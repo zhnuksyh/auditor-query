@@ -1,7 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#09090b"/>
-  <text x="50%" y="52%" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial Black, Impact, sans-serif" font-weight="900"
-        font-size="220" fill="#f4f4f5" letter-spacing="-8">DQ</text>
-  <rect x="196" y="330" width="120" height="20" rx="10" fill="#e11d48"/>
+  <!-- App icon: lucide `database-search` (ISC) on the maroon accent.
+       The 24-unit lucide grid is scaled 14x (336px) and centred, leaving 88px
+       of padding on every side so the glyph survives a maskable circle crop. -->
+  <rect width="512" height="512" rx="112" fill="#9f1239"/>
+  <g transform="translate(88 88) scale(14)"
+     fill="none" stroke="#fff1f2" stroke-width="2"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 11.693V5"/>
+    <path d="m22 22-1.875-1.875"/>
+    <path d="M3 12a9 3 0 0 0 8.697 2.998"/>
+    <path d="M3 5v14a9 3 0 0 0 9.28 2.999"/>
+    <circle cx="18" cy="18" r="3"/>
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+  </g>
 </svg>
