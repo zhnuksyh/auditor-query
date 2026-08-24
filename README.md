@@ -57,7 +57,16 @@ npm run dev      # start the dev server
 npm run build    # production build to dist/
 npm run preview  # preview the production build
 npm test         # case-integrity checks (Node's built-in test runner)
+npm run typecheck # type-check the case data and engine (no build output)
 ```
+
+`npm run typecheck` runs TypeScript in check-only mode over the case data and
+the engine. There are no `.ts` files — types live in `src/types.d.ts` and are
+attached through JSDoc comments in files marked `// @ts-check`, so TypeScript
+never emits anything and the shipped bundle is byte-for-byte identical to an
+untyped build. Components, screens and the trailer are deliberately not
+checked; the value is in the case data, where a mistyped `triggerValue` or a
+missing blank is otherwise a silent runtime failure.
 
 `npm test` builds every case's real schema in sql.js and verifies the case is
 actually solvable: that the Case Board ERD matches the database, that each
@@ -106,6 +115,7 @@ src/
   engine/         sql.js runtime, verification matrix, save system, error hints
   screens/        Main Menu, Level Select, Options, Credits, Game Dashboard
   state/          top-level game state hook
+  types.d.ts      shared type definitions (JSDoc, no .ts source)
 test/             case-integrity test suite
 ```
 
