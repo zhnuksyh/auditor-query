@@ -39,12 +39,13 @@ logical flaw hiding in the tables.
 
 | Layer | Choice |
 |---|---|
-| Frontend | React + Vite (static export) |
+| Frontend | React 18 + Vite (static, two HTML entry points) |
 | Styling | Tailwind CSS (deep charcoal base, crimson accent) |
 | DB engine | [sql.js](https://github.com/sql-js/sql.js) — SQLite compiled to WebAssembly |
 | SQL editor | [CodeMirror 6](https://codemirror.net/) |
 | Data grid | [TanStack Table](https://tanstack.com/table) |
 | Icons | [lucide-react](https://lucide.dev/) |
+| PWA | [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) — offline + installable |
 
 Everything is fully client-side, so it deploys to any static host (GitHub Pages,
 Netlify, Vercel).
@@ -108,16 +109,23 @@ run without a network connection after the first load.
 ## Project structure
 
 ```
+public/           PWA icons and the menu music (copied verbatim into dist/)
 src/
   assets/         static art (main-menu background)
-  cases/          case data — one file per case, plus _TEMPLATE.md
-  components/     tab UIs, table, dropdown, tab bar, stamp
-  engine/         sql.js runtime, verification matrix, save system, error hints
-  screens/        Main Menu, Level Select, Options, Credits, Game Dashboard
-  state/          top-level game state hook
+  cases/          case data — one file per case, plus CASE_DESIGN.md and _TEMPLATE.md
+  components/     tab UIs, table, dropdown, tab bar, stamp, tutorial overlay
+  engine/         sql.js runtime, verification matrix, save system, audio, error hints
+  screens/        Main Menu, Level Select, Guide, Options, Credits, Game Dashboard
+  state/          game state and sound hooks
+  trailer/        the kinetic-typography trailer — a second entry point, not a route
   types.d.ts      shared type definitions (JSDoc, no .ts source)
 test/             case-integrity test suite
+trailer/          the trailer's index.html entry point
 ```
+
+The build produces **two pages**: the game at `/` and the trailer at `/trailer/`.
+Both are plain static HTML entry points, so they work on any host without
+SPA-fallback rewrites.
 
 ## Authoring a new case
 
