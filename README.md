@@ -56,7 +56,16 @@ npm install
 npm run dev      # start the dev server
 npm run build    # production build to dist/
 npm run preview  # preview the production build
+npm test         # case-integrity checks (Node's built-in test runner)
 ```
+
+`npm test` builds every case's real schema in sql.js and verifies the case is
+actually solvable: that the Case Board ERD matches the database, that each
+Report Card blank has a `provingQuery` which unlocks it through the same
+`evaluateUnlocks` the app uses, and that the intended answers grade as correct
+while a decoy does not. Run it after editing any case — a mistyped trigger
+value or a drifted seed row makes a case unsolvable without anything else
+visibly breaking.
 
 > On Windows, run these from PowerShell — some dependency post-install scripts
 > (esbuild, sql.js) need `node` on the PATH.
@@ -97,6 +106,7 @@ src/
   engine/         sql.js runtime, verification matrix, save system, error hints
   screens/        Main Menu, Level Select, Options, Credits, Game Dashboard
   state/          top-level game state hook
+test/             case-integrity test suite
 ```
 
 ## Authoring a new case
@@ -105,7 +115,9 @@ Cases are pure data. `src/cases/_TEMPLATE.md` is a design form covering
 everything a case needs: identity, the crime-scene narrative, the database
 schema and seed rows (with the single planted contradiction that makes it
 solvable), and the Report Card blanks with their unlock triggers. Fill it in,
-add a `caseNN.js`, and register it in `src/cases/index.js`.
+add a `caseNN.js`, and register it in `src/cases/index.js`. Give every blank a
+`provingQuery` and run `npm test` — the suite will tell you if the case can't
+actually be solved.
 
 ## Credits
 
