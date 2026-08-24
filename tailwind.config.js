@@ -20,6 +20,8 @@ export default {
           fall: '#c9a56b',
           signal: '#1a1a1a',
           work: '#3d4a3a',
+          ledger: '#8a7f6d',
+          archive: '#6b5b73',
         },
       },
       fontFamily: {
