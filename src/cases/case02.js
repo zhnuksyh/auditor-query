@@ -222,8 +222,8 @@ Three people rode up to the seventh floor while Celeste was falling, and two of 
         triggerValue: 7,
         options: ['2', '3', '7', '1'],
         provingQuery: `
-          SELECT s.name, e.to_floor, e.ride_time FROM elevator_logs e
-          JOIN suspects s ON s.id = e.suspect_id WHERE e.to_floor = 7
+          SELECT e.to_floor, e.ride_time FROM elevator_logs e
+          WHERE e.to_floor = 7
         `,
         hint: 'The elevator log records which floor each ride went to.',
       },

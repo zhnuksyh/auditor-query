@@ -234,7 +234,7 @@ Several people used the pantry that morning. More than one has entries against t
         triggerValue: 'Coastline Supply',
         options: ['Brightwater Paper', 'Coastline Supply', 'Kestrel IT', 'Harbor Freight Co.'],
         provingQuery: `
-          SELECT v.vendor_name, v.registered_address, v.status, a.flagged
+          SELECT v.vendor_name, v.status, a.flagged, a.note
           FROM vendors v JOIN audit_scope a ON a.account = v.vendor_name
           WHERE a.flagged = 'yes'
         `,
@@ -247,9 +247,8 @@ Several people used the pantry that morning. More than one has entries against t
         triggerValue: 'PO Box 119, Brant Station',
         options: ['Unit 4, Mill Road', 'PO Box 119, Brant Station', '12 Foundry Avenue', '2 Regent Crescent'],
         provingQuery: `
-          SELECT v.vendor_name, v.registered_address, s.name, h.home_address
+          SELECT v.vendor_name, v.registered_address, h.home_address
           FROM vendors v JOIN hr_records h ON h.home_address = v.registered_address
-          JOIN suspects s ON s.id = h.suspect_id
         `,
         hint: 'Join vendors.registered_address to hr_records.home_address — one pair matches.',
       },
@@ -273,6 +272,9 @@ Several people used the pantry that morning. More than one has entries against t
         targetValue: '48,900',
         unlockedByColumn: 'skimmed_total',
         triggerValue: 48900,
+        // Deliberately shares the killer's query: the SUM that names the amount
+        // is the same GROUP BY that names who booked it. One deduction.
+        coUnlocksWith: 'killer',
         options: ['12,400', '48,900', '61,200', '96,200'],
         provingQuery: `
           SELECT s.name, SUM(l.amount) AS skimmed_total
@@ -299,6 +301,9 @@ Several people used the pantry that morning. More than one has entries against t
         targetValue: '08:00',
         unlockedByColumn: 'ingestion_from',
         triggerValue: '08:00',
+        // Deliberately shares the substance query: one toxicology row carries
+        // both the poison and the window it was taken in. One deduction.
+        coUnlocksWith: 'substance',
         options: ['07:45', '08:00', '08:40', '09:30'],
         provingQuery: `
           SELECT victim, substance, ingestion_from, ingestion_to FROM toxicology

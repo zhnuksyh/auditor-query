@@ -307,7 +307,7 @@ Three people passed through that door while Wray was dying, and each had a reaso
         triggerValue: '19:08',
         options: ['17:48', '19:08', '19:14', '19:52'],
         provingQuery: `
-          SELECT s.name, d.direction, d.scan_time
+          SELECT d.direction, d.scan_time
           FROM door_scans d JOIN suspects s ON s.badge_id = d.badge_id
           WHERE s.name = 'Ingrid Sahl' AND d.direction = 'IN' AND d.scan_time > '19:00'
         `,

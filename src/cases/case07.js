@@ -295,7 +295,7 @@ Six people had a berth here and a reason to resent Mallen, who had spent the sum
         unlockedByColumn: 'account',
         triggerValue: 'Down on the visitor pontoon with the others all evening.',
         provingQuery: `
-          SELECT s.name, st.account, st.claimed_berth
+          SELECT st.account, st.claimed_berth
           FROM statements st JOIN suspects s ON s.id = st.suspect_id
           WHERE s.name = 'Marisol Quint'
         `,

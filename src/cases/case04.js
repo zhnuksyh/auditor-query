@@ -273,7 +273,7 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         triggerValue: 'Caleb Osei',
         options: ['Vera Lin', 'Caleb Osei', 'Marta Voss', 'Dominic Hale', 'Ruth Kessler'],
         provingQuery: `
-          SELECT s.name, c.camera_location, c.seen_time
+          SELECT s.name, c.seen_time
           FROM cctv_sightings c JOIN suspects s ON s.vehicle_plate = c.plate
           JOIN coroner_reports r ON r.victim = 'Jonah Reyes'
           WHERE c.seen_time >= r.tod_from AND c.seen_time <= r.tod_to

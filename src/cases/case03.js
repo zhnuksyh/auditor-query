@@ -222,6 +222,10 @@ Six people had access that week. Only one of them connects to everything: both i
         targetValue: 'two',
         unlockedByColumn: 'incident_count',
         triggerValue: 2,
+        // Deliberately shares the killer's query: "who badged into both
+        // incidents" and "how many incidents" are one deduction, and the count
+        // IS the reason he's the killer. Splitting them would be busywork.
+        coUnlocksWith: 'killer',
         options: ['one', 'two', 'three', 'four'],
         provingQuery: `
           SELECT s.name, COUNT(DISTINCT a.incident_id) AS incident_count
