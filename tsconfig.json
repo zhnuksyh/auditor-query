@@ -1,0 +1,36 @@
+{
+  // Type-checking ONLY. TypeScript never emits anything here — Vite still does
+  // all the building, and the shipped bundle is untouched. Files opt in with
+  // `// @ts-check` at the top; everything else is ignored.
+  //
+  //   npm run typecheck
+  //
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+
+    // The whole point: check .js/.jsx, emit nothing.
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+
+    // Vite's `?url` imports and asset imports aren't real modules to tsc.
+    "types": ["vite/client"]
+  },
+  // The test suite is deliberately excluded: checking it would pull in
+  // @types/node for `node:test` and force restructuring assert.doesNotThrow
+  // patterns, for no real safety gain — the tests are verified by running.
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
+}
