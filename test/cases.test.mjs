@@ -42,7 +42,10 @@ function execRows(db, sql) {
 }
 
 test('the case roster is well-formed', () => {
-  assert.ok(playable.length > 0, 'expected at least one playable case')
+  // Guards against a vacuous green run: if the test glob ever stops matching,
+  // `node --test` reports 0 tests and still exits 0. This file failing to load
+  // is loud, but a roster that silently empties out would not be.
+  assert.ok(playable.length >= 5, `expected the full case roster, saw ${playable.length}`)
 
   const ids = CASES.map((c) => c.id)
   assert.equal(new Set(ids).size, ids.length, 'case ids must be unique')
