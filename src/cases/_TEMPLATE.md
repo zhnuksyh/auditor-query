@@ -3,6 +3,11 @@
 Fill this out to design a new case. Hand the completed form back and it can be
 turned into a working `caseNN.js` file. Everything the game needs is here.
 
+> **Read [`CASE_DESIGN.md`](./CASE_DESIGN.md) first.** This form covers the
+> mechanics of a case; that document covers what makes one *harder* than the
+> last — the difficulty dials, the hard constraints, and the checklist a case
+> has to pass.
+
 A case is solvable **only by querying the database** — never by guessing. The
 core trick: one row in the data contradicts a suspect's story, and the player
 finds it with SQL. Design the contradiction first, then build the tables around it.

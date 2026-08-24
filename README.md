@@ -111,7 +111,10 @@ test/             case-integrity test suite
 
 ## Authoring a new case
 
-Cases are pure data. `src/cases/_TEMPLATE.md` is a design form covering
+Cases are pure data. `src/cases/CASE_DESIGN.md` explains what makes a case
+harder than the one before it — the difficulty dials, the constraints that keep
+a case solvable, and the checklist to run it against.
+`src/cases/_TEMPLATE.md` is a design form covering
 everything a case needs: identity, the crime-scene narrative, the database
 schema and seed rows (with the single planted contradiction that makes it
 solvable), and the Report Card blanks with their unlock triggers. Fill it in,
