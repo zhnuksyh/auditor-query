@@ -40,7 +40,7 @@ At first glance it read as a jump — the balcony was empty, the door to it unlo
 
 The building is instrumented. The service elevator logs every trip and floor. Every phone in range pings the nearest cell tower, and the gallery sits under the "Wharf-7" tower. And the hardware shop two blocks over keeps card receipts.
 
-Five guests had a reason to want Celeste gone, and each gave a statement about where they were at 20:50. One of those statements is a lie the records don't support.`,
+Three people rode up to the seventh floor while Celeste was falling, and two of them said so freely. Five guests had a reason to want Celeste gone, and each gave a statement about where they were at 20:50. One of those statements is a lie the records don't support.`,
   },
 
   schemaSql: `
@@ -84,7 +84,14 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
       (4, 1, 1, '20:05'),
       (5, 4, 1, '21:02'),   -- came back down just after
       (6, 3, 3, '20:55'),
-      (7, 5, 2, '20:59');
+      (7, 5, 2, '20:59'),
+      -- Two others also reach Floor 7 inside the window, so the elevator alone
+      -- names three people. Iris and Lena both admit to being in the building,
+      -- and their phones and receipts clear them; only Marcus claimed off-site.
+      (8, 1, 7, '20:42'),
+      (9, 1, 1, '20:51'),
+      (10, 5, 7, '20:56'),
+      (11, 5, 2, '21:04');
 
     -- Cell tower pings. The gallery is under 'Wharf-7'; 'Downtown' is far away.
     CREATE TABLE phone_pings (
@@ -112,7 +119,10 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
       (1, 'Priya Anand', 'Canvas stretchers', '2026-03-01'),
       (2, 'Marcus Feld', 'Hex wrench set',    '2026-03-02'),   -- the sabotage tool
       (3, 'Iris Kwan',   'Picture wire',      '2026-02-28'),
-      (4, 'Lena Sorkin', 'Printer toner',     '2026-03-01');
+      (4, 'Lena Sorkin', 'Printer toner',     '2026-03-01'),
+      -- Priya bought the same tool, so the receipt alone convicts nobody. She
+      -- was on Floor 3 all evening and never rode to 7.
+      (5, 'Priya Anand', 'Hex wrench set',    '2026-02-27');
 
     CREATE TABLE forensics (
       id INTEGER PRIMARY KEY,
@@ -196,12 +206,14 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         triggerValue: 'Marcus Feld',
         options: ['Iris Kwan', 'Damien Roth', 'Priya Anand', 'Marcus Feld', 'Lena Sorkin'],
         provingQuery: `
-          SELECT s.name, e.to_floor, e.ride_time, a.claimed_location
+          SELECT s.name, e.ride_time, a.claimed_location
           FROM elevator_logs e JOIN suspects s ON s.id = e.suspect_id
           JOIN alibis a ON a.suspect_id = s.id
           WHERE e.to_floor = 7
+            AND e.ride_time >= '20:40' AND e.ride_time <= '21:00'
+            AND a.claimed_location = 'Off-site'
         `,
-        hint: 'Join elevator_logs to suspects: who rode to Floor 7 inside the 20:40–21:00 window?',
+        hint: 'Three people rode to Floor 7 in the window. Only one of them told you they were somewhere else.',
       },
       floor: {
         label: 'the floor',
@@ -218,14 +230,18 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
       alibiLie: {
         label: 'their false alibi',
         targetValue: 'off-site',
-        unlockedByColumn: 'claimed_location',
-        triggerValue: 'Off-site',
+        // Keyed on the statement text rather than claimed_location: the killer's
+        // proving query already selects claimed_location, so triggering on that
+        // would unlock this blank for free. The player has to open alibis.
+        unlockedByColumn: 'statement',
+        triggerValue: 'I stepped out to take a call in the street.',
         options: ['off-site', 'Floor 2', 'Floor 3', 'the atrium bar'],
         provingQuery: `
-          SELECT s.name, a.claimed_location, a.statement FROM alibis a
-          JOIN suspects s ON s.id = a.suspect_id WHERE a.claimed_location = 'Off-site'
+          SELECT s.name, a.statement, a.claimed_location FROM alibis a
+          JOIN suspects s ON s.id = a.suspect_id
+          WHERE s.name = 'Marcus Feld'
         `,
-        hint: 'Check the killer’s alibi row — where did they claim to be?',
+        hint: 'Read the killer’s own alibi row in full — what exactly did they claim?',
       },
       tower: {
         label: 'the cell tower',
@@ -249,7 +265,7 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
           SELECT finding, detail, implicates_tool FROM forensics
           WHERE implicates_tool IS NOT NULL
         `,
-        hint: 'Forensics names the tool that left the marks; purchases show who bought it.',
+        hint: 'Forensics names the tool that left the marks. Two people bought one — only one of them went up to 7.',
       },
     },
   },
