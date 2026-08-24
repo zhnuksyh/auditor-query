@@ -49,6 +49,7 @@ Where the shipped cases actually land:
 | 05 Zero Sum | in the pantry during the dosing window | 3 |
 | 06 The Archivist | in the vault during TOD | 3 |
 | 07 Slack Water | upstream of Jetty 4 during the ebb | 3 |
+| 08 The Long Shift | badged onto Ward 3B during the TOD window | 4 |
 
 Case 01 gets a pass — it is the tutorial, and it should feel solvable. Every
 other case sits at 2 or more, so the killer always requires an intersection.
@@ -80,15 +81,25 @@ backbone of the ladder and the reason the game teaches anything.
 | 05 | `SUM … HAVING` + a TEXT join across tables |
 | 06 | anti-join / absence (`IS NULL`), correlated subquery |
 | 07 | **self-join** (a table against itself), `EXCEPT` |
+| 08 | **window function** — `LAG() OVER (ORDER BY …)`, subquery-wrapped |
 
-**Still unused, roughly in order of difficulty:** window functions
-(`LAG`/`LEAD` over a sequence of events — worth checking sql.js support first,
-though it does have them), `UNION` for combining evidence sets, recursive CTEs
-(probably a step too far).
+**Still unused, roughly in order of difficulty:** `LEAD` and `PARTITION BY`
+(case 08 used only `LAG`, so the rest of the window family is still fresh),
+`UNION` for combining evidence sets, recursive CTEs (probably a step too far).
+
+sql.js ships SQLite **3.49.1**, and `LAG`, `LEAD`, `ROW_NUMBER`, `PARTITION BY`
+and CTEs are all confirmed working — no need to re-check before using them.
 
 Case 07 used the self-join and `EXCEPT`. Note that a self-join pairs naturally
 with any hourly log where the *transition* matters rather than the value —
 tide turning, a door state changing, a temperature crossing a threshold.
+
+Case 08 used `LAG()` to expose a **gap that exists in no column**: ordering the
+shift roster by start time and pulling the previous row's end shows where the
+relay failed to overlap. Reach for a window function whenever the answer lives
+*between* two consecutive rows rather than inside either one. Note that SQLite
+won't let you filter on a window alias in the same `WHERE`, so the query has to
+wrap it in a subquery — which is itself a useful difficulty step.
 
 ### 2. Evidence sets to intersect
 
@@ -154,6 +165,14 @@ Violate these and the case breaks.
 
   `npm test` enforces all of this. It found real leaks in five of seven cases
   the first time it ran, so do not rely on spotting them by eye.
+- **Every deduction must be UNIQUE in the data, not just in your proving query.**
+  `npm test` only checks that your query unlocks its blank — it cannot tell you
+  that the *general* form of the same question returns three rows. Case 08 nearly
+  shipped with three countersignatures written after their signer's shift ended;
+  the proving query looked fine because it filtered on `dose_mg = 60`. Run the
+  honest, unfiltered version of each deduction and confirm it returns exactly one
+  row. Incidental noise elsewhere in the seed data is how a case becomes
+  ambiguous without any test failing.
 - **The locked dropdown must hide the correct answer**, or players can guess
   past the anti-cheat.
 - **Every blank needs a `provingQuery`**, and `npm test` must pass. The suite
@@ -179,3 +198,5 @@ Deductive:
 - [ ] Every fact needed is in the narrative prose.
 - [ ] The contradiction cannot be spotted without running a query.
 - [ ] A player who guesses the most suspicious-sounding name is wrong.
+- [ ] The unfiltered form of every deduction returns exactly **one** row —
+      no second row anywhere in the seed data answers the same question.
