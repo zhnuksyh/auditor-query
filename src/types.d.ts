@@ -56,6 +56,12 @@ export interface ReportBlank {
   provingQuery: string
   /** One line nudging the player toward the proving query. */
   hint: string
+  /**
+   * Names another blank this one deliberately shares a proving query with,
+   * when both are genuinely the same deduction. Without it, the case tests
+   * reject a query that unlocks more than one blank — see CASE_DESIGN.md.
+   */
+  coUnlocksWith?: string
 }
 
 /** The Report Card: a closing paragraph with `{{key}}` tokens as dropdowns. */

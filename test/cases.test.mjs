@@ -156,6 +156,42 @@ for (const gameCase of playable) {
       }
     })
 
+    await t.test('no proving query gives away a later answer', () => {
+      // Blanks are declared in the intended solve order, and a query may only
+      // unlock blanks at or before its own position. Unlocking a LATER blank is
+      // a real leak: the player is handed an answer before earning it.
+      //
+      // Unlocking an EARLIER blank is fine and often unavoidable — case 02's
+      // alibi query filters `WHERE s.name = 'Marcus Feld'`, so it can only be
+      // written by someone who already identified him.
+      //
+      // A blank may opt out with `coUnlocksWith` when two blanks are genuinely
+      // one deduction (case 03's killer and incident count share a GROUP BY).
+      const order = Object.keys(gameCase.report.blanks)
+
+      order.forEach((key, index) => {
+        const blank = gameCase.report.blanks[key]
+        const rows = execRows(db, blank.provingQuery)
+        const { unlocked } = evaluateUnlocks(gameCase.report.blanks, rows, new Set())
+
+        const premature = [...unlocked].filter((other) => {
+          if (other === key) return false
+          if (order.indexOf(other) <= index) return false
+          return (
+            gameCase.report.blanks[other].coUnlocksWith !== key &&
+            blank.coUnlocksWith !== other
+          )
+        })
+
+        assert.deepEqual(
+          premature,
+          [],
+          `the "${key}" proving query already unlocks ${premature.map((k) => `"${k}"`).join(', ')}, ` +
+            'which the player has not reached yet — key those blanks on a column this query does not select',
+        )
+      })
+    })
+
     await t.test('the intended solution grades as correct', () => {
       const answers = Object.fromEntries(
         Object.entries(gameCase.report.blanks).map(([key, blank]) => [key, blank.targetValue]),
