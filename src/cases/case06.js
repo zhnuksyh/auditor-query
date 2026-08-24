@@ -42,13 +42,14 @@ Wray had spent his last month digitising the Bureau's oldest evidence files, and
 
 The ledger for that week looks immaculate — every sign-out paired with a return, every line initialled. But the ledger is only as honest as the person holding the pen, and one clerk whose name appears in it was nowhere near the building: the staff leave records put them away all week. Whoever wrote that line borrowed a name that couldn't contradict them.
 
-Find the file that went out and never came back, then work out who was actually standing in the vault when that entry was written. The ledger lies. The door does not.`,
+Three people passed through that door while Wray was dying, and each had a reason to be there. Find the file that went out and never came back, then work out which of them was still inside at the minute that entry was written. The ledger lies. The door does not.`,
     constraints: [
       'Time of death: 19:05–19:40, September 3rd.',
       'Blunt trauma to the BACK of the skull — the fall was staged.',
       'Every vault sign-out must have a matching return in the ledger.',
       'Door scans are machine-written and cannot be forged; the ledger is handwritten.',
       'One name in the ledger belongs to a clerk who was on leave all week.',
+      'Three badges passed the vault door inside the coroner’s window.',
     ],
   },
 
@@ -118,7 +119,15 @@ Find the file that went out and never came back, then work out who was actually 
       (11, 304, 'IN',  '19:08'),   -- Ingrid is inside when entry 4 is written
       (12, 306, 'IN',  '19:52'),   -- the porter arrives well after the window
       (13, 304, 'OUT', '19:36'),
-      (14, 306, 'OUT', '20:15');
+      (14, 306, 'OUT', '20:15'),
+      -- Two more people are inside the coroner's window, so "who was in the
+      -- vault when Wray died" returns three names, not one. Neither of them is
+      -- still inside at 19:14 when the ledger entry is written:
+      -- Sabine leaves four minutes before it, Casimir arrives six after.
+      (15, 302, 'IN',  '18:55'),
+      (16, 302, 'OUT', '19:10'),
+      (17, 305, 'IN',  '19:20'),
+      (18, 305, 'OUT', '19:33');
 
     -- Dov Lantry cannot have signed anything that day.
     CREATE TABLE leave_records (
@@ -287,7 +296,7 @@ Find the file that went out and never came back, then work out who was actually 
                 AND o.scan_time > d.scan_time
             ) >= '19:14'
         `,
-        hint: 'Who was badged IN before 19:14 and had not badged OUT again until after it?',
+        hint: 'Several people were in the vault that evening. Who was badged IN before 19:14 and had not badged OUT again until after it?',
       },
       scanTime: {
         label: 'when they badged in',
