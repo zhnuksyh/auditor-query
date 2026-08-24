@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 01 — "THE MIDNIGHT DRIFT"
  *
@@ -17,6 +18,7 @@
  * Every deduction is provable with a SELECT. No guessing.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case01 = {
   id: 'case_01',
   code: 'CODE_01',

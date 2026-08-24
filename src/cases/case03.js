@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 03 — "TERMINAL VELOCITY"
  *
@@ -17,6 +18,7 @@
  * not in any hidden information.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case03 = {
   id: 'case_03',
   code: 'CODE_03',

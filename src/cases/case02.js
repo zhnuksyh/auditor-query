@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 02 — "A LONG WAY DOWN"
  *
@@ -18,6 +19,7 @@
  * Every step is provable with SQL; nothing is guessable.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case02 = {
   id: 'case_02',
   code: 'CODE_02',

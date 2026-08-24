@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 06 — "THE ARCHIVIST"
  *
@@ -22,6 +23,7 @@
  * that disagree. Everything is still provable with SQL — no guessing.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case06 = {
   id: 'case_06',
   code: 'CODE_06',

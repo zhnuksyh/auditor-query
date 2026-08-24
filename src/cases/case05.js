@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 05 — "ZERO SUM"
  *
@@ -18,6 +19,7 @@
  * address match seals it. Everything is provable with SQL — no guessing.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case05 = {
   id: 'case_05',
   code: 'CODE_05',

@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CASE 04 — "DEAD SIGNAL"
  *
@@ -22,6 +23,7 @@
  * Everything is still provable with SQL — no guessing.
  */
 
+/** @type {import('../types.js').PlayableCase} */
 export const case04 = {
   id: 'case_04',
   code: 'CODE_04',
