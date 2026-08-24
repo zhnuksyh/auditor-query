@@ -1,6 +1,12 @@
+// @ts-check
+/** @type {Promise<import('sql.js').SqlJsStatic> | null} */
 let sqlPromise = null
 
-/** Peel .default layers off an interop-wrapped module until a function surfaces. */
+/**
+ * Peel .default layers off an interop-wrapped module until a function surfaces.
+ * @param {any} mod
+ * @returns {any}
+ */
 function unwrapFn(mod) {
   let cur = mod
   for (let i = 0; i < 4 && cur && typeof cur !== 'function'; i++) {
@@ -83,8 +89,10 @@ export function runQuery(db, sql) {
       // Statement ran but returned no result set (e.g. an UPDATE, or empty SELECT).
       return { columns: [], rows: [], allRows: [], error: null, empty: true }
     }
+    /** @param {import('sql.js').QueryExecResult} set */
     const toRows = (set) =>
       set.values.map((valueRow) => {
+        /** @type {Record<string, unknown>} */
         const obj = {}
         set.columns.forEach((col, i) => {
           obj[col] = valueRow[i]
@@ -95,6 +103,6 @@ export function runQuery(db, sql) {
     const allRows = results.length === 1 ? rows : results.flatMap(toRows)
     return { columns: results[results.length - 1].columns, rows, allRows, error: null, empty: rows.length === 0 }
   } catch (err) {
-    return { columns: [], rows: [], allRows: [], error: err.message || String(err), empty: false }
+    return { columns: [], rows: [], allRows: [], error: /** @type {Error} */ (err).message || String(err), empty: false }
   }
 }

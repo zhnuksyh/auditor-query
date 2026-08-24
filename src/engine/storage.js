@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * localStorage-backed save system. Everything is client-side, so a player's
  * progress, notebook text, and unlocked levels live entirely in the browser.
@@ -42,6 +43,7 @@ export function loadState() {
   }
 }
 
+/** @param {unknown} state */
 export function saveState(state) {
   try {
     localStorage.setItem(KEY, JSON.stringify(state))

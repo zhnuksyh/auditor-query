@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * The "Intercepted Deduction" tracker.
  *
@@ -42,6 +43,9 @@ export function evaluateUnlocks(blanks, rows, alreadyUnlocked) {
  * reports result columns with whatever casing the player typed, so an unlock
  * keyed on `last_ping` must also accept `AS Last_Ping` / `AS LAST_PING`.
  * Only own keys count — never fall through to Object.prototype.
+ * @param {Record<string, unknown>} row
+ * @param {string} column
+ * @returns {unknown}
  */
 function readColumn(row, column) {
   if (Object.prototype.hasOwnProperty.call(row, column)) return row[column]
@@ -52,7 +56,12 @@ function readColumn(row, column) {
   return undefined
 }
 
-/** Loose equality so INTEGER 3 matches the string "3", trimming text. */
+/**
+ * Loose equality so INTEGER 3 matches the string "3", trimming text.
+ * @param {unknown} a
+ * @param {unknown} b
+ * @returns {boolean}
+ */
 function looseEqual(a, b) {
   if (a == null || b == null) return a === b
   if (typeof a === 'string' && typeof b === 'string') {
@@ -69,6 +78,7 @@ function looseEqual(a, b) {
  * @returns {{ correct: boolean, results: Record<string, boolean> }}
  */
 export function gradeReport(blanks, answers) {
+  /** @type {Record<string, boolean>} */
   const results = {}
   let correct = true
   for (const [key, config] of Object.entries(blanks)) {

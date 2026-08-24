@@ -1,7 +1,10 @@
+// @ts-check
 /**
  * Translate a raw SQLite error message into a short, friendly hint about what
  * the player likely got wrong. Falls back to the original message (lightly
  * cleaned) when nothing matches.
+ * @param {unknown} raw
+ * @returns {string}
  */
 export function friendlySqlError(raw) {
   if (!raw) return 'Something went wrong.'
