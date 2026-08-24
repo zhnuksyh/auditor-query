@@ -250,8 +250,12 @@ Find the file that went out and never came back, then work out who was actually 
       borrowedName: {
         label: 'the name in the ledger',
         targetValue: 'Dov Lantry',
-        unlockedByColumn: 'signed_out_by',
-        triggerValue: 'Dov Lantry',
+        // Keyed on the leave date, not the name: the name is visible on the
+        // unreturned ledger row, so triggering on it would unlock this blank
+        // for free. The player must join leave_records to prove the signer
+        // couldn't have been holding the pen.
+        unlockedByColumn: 'leave_from',
+        triggerValue: '2026-08-31',
         options: ['Perrin Oyelaran', 'Dov Lantry', 'Casimir Boyle', 'Neve Abara'],
         provingQuery: `
           SELECT v.signed_out_by, l.leave_from, l.leave_to, l.reason
