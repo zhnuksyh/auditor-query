@@ -6,9 +6,10 @@ import { case04 } from './case04.js'
 import { case05 } from './case05.js'
 import { case06 } from './case06.js'
 import { case07 } from './case07.js'
+import { case08 } from './case08.js'
 
 /**
- * Case 08 is a "coming soon" placeholder — it renders as a folder but has no
+ * The trailing "coming soon" placeholder — it renders as a folder but has no
  * playable schema yet. `comingSoon` marks it for the level-select card.
  *
  * @param {Pick<import('../types.js').ComingSoonCase, 'id' | 'code' | 'tag' | 'title' | 'teaser' | 'folderTheme' | 'comingSoon'>} over
@@ -32,13 +33,14 @@ export const CASES = [
   case05,
   case06,
   case07,
+  case08,
   lockedStub({
-    id: 'case_08',
-    code: 'CODE_08',
-    tag: 'RELAY',
-    title: 'The Long Shift',
-    folderTheme: 'work',
-    teaser: 'Six nurses, one locked drug cabinet, and a signature that was never on shift.',
+    id: 'case_09',
+    code: 'CODE_09',
+    tag: 'CHORUS',
+    title: 'Second Voice',
+    folderTheme: 'signal',
+    teaser: 'The confession tape runs eleven minutes. Two of them belong to someone else.',
     comingSoon: true,
   }),
 ]
