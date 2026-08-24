@@ -43,14 +43,20 @@ Where the shipped cases actually land:
 | Case | First obvious query | Survivors |
 |---|---|---|
 | 01 Midnight Drift | keycard in East Wing during TOD | 1 — fine, it's the tutorial |
-| 02 A Long Way Down | rode the elevator to Floor 7 | 1 |
+| 02 A Long Way Down | rode the elevator to Floor 7 | 3 |
 | 03 Terminal Velocity | badged into Stairwell C | 6 |
 | 04 Dead Signal | phone at Dockside in the real window | 2 |
 | 05 Zero Sum | in the pantry during the dosing window | 3 |
 | 06 The Archivist | in the vault during TOD | 3 |
 
-Case 01 gets a pass — it is the tutorial, and it should feel solvable. Case 02
-is the weakest case on this axis and worth revisiting.
+Case 01 gets a pass — it is the tutorial, and it should feel solvable. Every
+other case sits at 2 or more, so the killer always requires an intersection.
+
+Both Case 02 and Case 06 originally shipped at 1 and had to be rebalanced by
+adding candidates *after* the fact, which is more delicate than designing the
+field in from the start: every added row has to be checked against the proving
+queries so the intended solution stays unique. Run this measure while you are
+seeding the tables, not after.
 
 ---
 
