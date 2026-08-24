@@ -231,6 +231,11 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'vendor_name',
         triggerValue: 'Coastline Supply',
         options: ['Brightwater Paper', 'Coastline Supply', 'Kestrel IT', 'Harbor Freight Co.'],
+        provingQuery: `
+          SELECT v.vendor_name, v.registered_address, v.status, a.flagged
+          FROM vendors v JOIN audit_scope a ON a.account = v.vendor_name
+          WHERE a.flagged = 'yes'
+        `,
         hint: 'audit_scope names the flagged account; vendors shows which payee has no filings.',
       },
       address: {
@@ -239,6 +244,11 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'registered_address',
         triggerValue: 'PO Box 119, Brant Station',
         options: ['Unit 4, Mill Road', 'PO Box 119, Brant Station', '12 Foundry Avenue', '2 Regent Crescent'],
+        provingQuery: `
+          SELECT v.vendor_name, v.registered_address, s.name, h.home_address
+          FROM vendors v JOIN hr_records h ON h.home_address = v.registered_address
+          JOIN suspects s ON s.id = h.suspect_id
+        `,
         hint: 'Join vendors.registered_address to hr_records.home_address — one pair matches.',
       },
       killer: {
@@ -247,6 +257,13 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'name',
         triggerValue: 'Sonia Grey',
         options: ['Piet Halvard', 'Sonia Grey', 'Tobias Denn', 'Ida Brandt', 'Yusuf Kade', 'Fern Wexley'],
+        provingQuery: `
+          SELECT s.name, SUM(l.amount) AS skimmed_total
+          FROM ledger_entries l JOIN suspects s ON s.id = l.entered_by
+          WHERE l.account = 'Coastline Supply'
+          GROUP BY s.name
+          HAVING SUM(l.amount) > 1000
+        `,
         hint: 'Intersect three sets: booked entries to the shell, badged the pantry inside 08:00–09:30, and matches the vendor’s address. One name survives all three.',
       },
       total: {
@@ -255,6 +272,13 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'skimmed_total',
         triggerValue: 48900,
         options: ['12,400', '48,900', '61,200', '96,200'],
+        provingQuery: `
+          SELECT s.name, SUM(l.amount) AS skimmed_total
+          FROM ledger_entries l JOIN suspects s ON s.id = l.entered_by
+          WHERE l.account = 'Coastline Supply'
+          GROUP BY s.name
+          HAVING SUM(l.amount) > 1000
+        `,
         hint: 'GROUP BY entered_by over the shell-vendor entries with SUM(amount) AS skimmed_total — use HAVING to drop the petty-cash noise.',
       },
       substance: {
@@ -263,6 +287,9 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'substance',
         triggerValue: 'aconitine',
         options: ['aconitine', 'arsenic', 'thallium', 'cyanide'],
+        provingQuery: `
+          SELECT victim, substance, ingestion_from, ingestion_to FROM toxicology
+        `,
         hint: 'Toxicology names what was in the thermos.',
       },
       window: {
@@ -271,6 +298,9 @@ Several people used the pantry that morning. More than one has entries against t
         unlockedByColumn: 'ingestion_from',
         triggerValue: '08:00',
         options: ['07:45', '08:00', '08:40', '09:30'],
+        provingQuery: `
+          SELECT victim, substance, ingestion_from, ingestion_to FROM toxicology
+        `,
         hint: 'Toxicology fixes when the thermos could have been dosed.',
       },
     },

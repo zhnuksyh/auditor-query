@@ -235,6 +235,9 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         unlockedByColumn: 'last_ping',
         triggerValue: '01:50',
         options: ['01:32', '01:50', '02:14', '01:20'],
+        provingQuery: `
+          SELECT MAX(ping_time) AS last_ping FROM tower_pings WHERE phone_id = 900
+        `,
         hint: 'When did the victim’s handset (phone_id 900) last touch a tower? SELECT MAX(ping_time) AS last_ping FROM tower_pings …',
       },
       sentVia: {
@@ -243,6 +246,10 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         unlockedByColumn: 'sent_via',
         triggerValue: 'cloud relay',
         options: ['the handset', 'cloud relay', 'an SMS gateway', 'a burner phone'],
+        provingQuery: `
+          SELECT id, recipient, body, sent_time, sent_via FROM messages
+          WHERE sent_time > (SELECT MAX(ping_time) FROM tower_pings WHERE phone_id = 900)
+        `,
         hint: 'Compare sent_via across the messages from phone 900 — one of them is different.',
       },
       device: {
@@ -251,6 +258,10 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         unlockedByColumn: 'device',
         triggerValue: 'tablet',
         options: ['laptop', 'tablet', 'smartwatch', 'phone'],
+        provingQuery: `
+          SELECT device, owner, paired_to, note FROM device_registry
+          WHERE owner <> 'Jonah Reyes' AND paired_to = 'Jonah Reyes — cloud account'
+        `,
         hint: 'device_registry: which device that isn’t Jonah’s is paired to “Jonah Reyes — cloud account”?',
       },
       killer: {
@@ -259,6 +270,12 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         unlockedByColumn: 'name',
         triggerValue: 'Caleb Osei',
         options: ['Vera Lin', 'Caleb Osei', 'Marta Voss', 'Dominic Hale', 'Ruth Kessler'],
+        provingQuery: `
+          SELECT s.name, c.camera_location, c.seen_time
+          FROM cctv_sightings c JOIN suspects s ON s.vehicle_plate = c.plate
+          JOIN coroner_reports r ON r.victim = 'Jonah Reyes'
+          WHERE c.seen_time >= r.tod_from AND c.seen_time <= r.tod_to
+        `,
         hint: 'Two alibis fail to cover 01:20–01:55. Join tower_pings and the device registry to pick which of the two was really in play.',
       },
       lot: {
@@ -267,6 +284,11 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
         unlockedByColumn: 'camera_location',
         triggerValue: 'Dockside Lot',
         options: ['Dockside Lot', 'Civic Plaza Garage', 'Press Tower Garage', 'Northside Gym'],
+        provingQuery: `
+          SELECT s.name, c.camera_location, c.seen_time
+          FROM cctv_sightings c JOIN suspects s ON s.vehicle_plate = c.plate
+          WHERE c.camera_location = 'Dockside Lot'
+        `,
         hint: 'Join the killer’s vehicle_plate to cctv_sightings — where was the car during the window?',
       },
     },

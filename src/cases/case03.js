@@ -195,6 +195,13 @@ Six people had access that week. Only one of them connects to everything: both i
         unlockedByColumn: 'name',
         triggerValue: 'Amos Bright',
         options: ['Gil Auerbach', 'Hana Vos', 'Reuben Sato', 'Delia Frost', 'Amos Bright', 'Cora Nunn'],
+        provingQuery: `
+          SELECT s.name, COUNT(DISTINCT a.incident_id) AS incident_count
+          FROM access_logs a JOIN suspects s ON s.id = a.suspect_id
+          WHERE a.area = 'Stairwell C'
+          GROUP BY s.name
+          HAVING COUNT(DISTINCT a.incident_id) = 2
+        `,
         hint: 'In access_logs, group by suspect and count DISTINCT incident_id — who has 2?',
       },
       department: {
@@ -203,6 +210,9 @@ Six people had access that week. Only one of them connects to everything: both i
         unlockedByColumn: 'department',
         triggerValue: 'Facilities',
         options: ['Facilities', 'Finance', 'Security', 'Legal', 'IT'],
+        provingQuery: `
+          SELECT name, department, badge_id FROM suspects WHERE department = 'Facilities'
+        `,
         hint: 'Look up the killer in the suspects table.',
       },
       count: {
@@ -211,6 +221,13 @@ Six people had access that week. Only one of them connects to everything: both i
         unlockedByColumn: 'incident_count',
         triggerValue: 2,
         options: ['one', 'two', 'three', 'four'],
+        provingQuery: `
+          SELECT s.name, COUNT(DISTINCT a.incident_id) AS incident_count
+          FROM access_logs a JOIN suspects s ON s.id = a.suspect_id
+          WHERE a.area = 'Stairwell C'
+          GROUP BY s.name
+          HAVING COUNT(DISTINCT a.incident_id) = 2
+        `,
         hint: 'COUNT(DISTINCT incident_id) for the killer in access_logs.',
       },
       task: {
@@ -219,6 +236,10 @@ Six people had access that week. Only one of them connects to everything: both i
         unlockedByColumn: 'task',
         triggerValue: 'Camera maintenance',
         options: ['Camera maintenance', 'Light replacement', 'Filter change', 'Elevator service'],
+        provingQuery: `
+          SELECT s.name, w.task, w.area, w.order_date FROM work_orders w
+          JOIN suspects s ON s.id = w.assigned_to WHERE w.area = 'Stairwell C'
+        `,
         hint: 'work_orders assigned to the killer in Stairwell C — what was the task?',
       },
       badge: {
@@ -227,6 +248,10 @@ Six people had access that week. Only one of them connects to everything: both i
         unlockedByColumn: 'status',
         triggerValue: 'cloned',
         options: ['cloned', 'expired', 'ok', 'suspended'],
+        provingQuery: `
+          SELECT s.name, b.badge_id, b.status, b.note FROM badge_audit b
+          JOIN suspects s ON s.badge_id = b.badge_id WHERE b.status = 'cloned'
+        `,
         hint: 'Join the killer’s badge_id to badge_audit — what status did Security flag?',
       },
     },

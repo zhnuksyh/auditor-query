@@ -193,6 +193,12 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         unlockedByColumn: 'name',
         triggerValue: 'Marcus Feld',
         options: ['Iris Kwan', 'Damien Roth', 'Priya Anand', 'Marcus Feld', 'Lena Sorkin'],
+        provingQuery: `
+          SELECT s.name, e.to_floor, e.ride_time, a.claimed_location
+          FROM elevator_logs e JOIN suspects s ON s.id = e.suspect_id
+          JOIN alibis a ON a.suspect_id = s.id
+          WHERE e.to_floor = 7
+        `,
         hint: 'Join elevator_logs to suspects: who rode to Floor 7 inside the 20:40–21:00 window?',
       },
       floor: {
@@ -201,6 +207,10 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         unlockedByColumn: 'to_floor',
         triggerValue: 7,
         options: ['2', '3', '7', '1'],
+        provingQuery: `
+          SELECT s.name, e.to_floor, e.ride_time FROM elevator_logs e
+          JOIN suspects s ON s.id = e.suspect_id WHERE e.to_floor = 7
+        `,
         hint: 'The elevator log records which floor each ride went to.',
       },
       alibiLie: {
@@ -209,6 +219,10 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         unlockedByColumn: 'claimed_location',
         triggerValue: 'Off-site',
         options: ['off-site', 'Floor 2', 'Floor 3', 'the atrium bar'],
+        provingQuery: `
+          SELECT s.name, a.claimed_location, a.statement FROM alibis a
+          JOIN suspects s ON s.id = a.suspect_id WHERE a.claimed_location = 'Off-site'
+        `,
         hint: 'Check the killer’s alibi row — where did they claim to be?',
       },
       tower: {
@@ -217,6 +231,10 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         unlockedByColumn: 'tower',
         triggerValue: 'Wharf-7',
         options: ['Wharf-7', 'Downtown', 'Harbor-3', 'Midtown'],
+        provingQuery: `
+          SELECT s.name, p.tower, p.ping_time FROM phone_pings p
+          JOIN suspects s ON s.phone_id = p.phone_id WHERE p.tower = 'Wharf-7'
+        `,
         hint: 'Join the killer’s phone_id to phone_pings — which tower did it hit at 20:50?',
       },
       tool: {
@@ -225,6 +243,10 @@ Five guests had a reason to want Celeste gone, and each gave a statement about w
         unlockedByColumn: 'implicates_tool',
         triggerValue: 'hex wrench',
         options: ['hex wrench', 'crowbar', 'screwdriver', 'bolt cutter'],
+        provingQuery: `
+          SELECT finding, detail, implicates_tool FROM forensics
+          WHERE implicates_tool IS NOT NULL
+        `,
         hint: 'Forensics names the tool that left the marks; purchases show who bought it.',
       },
     },

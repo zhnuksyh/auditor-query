@@ -218,6 +218,13 @@ Four people had reason to be in the building that night. Each gave a statement. 
         unlockedByColumn: 'name',
         triggerValue: 'Theo Marsh',
         options: ['Mara Quinn', 'Elias Vale', 'Nadia Frost', 'Theo Marsh'],
+        provingQuery: `
+          SELECT s.name, k.wing, k.direction, k.swipe_time
+          FROM keycard_logs k JOIN suspects s ON s.id = k.suspect_id
+          JOIN alibis a ON a.suspect_id = s.id
+          WHERE k.wing = 'East Wing' AND k.direction = 'IN'
+            AND k.swipe_time >= '23:10' AND k.swipe_time <= '23:25'
+        `,
         hint: 'Find the suspect whose keycard swipe contradicts their alibi during the time of death.',
       },
       todStart: {
@@ -226,6 +233,9 @@ Four people had reason to be in the building that night. Each gave a statement. 
         unlockedByColumn: 'tod_from',
         triggerValue: '23:10',
         options: ['22:40', '23:10', '23:29', '23:50'],
+        provingQuery: `
+          SELECT victim, tod_from, tod_to FROM coroner_reports
+        `,
         hint: 'Query the coroner report for the time-of-death window.',
       },
       handedness: {
@@ -234,6 +244,10 @@ Four people had reason to be in the building that night. Each gave a statement. 
         unlockedByColumn: 'implicates_handedness',
         triggerValue: 'left',
         options: ['left-handed', 'right-handed', 'ambidextrous', 'unknown'],
+        provingQuery: `
+          SELECT finding, detail, implicates_handedness FROM forensics
+          WHERE implicates_handedness IS NOT NULL
+        `,
         hint: 'The forensics table records which hand the wound angle implicates.',
       },
       weapon: {
@@ -242,6 +256,9 @@ Four people had reason to be in the building that night. Each gave a statement. 
         unlockedByColumn: 'finding',
         triggerValue: 'Missing item',
         options: ['candlestick', 'letter opener', 'kitchen knife', 'ice pick'],
+        provingQuery: `
+          SELECT finding, detail FROM forensics WHERE finding = 'Missing item'
+        `,
         hint: 'The forensics "Missing item" finding names the weapon.',
       },
     },
