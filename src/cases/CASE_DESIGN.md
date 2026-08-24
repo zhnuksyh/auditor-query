@@ -48,6 +48,7 @@ Where the shipped cases actually land:
 | 04 Dead Signal | phone at Dockside in the real window | 2 |
 | 05 Zero Sum | in the pantry during the dosing window | 3 |
 | 06 The Archivist | in the vault during TOD | 3 |
+| 07 Slack Water | upstream of Jetty 4 during the ebb | 3 |
 
 Case 01 gets a pass — it is the tutorial, and it should feel solvable. Every
 other case sits at 2 or more, so the killer always requires an intersection.
@@ -78,11 +79,16 @@ backbone of the ladder and the reason the game teaches anything.
 | 04 | aggregate **alias** (`MAX(x) AS last_ping`) |
 | 05 | `SUM … HAVING` + a TEXT join across tables |
 | 06 | anti-join / absence (`IS NULL`), correlated subquery |
+| 07 | **self-join** (a table against itself), `EXCEPT` |
 
-**Still unused, roughly in order of difficulty:** self-join (two rows of the
-same table contradicting each other), `UNION` / `EXCEPT` for set arithmetic,
-window functions (`LAG`/`LEAD` over a sequence of events), recursive CTEs
+**Still unused, roughly in order of difficulty:** window functions
+(`LAG`/`LEAD` over a sequence of events — worth checking sql.js support first,
+though it does have them), `UNION` for combining evidence sets, recursive CTEs
 (probably a step too far).
+
+Case 07 used the self-join and `EXCEPT`. Note that a self-join pairs naturally
+with any hourly log where the *transition* matters rather than the value —
+tide turning, a door state changing, a temperature crossing a threshold.
 
 ### 2. Evidence sets to intersect
 
@@ -132,10 +138,22 @@ Violate these and the case breaks.
   aliased aggregate that exists in no table (`incident_count`, `last_ping`,
   `skimmed_total`) and name the alias in the hint. `SELECT MAX(x)` *without* the
   alias deliberately does not unlock.
-- **Each proving query should unlock exactly one blank.** Check this explicitly.
-  Case 06's first draft keyed the borrowed-name blank on `signed_out_by`, which
-  is visible on the very first query — so it unlocked for free, before the
-  player ever opened `leave_records`.
+- **No proving query may give away a LATER answer.** Blanks are declared in the
+  intended solve order, and a query may only unlock blanks at or before its own
+  position. Unlocking a later blank hands the player an answer they haven't
+  earned — usually because a helper query selected `s.name` it didn't need.
+
+  Unlocking an *earlier* blank is fine and often unavoidable: Case 02's alibi
+  query filters `WHERE s.name = 'Marcus Feld'`, so only someone who already
+  identified him can write it.
+
+  When two blanks are genuinely **one deduction** — Case 03's killer and
+  incident count come from the same `GROUP BY`; Case 05's poison and its window
+  come from the same toxicology row — declare `coUnlocksWith: 'otherKey'` rather
+  than splitting the query into busywork.
+
+  `npm test` enforces all of this. It found real leaks in five of seven cases
+  the first time it ran, so do not rely on spotting them by eye.
 - **The locked dropdown must hide the correct answer**, or players can guess
   past the anti-cheat.
 - **Every blank needs a `provingQuery`**, and `npm test` must pass. The suite
@@ -149,7 +167,8 @@ Mechanical:
 
 - [ ] Needs a query shape no earlier case required.
 - [ ] Every blank has a `provingQuery`; `npm test` passes.
-- [ ] Each proving query unlocks exactly **one** blank.
+- [ ] No proving query unlocks a blank that comes later in the solve order
+      (`npm test` checks this; use `coUnlocksWith` for genuine shared deductions).
 - [ ] No time window crosses midnight.
 - [ ] `targetValue` is in `options` for every blank.
 
