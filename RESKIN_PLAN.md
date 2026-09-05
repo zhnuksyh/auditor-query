@@ -2,11 +2,12 @@
 
 Porting **Detective Query** (murder mystery) to **Auditor Query** (IT auditing).
 
-This repo is a git clone of `../deduction-query` at commit `a21816a`, with the
-`origin` remote removed. Everything in it is currently still the murder game.
+This repo began as a git clone of `../deduction-query` at commit `a21816a`.
 This document is the plan for the port and the record of what has been done.
 
-Status: **Phase 0 not started.** Nothing has been reskinned yet.
+Status: **Phases 0–2 done.** The shell, the workspace structure and the copy are
+reskinned; `npm test`, `npm run typecheck` and `npm run build` are green. The eight
+shipped cases are still the parent game's murder mysteries — Phase 3 is next.
 
 ---
 
@@ -102,39 +103,40 @@ Cherry-pick engine fixes across if either side diverges.
 
 - [x] Clone repo, remove `origin` remote
 - [x] Adapt `CLAUDE.md`
-- [ ] `package.json` — name `auditor-query`, description
-- [ ] `index.html` — title + meta description
-- [ ] `vite.config.js` — PWA manifest name / short_name / description
-- [ ] `MainMenu.jsx` — title `AUDITOR_QUERY`, `REPO_URL`, `SQL_TEXTURE` queries
-- [ ] `engine/storage.js` — `KEY` → `auditor-query:save:v1`
-- [ ] `Credits.jsx` — attribution and the fictional-data disclaimer
-- [ ] `ErrorBoundary.jsx` — log tag `[AuditorQuery]`
-- [ ] `engine/music.js` — `MUSIC_FILE` (needs a non-true-crime track)
-- [ ] `README.md` — full rewrite for the new theme
-- [ ] `tailwind.config.js` — accent crimson → amber (exception) / teal
+- [x] `package.json` — name `auditor-query`, description
+- [x] `index.html` — title + meta description
+- [x] `vite.config.js` — PWA manifest name / short_name / description
+- [x] `MainMenu.jsx` — title `AUDITOR_QUERY`, `REPO_URL`, `SQL_TEXTURE` queries
+- [x] `engine/storage.js` — `KEY` → `auditor-query:save:v1`
+- [x] `Credits.jsx` — attribution and the fictional-data disclaimer
+- [x] `ErrorBoundary.jsx` — log tag `[AuditorQuery]`
+- [x] `engine/music.js` — `MUSIC_FILE`, track renamed to `theme.mp3`
+      (still the parent game's crime-drama cue — **replacing it is outstanding**)
+- [x] `README.md` — full rewrite for the new theme
+- [x] `tailwind.config.js` — accent crimson → amber (exception) / teal
       (compliant), keep the `zinc-950` ground; retheme `paper.*` folder tones to
       audit domains (`access`, `change`, `finance`, `vendor`, `privacy`,
       `continuity`)
 
 ### Phase 1 — Decouple the structural hardcode (~30 min)
 
-- [ ] Generalize `CrimeSceneTab.jsx`'s vitals from three fixed `<dt>`s to a
+- [x] Generalize `CrimeSceneTab.jsx`'s vitals from three fixed `<dt>`s to a
       `vitals: {term, value}[]` array (or add `term` to `CrimeSceneVital`)
-- [ ] Rename `crimeScene` → `engagement` in `types.d.ts` and every case file
-- [ ] Rename components: `CrimeSceneTab` → `ScopeTab`, `CaseBoardTab` →
+- [x] Rename `crimeScene` → `engagement` in `types.d.ts` and every case file
+- [x] Rename components: `CrimeSceneTab` → `ScopeTab`, `CaseBoardTab` →
       `DataMapTab`, `ReportCardTab` → `FindingTab`
-- [ ] Tab labels in `GameDashboard.jsx` → `SCOPE / DATA MAP / ANALYSIS / FINDING`
-- [ ] Update `test/cases.test.mjs` field references and assertion messages
-- [ ] Update `_TEMPLATE.md` and `CASE_DESIGN.md` field names
-- [ ] `npm test` and `npm run typecheck` green
+- [x] Tab labels in `GameDashboard.jsx` → `SCOPE / DATA MAP / ANALYSIS / FINDING`
+- [x] Update `test/cases.test.mjs` field references and assertion messages
+- [x] Update `_TEMPLATE.md` and `CASE_DESIGN.md` field names
+- [x] `npm test` and `npm run typecheck` green
 
 ### Phase 2 — Guide and copy (~2 hours)
 
-- [ ] `Guide.jsx` — SQL examples on audit tables
-- [ ] `Guide.jsx` — **new glossary section** for domain jargon (SoD, JML, CAB,
+- [x] `Guide.jsx` — SQL examples on audit tables
+- [x] `Guide.jsx` — **new glossary section** for domain jargon (SoD, JML, CAB,
       recertification, privileged access, ITGC)
-- [ ] `AnalysisTab.jsx` — starter query, "auditor's workpaper" label, placeholder
-- [ ] `engine/sqlErrors.js` — example table names in hint text
+- [x] `AnalysisTab.jsx` — starter query, "auditor's workpaper" label, placeholder
+- [x] `engine/sqlErrors.js` — example table names in hint text
 
 ### Phase 3 — Author the case ladder (the actual work, ~1 day per case)
 
@@ -163,6 +165,24 @@ second entry point — safe to defer entirely, or ship without a trailer initial
 
 - [ ] Rewrite trailer copy and `TrailerCaseBoard` schema
 - [ ] Or: drop the `trailer` entry from `vite.config.js` for the first release
+
+---
+
+## Decisions made during Phases 0–2
+
+- **`crimson` keeps its name.** Its ~56 usages all mean "alert / exception /
+  wrong answer", which the audit theme wants too. Only the value moved (rose red
+  → register amber). `exception` / `compliant` aliases exist for new code.
+- **Vitals are case-supplied.** `engagement.vitals` is a `{term, line1, line2}[]`
+  and the grid auto-fits, so a case picks its own headline labels and count.
+- **`paper.*` folder tones were rekeyed** to audit domains even though nothing
+  renders them yet — the `FolderTheme` type is the only thing holding them
+  honest, and fixing eight stale values later is worse than fixing them now.
+- **`CASE_DESIGN.md` keeps its murder examples**, with a note at the top. The
+  rules are about SQL shape, not theme, and the shipped cases are real evidence
+  for them. The example table gets replaced as audit cases ship.
+- **Outstanding:** the music track is still the parent game's crime-drama cue,
+  renamed to `theme.mp3`. Needs a replacement.
 
 ---
 

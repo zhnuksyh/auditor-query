@@ -1,5 +1,12 @@
 # Case Design — what makes a case *harder*
 
+> **Note on the examples.** This document carried over from Detective Query, the
+> murder-mystery game this project forked from, and its worked examples still
+> cite those eight cases. They are kept deliberately: the design rules are about
+> SQL shape and deduction, not about the theme, and the cases are real evidence
+> for them. Read "killer" as "the exception" and "suspect" as "the account" — the
+> reasoning transfers exactly. Phase 3 replaces the table as audit cases ship.
+
 `_TEMPLATE.md` covers the **mechanics** of a case: the fields to fill in, the
 schema format, how unlocks are wired. This document covers the **design** — how
 to pitch a new case above the last one, and the rules that keep it solvable.
@@ -23,18 +30,18 @@ only row returned is deductively trivial no matter how clever the query was.
 A case can be hard in one and easy in the other. The best cases raise both.
 
 > **The failure mode to watch for:** you write a genuinely advanced query shape,
-> and it returns exactly one name. The player types clever SQL and the game
+> and it returns exactly one row. The player types clever SQL and the game
 > hands them the answer. It *feels* hard to author and plays as easy.
 
 ### Measuring deductive difficulty
 
 Run the **first obvious query** a player would try — the one-table filter the
-narrative points at (who was in the room during the time-of-death window?) — and
-count the suspects it returns. That number is your deductive difficulty.
+narrative points at (who held that entitlement during the audit period?) — and
+count the candidates it returns. That number is your deductive difficulty.
 
 | Survivors | Verdict |
 |---|---|
-| 1 | Trivial. The case named the killer. Add candidates. |
+| 1 | Trivial. The case named the exception. Add candidates. |
 | 2–3 | Good. Forces an intersection of evidence sets. |
 | 4+ | Strong, if each is eliminated by a *different* kind of evidence. |
 
@@ -103,9 +110,9 @@ wrap it in a subquery — which is itself a useful difficulty step.
 
 ### 2. Evidence sets to intersect
 
-The killer must never fall out of a single filter. Case 05 is the model: two
+The exception must never fall out of a single filter. Case 05 is the model: two
 suspects were in the pantry, two booked entries to the shell vendor, and only
-one person is in **both** — then the address match seals it.
+one account is in **both** — then the address match seals it.
 
 Design rule: **keep more than one candidate per single-table filter**, so
 presence alone never convicts. Three sets of 2–3 candidates intersecting to one
@@ -139,7 +146,7 @@ Violate these and the case breaks.
 
 - **Exactly one planted contradiction**, discoverable *only* by querying. Never
   state it outright in the narrative.
-- **Every fact the player must deduce appears in the crime-scene prose** in
+- **Every fact the player must deduce appears in the scope-memo prose** in
   plain language. The database makes it queryable; the story makes it findable.
   If a fact is only in the tables, players won't know to look for it.
 - **Times are `'HH:MM'` TEXT compared lexicographically.** Never seed a window
@@ -194,9 +201,9 @@ Mechanical:
 Deductive:
 
 - [ ] The first obvious query returns **2 or more** suspects.
-- [ ] The killer is identified by an **intersection**, not a single filter.
+- [ ] The exception is identified by an **intersection**, not a single filter.
 - [ ] Every fact needed is in the narrative prose.
 - [ ] The contradiction cannot be spotted without running a query.
-- [ ] A player who guesses the most suspicious-sounding name is wrong.
+- [ ] A player who guesses the most suspicious-sounding account is wrong.
 - [ ] The unfiltered form of every deduction returns exactly **one** row —
       no second row anywhere in the seed data answers the same question.
