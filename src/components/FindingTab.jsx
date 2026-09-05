@@ -63,7 +63,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
 
       <div className="relative mx-auto max-w-3xl">
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-zinc-100">Report Card</h2>
+          <h2 className="text-2xl font-semibold text-zinc-100">Finding</h2>
           <p className="mt-1 text-xs text-zinc-500">
             Fill each blank. The proving query must run in Analysis before the correct answer
             becomes available.

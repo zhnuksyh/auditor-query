@@ -83,7 +83,7 @@ function Board({ tables }) {
   return (
     <div className="h-full overflow-auto px-8 py-7">
       <div className="mx-auto max-w-3xl">
-        <h2 className="mb-1 text-2xl font-semibold text-zinc-100">Case Board</h2>
+        <h2 className="mb-1 text-2xl font-semibold text-zinc-100">Data Map</h2>
         <p className="mb-8 text-xs text-zinc-500">
           The tables you can query. Dotted lines trace foreign keys to the column they reference.
         </p>

@@ -248,7 +248,7 @@ const EFFECTS = {
 
   // The game's key moments.
   unlock: () => {
-    // Bright ascending arpeggio — "clue verified".
+    // Bright ascending arpeggio — "evidence obtained".
     tone({ freq: 659, type: 'sine', dur: 0.12, gain: 0.6 })
     tone({ freq: 880, type: 'sine', start: 0.09, dur: 0.12, gain: 0.6 })
     tone({ freq: 1175, type: 'sine', start: 0.18, dur: 0.18, gain: 0.55 })

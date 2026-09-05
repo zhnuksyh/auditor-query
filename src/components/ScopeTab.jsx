@@ -186,7 +186,7 @@ function MarkerToggle({ on, count, onToggle, onClear }) {
       <button
         onClick={onToggle}
         aria-pressed={on}
-        title={on ? 'Put the highlighter away' : 'Highlight clues in the report'}
+        title={on ? 'Put the highlighter away' : 'Highlight evidence in the memo'}
         className={`press flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-colors ${
           on
             ? 'border-amber-300/40 bg-amber-300/10 text-amber-200'

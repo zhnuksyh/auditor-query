@@ -3,14 +3,14 @@
  * The "Intercepted Deduction" tracker.
  *
  * After every query the player runs, we inspect the returned rows and decide
- * which Report Card blanks should unlock. A blank unlocks when ANY returned row
+ * which Finding blanks should unlock. A blank unlocks when ANY returned row
  * has `row[unlockedByColumn] === triggerValue` (compared loosely so 3 === "3";
  * column names match ignoring case, since SQL is case-insensitive and players
  * write aliases like `AS LAST_PING`).
  *
  * A case defines its blanks like:
  *   blanks: {
- *     suspectId: { label, targetValue, unlockedByColumn, triggerValue, options },
+ *     accountId: { label, targetValue, unlockedByColumn, triggerValue, options },
  *     ...
  *   }
  *

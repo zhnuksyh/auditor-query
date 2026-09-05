@@ -6,7 +6,7 @@ import { evaluateUnlocks } from '../engine/verification.js'
 import ResultsTable from './ResultsTable.jsx'
 import { LockedCase } from './ScopeTab.jsx'
 
-const STARTER = '-- Query the evidence. Try:\nSELECT * FROM suspects;'
+const STARTER = '-- Test the control. Try:\nSELECT * FROM accounts;'
 
 // Last run result per case, kept in memory so switching tabs (or leaving and
 // reopening the case) doesn't clear the results grid. Deliberately not in the
@@ -19,7 +19,7 @@ export default function AnalysisTab({ caseData, db, dbError, game, play, shake, 
   const sqlText = game.save.sqlDrafts?.[caseData.id] ?? STARTER
   const setSqlText = (text) => game.setSqlDraft(caseData.id, text)
   const [result, setResult] = useState(() => resultCache.get(caseData.id) ?? null)
-  // Toast for newly unlocked clues: null | 'in' | 'out' (the phase drives the
+  // Toast for newly obtained evidence: null | 'in' | 'out' (the phase drives the
   // enter/exit animation). Timers are tracked so back-to-back unlocks restart
   // the toast cleanly instead of an old timer dismissing the new one.
   const [flash, setFlash] = useState(null)
@@ -70,7 +70,7 @@ export default function AnalysisTab({ caseData, db, dbError, game, play, shake, 
       }
     }
 
-    // A verified clue gets its own celebratory chime; otherwise the plain
+    // Obtained evidence gets its own celebratory chime; otherwise the plain
     // "query returned" confirmation. The unlock sound trails the run tick.
     if (unlockedSomething) {
       setTimeout(() => play('unlock'), 120)
@@ -153,23 +153,23 @@ export default function AnalysisTab({ caseData, db, dbError, game, play, shake, 
                 flash === 'in' ? 'animate-toast-up' : 'animate-toast-down'
               }`}
             >
-              CLUE VERIFIED!
+              EVIDENCE OBTAINED!
             </div>
           )}
         </div>
       </div>
 
-      {/* Detective's Notebook — full width when stacked, fixed sidebar on desktop. */}
+      {/* Auditor's Workpaper — full width when stacked, fixed sidebar on desktop. */}
       <aside className="flex h-48 shrink-0 flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 lg:h-auto lg:w-72">
         {/* Header height matches the SQL-input header so their bottom borders
             sit on the same line. */}
         <div className="flex h-10 items-center border-b border-zinc-800 px-4 text-[10px] uppercase tracking-[0.25em] text-zinc-500">
-          detective's notebook
+          auditor's workpaper
         </div>
         <textarea
           value={notebook}
           onChange={(e) => game.setNotebook(caseData.id, e.target.value)}
-          placeholder="Track suspects, jot clues, list query ideas… auto-saved."
+          placeholder="Note what you tested, the exceptions you found, queries still to run… auto-saved."
           className="flex-1 resize-none bg-transparent px-4 py-3 text-xs leading-relaxed text-zinc-300 placeholder:text-zinc-700 focus:outline-none"
           spellCheck={false}
         />
