@@ -5,9 +5,12 @@ Porting **Detective Query** (murder mystery) to **Auditor Query** (IT auditing).
 This repo began as a git clone of `../deduction-query` at commit `a21816a`.
 This document is the plan for the port and the record of what has been done.
 
-Status: **Phases 0–2 done.** The shell, the workspace structure and the copy are
-reskinned; `npm test`, `npm run typecheck` and `npm run build` are green. The eight
-shipped cases are still the parent game's murder mysteries — Phase 3 is next.
+Status: **Phases 0–2 done; Phase 3 started.** Case 01 is a real audit engagement
+(The Leaver). Cases 02–08 are still the parent game's murder mysteries, so the
+game currently reads as an audit tutorial followed by seven killings — expected
+mid-port, but not shippable until the ladder is finished.
+
+`npm test`, `npm run typecheck` and `npm run build` are green.
 
 ---
 
@@ -145,7 +148,7 @@ Cherry-pick engine fixes across if either side diverges.
 
 | # | Case | New query shape | Domain |
 |---|---|---|---|
-| 01 | Orphaned account (tutorial) | `WHERE` + `JOIN` | Access management |
+| 01 | ✅ **The Leaver** — orphaned account (tutorial) | `WHERE` + `JOIN` | Access management |
 | 02 | Unapproved production change | multi-table triangulation | Change management |
 | 03 | Rubber-stamp access review | `GROUP BY … HAVING` | Recertification |
 | 04 | Backdated approval (misdirection) | aggregate alias | Change management |
@@ -157,6 +160,25 @@ Cherry-pick engine fixes across if either side diverges.
 **Build Case 01 first, end to end, and play it** before writing 02–08. That
 validates the whole reskin against a real player experience while the cost of
 changing direction is still one file.
+
+#### What Case 01 taught (apply to 02–08)
+
+- **Alias every unlock trigger, without exception.** Case 01 first shipped with
+  blanks keyed on raw columns, and a bare `SELECT * FROM accounts` unlocked four
+  of five blanks. `npm test` passed the whole time — it only checks that the
+  proving query *does* unlock, never that a lazy one *doesn't*. Key every blank
+  on a column name that exists in no table (`orphan_account`, `orphan_last_day`,
+  `signed_off_by`) and name the alias in the hint.
+- **Write the decoy in deliberately.** Tomas Lindqvist is genuinely orphaned and
+  never used. Without him, "which leaver still has an account" answers the case
+  in one filter; with him it takes the intersection.
+- **Check the honest, unfiltered form of every deduction by hand.** The suite
+  cannot do this. Case 01's "Administrator on Helios HR" returns two rows — fine
+  here, because only one belongs to a leaver, but that is the shape that ships an
+  ambiguous case.
+- **The leak test is order-sensitive and strict.** A proving query that merely
+  *selects* a later blank's column fails it. Project only what the deduction
+  needs.
 
 ### Phase 4 — Trailer (~half day, deferrable)
 
