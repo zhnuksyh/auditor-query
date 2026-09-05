@@ -44,7 +44,7 @@ export const case08 = {
   title: 'The Long Shift',
   teaser:
     'Six nurses, one locked drug cabinet, and a signature that was never on shift.',
-  folderTheme: 'work',
+  folderTheme: 'finance',
   locked: true,
 
   crimeScene: {

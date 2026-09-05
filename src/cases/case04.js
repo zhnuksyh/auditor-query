@@ -31,7 +31,7 @@ export const case04 = {
   title: 'Dead Signal',
   teaser:
     'The last text was sent at 02:14. His phone was already off the grid at 01:50.',
-  folderTheme: 'signal',
+  folderTheme: 'continuity',
   locked: true,
 
   crimeScene: {

@@ -27,7 +27,7 @@ export const case02 = {
   title: 'A Long Way Down',
   teaser:
     'A gallery owner falls seven floors onto the atrium. The coroner says jump. The elevator, the towers, and a hardware receipt say otherwise.',
-  folderTheme: 'fall',
+  folderTheme: 'change',
   locked: true,
 
   crimeScene: {

@@ -114,8 +114,18 @@ export interface TutorialStep {
   body: string
 }
 
-/** Colour tone for the filing-cabinet folder. Maps to `paper.*` in Tailwind. */
-export type FolderTheme = 'drift' | 'fall' | 'signal' | 'work' | 'ledger' | 'archive'
+/**
+ * Audit domain for the filing-cabinet folder tone. Maps to `paper.*` in
+ * Tailwind. Declared per case and type-checked, though no component reads it
+ * yet — the folder art is uniform yardstock today.
+ */
+export type FolderTheme =
+  | 'access'
+  | 'change'
+  | 'finance'
+  | 'vendor'
+  | 'privacy'
+  | 'continuity'
 
 /**
  * A playable case. Everything the game needs is plain data — no binary .db

@@ -26,7 +26,7 @@ export const case01 = {
   title: 'The Midnight Drift',
   teaser:
     'A publisher found slumped over his desk at midnight. Four alibis. One of them drifts from the truth. The keycards never lie.',
-  folderTheme: 'drift', // maps to paper.drift tone
+  folderTheme: 'access', // maps to paper.access tone
   locked: false,
 
   // This case doubles as the tutorial. Each step pops an assist card; a step

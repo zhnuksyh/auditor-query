@@ -31,7 +31,7 @@ export const case06 = {
   title: 'The Archivist',
   teaser:
     'Every file in the vault was signed out in perfect order. Except the one that never came back.',
-  folderTheme: 'archive',
+  folderTheme: 'privacy',
   locked: true,
 
   crimeScene: {

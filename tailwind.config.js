@@ -4,24 +4,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Active accents per design spec.
+        // Active accents. `crimson` keeps its name because ~56 usages across the
+        // UI mean "alert / exception / wrong answer" — the semantic the audit
+        // theme wants too. Only the value moved: rose red to a register amber,
+        // which reads as an exception raised rather than blood spilled.
         crimson: {
-          DEFAULT: '#e11d48',
-          dim: '#9f1239',
+          DEFAULT: '#f2b25c',
+          dim: '#a86f21',
         },
         teal: {
           DEFAULT: '#2dd4bf',
           dim: '#0f766e',
         },
-        // Aged-paper tones for the filing-cabinet folders.
+        // Semantic aliases. Prefer these in new code; they say what the colour
+        // means instead of what it looks like.
+        exception: {
+          DEFAULT: '#f2b25c',
+          dim: '#a86f21',
+        },
+        compliant: {
+          DEFAULT: '#2dd4bf',
+          dim: '#0f766e',
+        },
+        // Folder tones for the filing-cabinet engagement select, one per audit
+        // domain. Keys are the `folderTheme` values a case may declare.
         paper: {
           DEFAULT: '#e8e3d5',
-          drift: '#b8bec6',
-          fall: '#c9a56b',
-          signal: '#1a1a1a',
-          work: '#3d4a3a',
-          ledger: '#8a7f6d',
-          archive: '#6b5b73',
+          access: '#b8bec6',
+          change: '#c9a56b',
+          finance: '#3d4a3a',
+          vendor: '#8a7f6d',
+          privacy: '#6b5b73',
+          continuity: '#1a1a1a',
         },
       },
       fontFamily: {

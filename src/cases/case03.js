@@ -26,7 +26,7 @@ export const case03 = {
   title: 'Terminal Velocity',
   teaser:
     'Two falls, one week apart, the same stairwell. Coincidence has a foreign key — and only one person badged into both.',
-  folderTheme: 'fall',
+  folderTheme: 'change',
   locked: true,
 
   crimeScene: {

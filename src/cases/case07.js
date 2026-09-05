@@ -34,7 +34,7 @@ export const case07 = {
   title: 'Slack Water',
   teaser:
     'The harbour gave the body back at dawn. The tide tables say it should never have reached that jetty.',
-  folderTheme: 'signal',
+  folderTheme: 'continuity',
   locked: true,
 
   crimeScene: {

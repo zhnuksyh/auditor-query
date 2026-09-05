@@ -39,7 +39,7 @@ export const CASES = [
     code: 'CODE_09',
     tag: 'CHORUS',
     title: 'Second Voice',
-    folderTheme: 'signal',
+    folderTheme: 'continuity',
     teaser: 'The confession tape runs eleven minutes. Two of them belong to someone else.',
     comingSoon: true,
   }),

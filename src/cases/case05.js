@@ -27,7 +27,7 @@ export const case05 = {
   title: 'Zero Sum',
   teaser:
     'The auditor was three days from naming a thief. The books balance perfectly now — minus one auditor.',
-  folderTheme: 'ledger',
+  folderTheme: 'vendor',
   locked: true,
 
   crimeScene: {
