@@ -86,19 +86,29 @@ row makes a case unsolvable without anything else visibly breaking.
 ## Project status
 
 The reskin from Detective Query is **in progress**. The shell, the workspace
-structure, and the copy are done; the eight shipped cases are still the parent
-game's murder mysteries, wearing audit-shaped field names.
+structure and the copy are done, and Case 01 is a real audit engagement.
 
-See [`RESKIN_PLAN.md`](RESKIN_PLAN.md) for the phase breakdown and what remains.
-The short version:
+**Cases 02–08 are still the parent game's murder mysteries**, wearing
+audit-shaped field names because the structural rename touched every case. So
+the game currently plays as an audit tutorial followed by seven killings — a
+known mid-port state, not a bug. Each inherited case is replaced wholesale when
+its turn comes rather than re-themed piecemeal.
+
+See [`RESKIN_PLAN.md`](RESKIN_PLAN.md) for the phase breakdown, the decisions
+already made, and the lessons from authoring Case 01. The short version:
 
 | Phase | What | Status |
 |---|---|---|
 | 0 | Rebrand — identity, save key, palette | done |
 | 1 | Scope/Data Map/Finding rename, case-supplied vitals | done |
 | 2 | Audit manual, glossary, workspace copy | done |
-| 3 | Author the eight audit cases | **not started** |
+| 3 | Author the eight audit cases | **1 of 8** — Case 01 "The Leaver" |
 | 4 | Trailer | deferred |
+
+Before writing a case, read [`src/cases/CASE_DESIGN.md`](src/cases/CASE_DESIGN.md)
+— especially the rule that every Finding blank must be keyed on an alias that
+exists in no table, and the note that the test enforcing it only covers case ids
+listed in `AUDIT_CASES`.
 
 ## Deployment (GitHub Pages)
 
