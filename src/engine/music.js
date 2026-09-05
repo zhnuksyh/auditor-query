@@ -12,7 +12,7 @@
 const base = import.meta.env.BASE_URL || '/'
 
 // The single looping background track (file in public/music/).
-const MUSIC_FILE = 'true_crime_soundridemusic.mp3'
+const MUSIC_FILE = 'theme.mp3'
 
 let audio = null
 let state = {

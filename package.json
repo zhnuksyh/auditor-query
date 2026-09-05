@@ -1,9 +1,9 @@
 {
-  "name": "detective-query",
+  "name": "auditor-query",
   "private": true,
   "version": "0.1.1",
   "type": "module",
-  "description": "A browser-based murder mystery deduction game where you write SQL to crack the case.",
+  "description": "A browser-based deduction game where you write SQL to work IT audit engagements and find control exceptions.",
   "scripts": {
     "dev": "vite",
     "test": "node --test \"test/**/*.test.mjs\"",

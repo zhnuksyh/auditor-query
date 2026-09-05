@@ -26,10 +26,12 @@ export default function Credits({ game, play }) {
         <Credit role="Frontend" who="React + Vite + Tailwind CSS" />
         <Credit role="Visual reference" who="GRID DAILY archive aesthetic" />
         <Credit role="Inspired by" who="SQL Noir & SQL Murder Mystery" />
+        <Credit role="Engine" who="Detective Query — same engine, different beat" />
 
         <p className="border-t border-zinc-800 pt-5 text-xs text-zinc-600">
-          All cases, suspects, and forensic data are entirely fictional. Any resemblance to
-          real persons or events is coincidental.
+          All engagements, systems, accounts, and audit data are entirely fictional. Any
+          resemblance to real organisations, persons, or incidents is coincidental. Nothing
+          here is professional audit guidance.
         </p>
       </div>
     </div>

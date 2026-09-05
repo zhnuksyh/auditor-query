@@ -4,14 +4,14 @@
  * progress, notebook text, and unlocked levels live entirely in the browser.
  */
 
-const KEY = 'detective-query:save:v1'
+const KEY = 'auditor-query:save:v1'
 
 const DEFAULT_STATE = {
   // Case ids that have been fully solved (report submitted correctly).
   solvedCases: [],
-  // Per-case detective's notebook text, keyed by case id.
+  // Per-case auditor's workpaper text, keyed by case id.
   notebooks: {},
-  // Per-case Crime Scene highlights, keyed by case id -> Highlight[].
+  // Per-case Scope highlights, keyed by case id -> Highlight[].
   // Each is { start, end, text }: character offsets into the case's report
   // string, plus the text they covered when made (see engine/highlights.js).
   highlights: {},

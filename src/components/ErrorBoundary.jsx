@@ -18,7 +18,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     // Surface it in the console for debugging, too.
-    console.error('[DetectiveQuery] crash:', error, info)
+    console.error('[AuditorQuery] crash:', error, info)
   }
 
   render() {

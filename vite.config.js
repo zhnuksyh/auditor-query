@@ -48,10 +48,10 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Detective Query',
-        short_name: 'Detective Query',
+        name: 'Auditor Query',
+        short_name: 'Auditor Query',
         description:
-          'A browser-based murder mystery deduction game where you write raw SQL to crack forensic cases.',
+          'A browser-based deduction game where you write raw SQL to work IT audit engagements and find control exceptions.',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',

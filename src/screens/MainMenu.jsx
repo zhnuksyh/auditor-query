@@ -4,21 +4,21 @@ import bgUrl from '../assets/main-menu-bg.jpg'
 const MENU = [
   { key: 'new', label: 'NEW GAME' },
   { key: 'continue', label: 'CONTINUE' },
-  { key: 'guide', label: 'CASE BRIEF' },
+  { key: 'guide', label: 'AUDIT MANUAL' },
   { key: 'options', label: 'OPTIONS' },
   { key: 'credits', label: 'CREDITS' },
 ]
 
-const REPO_URL = 'https://github.com/zhnuksyh/detective-query'
+const REPO_URL = 'https://github.com/zhnuksyh/auditor-query'
 const VERSION = 'v0.1.1'
 
 // A faint SQL snippet tiled behind the art for texture.
-const SQL_TEXTURE = `SELECT * FROM suspects WHERE alibi IS NULL;
-SELECT name FROM keycard_logs JOIN alibis USING (suspect_id);
-SELECT tod_from, tod_to FROM coroner_reports;
-WHERE swipe_time BETWEEN '23:10' AND '23:25'
-JOIN forensics ON forensics.case_id = cases.id
-GROUP BY suspect_id HAVING count(*) > 1
+const SQL_TEXTURE = `SELECT * FROM accounts WHERE disabled_on IS NULL;
+SELECT user_id FROM entitlements JOIN roles USING (role_id);
+SELECT opened_at, closed_at FROM change_requests;
+WHERE granted_on BETWEEN '2026-03-01' AND '2026-03-31'
+LEFT JOIN approvals ON approvals.change_id = changes.id
+GROUP BY reviewer_id HAVING count(*) > 1
 `.repeat(6)
 
 export default function MainMenu({ game, play }) {
@@ -90,7 +90,7 @@ export default function MainMenu({ game, play }) {
           nudged further in from the left edge. */}
       <div className="relative flex h-full w-full flex-col justify-center pb-16 pl-8 pr-8 sm:pb-24 sm:pl-32 sm:pr-10 lg:pl-48">
         <h1 className="mb-8 font-display text-3xl font-black leading-none tracking-tight text-zinc-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] sm:mb-10 sm:text-5xl lg:text-6xl">
-          DETECTIVE<span className="text-[#f26d78]">_</span>QUERY
+          AUDITOR<span className="text-[#f2b25c]">_</span>QUERY
         </h1>
 
         <ul className="flex w-full max-w-[240px] flex-col gap-2.5">
