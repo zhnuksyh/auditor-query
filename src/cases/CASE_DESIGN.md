@@ -164,8 +164,13 @@ Violate these and the case breaks.
   shipped that way in draft: `SELECT * FROM accounts` alone unlocked four of its
   five blanks, and the suite stayed green throughout — `npm test` only checks
   that a proving query *does* unlock its blank, never that a lazy query *does
-  not*. Check that yourself: run a bare `SELECT * FROM <table>` for every table
-  and confirm it unlocks nothing.
+  not*. `npm test` now checks this for you — but **only for cases listed in
+  `AUDIT_CASES` in `test/cases.test.mjs`**. The inherited murder cases all fail
+  it and are skipped there, since they are being replaced anyway.
+
+  > **When you add a new audit case, add its id to `AUDIT_CASES`.** Forget, and
+  > the check silently does not apply to your case — the suite goes green and
+  > your blanks may still fall to a bare `SELECT *`.
 - **No proving query may give away a LATER answer.** Blanks are declared in the
   intended solve order, and a query may only unlock blanks at or before its own
   position. Unlocking a later blank hands the player an answer they haven't
@@ -203,6 +208,9 @@ Mechanical:
 
 - [ ] Needs a query shape no earlier case required.
 - [ ] Every blank has a `provingQuery`; `npm test` passes.
+- [ ] Every blank is keyed on an alias that exists in no table, named in its hint.
+- [ ] The case id is added to `AUDIT_CASES` in `test/cases.test.mjs`, so the
+      bare-`SELECT *` check actually runs against it.
 - [ ] No proving query unlocks a blank that comes later in the solve order
       (`npm test` checks this; use `coUnlocksWith` for genuine shared deductions).
 - [ ] No time window crosses midnight.
