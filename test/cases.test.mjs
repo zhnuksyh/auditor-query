@@ -30,6 +30,19 @@ const SQL = await initSqlJs()
 /** Cases with real content. `comingSoon` stubs are intentionally schema-less. */
 const playable = CASES.filter((c) => !c.comingSoon)
 
+/**
+ * Cases authored for THIS game, as opposed to the murder cases inherited from
+ * Detective Query. Only these are held to the bare-`SELECT *` anti-cheat rule.
+ *
+ * Every inherited case fails it — in all seven, `SELECT * FROM suspects` alone
+ * unlocks the killer — and they are being replaced one at a time in Phase 3, so
+ * aliasing their triggers would be work spent on content that gets deleted.
+ * New cases are held to the rule from birth.
+ *
+ * **Add each case id here as it is rewritten for the audit theme.**
+ */
+const AUDIT_CASES = new Set(['case_01'])
+
 /** Mirror of sqlEngine.runQuery's row shaping, minus the UI-facing error handling. */
 function execRows(db, sql) {
   const results = db.exec(sql)
@@ -190,6 +203,39 @@ for (const gameCase of playable) {
             'which the player has not reached yet — key those blanks on a column this query does not select',
         )
       })
+    })
+
+    await t.test('a bare SELECT * does not unlock anything', (tt) => {
+      if (!AUDIT_CASES.has(gameCase.id)) {
+        tt.skip('inherited murder case — replaced in Phase 3, see AUDIT_CASES')
+        return
+      }
+
+      // The anti-cheat only holds if the lazy query fails. A blank keyed on a
+      // raw column (`username`, `reviewer`) is unlocked by a dump of its table,
+      // handing the player an answer for typing `SELECT *` — so every blank
+      // must key on a name that exists in no table (an aggregate or a plain
+      // alias) and name it in the hint.
+      //
+      // The suite's other checks all confirm a proving query DOES unlock. This
+      // one confirms a lazy query does NOT, which is the half that silently
+      // rotted: Case 01 drafted with four of five blanks falling to a dump, and
+      // every other test stayed green.
+      const tables = execRows(
+        db,
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+      ).map((r) => r.name)
+
+      for (const table of tables) {
+        const rows = execRows(db, `SELECT * FROM ${table}`)
+        const { unlocked } = evaluateUnlocks(gameCase.report.blanks, rows, new Set())
+        assert.deepEqual(
+          [...unlocked],
+          [],
+          `SELECT * FROM ${table} unlocks ${[...unlocked].map((k) => `"${k}"`).join(', ')} ` +
+            'without the player deducing anything — key those blanks on an alias that exists in no table',
+        )
+      }
     })
 
     await t.test('the intended solution grades as correct', () => {

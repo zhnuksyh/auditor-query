@@ -152,10 +152,20 @@ Violate these and the case breaks.
 - **Times are `'HH:MM'` TEXT compared lexicographically.** Never seed a window
   spanning midnight (`'23:30'`–`'03:00'`) or every gap/overlap filter silently
   breaks. Clamp to same-day times. (This bit Case 04 during authoring.)
-- **Don't let a plain `SELECT *` unlock a blank you want earned.** Key it on an
-  aliased aggregate that exists in no table (`incident_count`, `last_ping`,
-  `skimmed_total`) and name the alias in the hint. `SELECT MAX(x)` *without* the
-  alias deliberately does not unlock.
+- **Don't let a plain `SELECT *` unlock a blank you want earned.** Key it on a
+  column name that exists in no table and name the alias in the hint —
+  an aggregate (`incident_count`, `last_ping`, `skimmed_total`) or a plain
+  aliased column (`orphan_account`, `signed_off_by`). `SELECT MAX(x)` *without*
+  the alias deliberately does not unlock.
+
+  This applies to **every** blank, not just the aggregate ones. A blank keyed on
+  a raw column like `username` or `reviewer` is unlocked by a bare dump of that
+  table, and the player is handed an answer for typing `SELECT *`. Case 01
+  shipped that way in draft: `SELECT * FROM accounts` alone unlocked four of its
+  five blanks, and the suite stayed green throughout — `npm test` only checks
+  that a proving query *does* unlock its blank, never that a lazy query *does
+  not*. Check that yourself: run a bare `SELECT * FROM <table>` for every table
+  and confirm it unlocks nothing.
 - **No proving query may give away a LATER answer.** Blanks are declared in the
   intended solve order, and a query may only unlock blanks at or before its own
   position. Unlocking a later blank hands the player an answer they haven't
