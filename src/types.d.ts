@@ -71,6 +71,19 @@ export interface CaseReport {
   blanks: Record<string, ReportBlank>
 }
 
+/**
+ * One marker-pen highlight on the Crime Scene report.
+ *
+ * `start`/`end` are character offsets into `CrimeScene.report`. `text` is what
+ * those offsets covered when the highlight was made, so a save can be checked
+ * against a reworded report instead of painting the wrong words.
+ */
+export interface Highlight {
+  start: number
+  end: number
+  text: string
+}
+
 /** A two-line vital rendered in the Crime Scene header. */
 export interface CrimeSceneVital {
   line1: string

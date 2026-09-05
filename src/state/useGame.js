@@ -46,6 +46,13 @@ export function useGame() {
     [patch],
   )
 
+  const setHighlights = useCallback(
+    (caseId, highlights) => {
+      patch((s) => ({ ...s, highlights: { ...s.highlights, [caseId]: highlights } }))
+    },
+    [patch],
+  )
+
   const setSqlDraft = useCallback(
     (caseId, text) => {
       patch((s) => ({ ...s, sqlDrafts: { ...s.sqlDrafts, [caseId]: text } }))
@@ -103,6 +110,7 @@ export function useGame() {
     save,
     markSolved,
     setNotebook,
+    setHighlights,
     setSqlDraft,
     setReportAnswer,
     setUnlocks,

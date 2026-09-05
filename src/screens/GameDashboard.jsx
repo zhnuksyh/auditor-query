@@ -144,7 +144,9 @@ export default function GameDashboard({ game, play, shake }) {
               Keyed on `tab` so switching replays a soft fade-up on the panel. */}
           <main className="-mt-px min-h-0 flex-1 overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-950">
             <div key={tab} className="h-full animate-fade-up">
-              {tab === 'scene' && <CrimeSceneTab caseData={caseData} />}
+              {tab === 'scene' && (
+                <CrimeSceneTab caseData={caseData} game={game} play={play} />
+              )}
               {tab === 'board' && <CaseBoardTab caseData={caseData} />}
               {tab === 'analysis' && (
                 <AnalysisTab

@@ -11,6 +11,10 @@ const DEFAULT_STATE = {
   solvedCases: [],
   // Per-case detective's notebook text, keyed by case id.
   notebooks: {},
+  // Per-case Crime Scene highlights, keyed by case id -> Highlight[].
+  // Each is { start, end, text }: character offsets into the case's report
+  // string, plus the text they covered when made (see engine/highlights.js).
+  highlights: {},
   // Per-case set of unlocked report blanks, keyed by case id -> string[].
   unlocks: {},
   // Per-case SQL editor draft, keyed by case id.
