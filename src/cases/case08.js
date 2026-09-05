@@ -47,10 +47,12 @@ export const case08 = {
   folderTheme: 'finance',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Devrim Aslan, 47', line2: 'Post-operative patient, Bed 12' },
-    location: { line1: 'St. Brannock Infirmary, Ward 3B', line2: 'Recovery bay, east end' },
-    timeOfDeath: { line1: '13:20 – 14:10', line2: 'March 9th' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Devrim Aslan, 47', line2: 'Post-operative patient, Bed 12' },
+      { term: 'Location', line1: 'St. Brannock Infirmary, Ward 3B', line2: 'Recovery bay, east end' },
+      { term: 'Time of death', line1: '13:20 – 14:10', line2: 'March 9th' },
+    ],
     report: `DEVRIM ASLAN came through his surgery cleanly and was expected to walk out within the week. He died in his bed on Ward 3B some time between 13:20 and 14:10, and the ward wrote it up as a cardiac event until toxicology came back: a dose of MORPHINE far past anything on his chart, given by injection, in a man prescribed none of it.
 
 Ward 3B keeps its controlled drugs in a locked cabinet that opens only to a numbered PIN, and it keeps two records of every dose. The CABINET ACCESS log is machine-written — every opening, stamped with the minute and the PIN used. The WITHDRAWAL BOOK is handwritten: the nurse drawing a dose writes it down, and a SECOND nurse must witness the draw and countersign it. No controlled drug leaves that cabinet on one signature alone.

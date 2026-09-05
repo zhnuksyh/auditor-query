@@ -8,8 +8,8 @@ import {
   splitParagraphs,
 } from '../engine/highlights.js'
 
-export default function CrimeSceneTab({ caseData, game, play }) {
-  const scene = caseData.crimeScene
+export default function ScopeTab({ caseData, game, play }) {
+  const scene = caseData.engagement
   if (!scene) {
     return <LockedCase caseData={caseData} />
   }
@@ -96,7 +96,7 @@ function SceneReport({ caseData, scene, game, play }) {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-zinc-100">Crime Scene</h2>
+            <h2 className="text-2xl font-semibold text-zinc-100">Scope</h2>
             <p className="mt-1 text-xs text-zinc-500">{caseData.title}</p>
           </div>
           <MarkerToggle
@@ -113,14 +113,22 @@ function SceneReport({ caseData, scene, game, play }) {
           />
         </div>
 
-        {/* Vitals */}
-        <dl className="mb-8 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800 sm:grid-cols-3">
-          <Vital term="Victim" value={scene.victim} />
-          <Vital term="Location" value={scene.location} />
-          <Vital term="Time of death" value={scene.timeOfDeath} />
+        {/* Engagement vitals. The case supplies its own terms, so a case can
+            head its scope with whatever a reader of that engagement needs —
+            control and system for an access review, period and ledger for a
+            financial one — instead of three labels fixed in the markup. */}
+        <dl
+          className="mb-8 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800"
+          style={{
+            gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 14rem), 1fr))`,
+          }}
+        >
+          {scene.vitals.map((vital) => (
+            <Vital key={vital.term} term={vital.term} value={vital} />
+          ))}
         </dl>
 
-        {/* Report body — the forensic details are woven into this narrative.
+        {/* Memo body — the control detail is woven into this narrative.
             Paragraphs are separate nodes so selection offsets map cleanly onto
             the underlying report string. */}
         <div
@@ -211,7 +219,7 @@ export function LockedCase({ caseData }) {
         <h2 className="text-2xl font-semibold text-zinc-400">{caseData.title}</h2>
         <p className="mt-2 text-sm text-zinc-600">{caseData.teaser}</p>
         <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-zinc-600">
-          case data classified — solve the prior file to unlock
+          engagement not yet assigned — close the prior file to unlock
         </p>
       </div>
     </div>

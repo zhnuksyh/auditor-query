@@ -1,10 +1,10 @@
 import { Fragment, useState } from 'react'
 import { gradeReport } from '../engine/verification.js'
-import { LockedCase } from './CrimeSceneTab.jsx'
+import { LockedCase } from './ScopeTab.jsx'
 import Dropdown from './Dropdown.jsx'
 import CaseStamp from './CaseStamp.jsx'
 
-export default function ReportCardTab({ caseData, unlocked, game, play, shake }) {
+export default function FindingTab({ caseData, unlocked, game, play, shake }) {
   const report = caseData.report
   // Selections live in the save so they survive tab switches, returning to
   // the menu, and opening other cases.

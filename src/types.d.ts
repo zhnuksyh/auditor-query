@@ -72,9 +72,9 @@ export interface CaseReport {
 }
 
 /**
- * One marker-pen highlight on the Crime Scene report.
+ * One marker-pen highlight on the Scope memo.
  *
- * `start`/`end` are character offsets into `CrimeScene.report`. `text` is what
+ * `start`/`end` are character offsets into `Engagement.report`. `text` is what
  * those offsets covered when the highlight was made, so a save can be checked
  * against a reworded report instead of painting the wrong words.
  */
@@ -84,24 +84,31 @@ export interface Highlight {
   text: string
 }
 
-/** A two-line vital rendered in the Crime Scene header. */
-export interface CrimeSceneVital {
+/**
+ * One labelled vital in the Scope header — a two-line cell under its own term.
+ *
+ * The term travels with the case rather than being fixed in the markup, so an
+ * access review can head its scope with "Control" and "System" while a change
+ * audit uses "Period" and "Environment".
+ */
+export interface EngagementVital {
+  /** Column label, e.g. `'Control'`. Also the React key, so keep it unique. */
+  term: string
   line1: string
   line2: string
 }
 
-/** The narrative case file shown on the Crime Scene tab. */
-export interface CrimeScene {
-  victim: CrimeSceneVital
-  location: CrimeSceneVital
-  timeOfDeath: CrimeSceneVital
+/** The engagement memo shown on the Scope tab. */
+export interface Engagement {
+  /** Rendered in order, one cell each. Two to four reads best. */
+  vitals: EngagementVital[]
   /** 2–4 paragraphs. Must contain every fact the player has to deduce. */
   report: string
   /**
-   * Forensic constraints. Optional because only cases 01 and 06 define them
-   * and nothing in the UI currently renders the array — see the note in
-   * CASE_DESIGN.md. Typed as present-or-absent rather than required so the
-   * existing cases check without being edited.
+   * Control objectives / scope limitations. Optional because only cases 01 and
+   * 06 define them and nothing in the UI currently renders the array — see the
+   * note in CASE_DESIGN.md. Typed as present-or-absent rather than required so
+   * the existing cases check without being edited.
    */
   constraints?: string[]
 }
@@ -144,7 +151,7 @@ export interface PlayableCase {
   /** `false` only for the first case; every later case unlocks on the previous. */
   locked: boolean
   tutorial?: TutorialStep[]
-  crimeScene: CrimeScene
+  engagement: Engagement
   /** Schema + seed data as plain SQL. Executed by sql.js to build the case DB. */
   schemaSql: string
   erd: { tables: ErdTable[] }
@@ -165,7 +172,7 @@ export interface ComingSoonCase {
   folderTheme: FolderTheme
   locked: true
   comingSoon: true
-  crimeScene: null
+  engagement: null
   schemaSql: null
   erd: null
   report: null

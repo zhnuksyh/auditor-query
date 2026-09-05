@@ -17,7 +17,7 @@ import { case08 } from './case08.js'
  */
 const lockedStub = (over) => ({
   locked: true,
-  crimeScene: null,
+  engagement: null,
   schemaSql: null,
   erd: null,
   report: null,

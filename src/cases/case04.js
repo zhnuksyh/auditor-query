@@ -34,10 +34,12 @@ export const case04 = {
   folderTheme: 'continuity',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Jonah Reyes, 37', line2: 'Investigative journalist' },
-    location: { line1: '4 Dockside Terrace, Apt 3C', line2: 'Home office' },
-    timeOfDeath: { line1: '01:20 – 01:55', line2: 'May 2nd' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Jonah Reyes, 37', line2: 'Investigative journalist' },
+      { term: 'Location', line1: '4 Dockside Terrace, Apt 3C', line2: 'Home office' },
+      { term: 'Time of death', line1: '01:20 – 01:55', line2: 'May 2nd' },
+    ],
     report: `Jonah Reyes was found at his desk on the morning of May 2nd, dead from a single blow to the back of the head. He was mid-way through a story someone did not want printed.
 
 At 02:14 his phone texted his editor: "Can't sleep — still polishing the draft. More tomorrow." Everyone anchored their statements to that text. It proves he was alive after two. Except it proves nothing: the carrier's records show his handset last touched a cell tower at 01:50 and never came back on the network. Dead phones don't type.

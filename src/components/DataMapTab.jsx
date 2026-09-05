@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { LockedCase } from './CrimeSceneTab.jsx'
+import { LockedCase } from './ScopeTab.jsx'
 
-export default function CaseBoardTab({ caseData }) {
+export default function DataMapTab({ caseData }) {
   if (!caseData.erd) return <LockedCase caseData={caseData} />
 
   return <Board tables={caseData.erd.tables} />

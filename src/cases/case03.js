@@ -29,10 +29,12 @@ export const case03 = {
   folderTheme: 'change',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Two victims — Owen Pike & Rosa Delgado', line2: 'Both employees, Meridian Tower' },
-    location: { line1: 'Meridian Tower, Stairwell C', line2: 'Between the 12th and 11th landings' },
-    timeOfDeath: { line1: 'Incident 1: 18:30 · Incident 2: 18:20', line2: 'April 6th & April 13th' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Two victims — Owen Pike & Rosa Delgado', line2: 'Both employees, Meridian Tower' },
+      { term: 'Location', line1: 'Meridian Tower, Stairwell C', line2: 'Between the 12th and 11th landings' },
+      { term: 'Time of death', line1: 'Incident 1: 18:30 · Incident 2: 18:20', line2: 'April 6th & April 13th' },
+    ],
     report: `Two deaths, seven days apart, in the same place: Stairwell C of Meridian Tower, on the flight between the twelfth and eleventh landings. Owen Pike on April 6th; Rosa Delgado on April 13th. Both "fell." Both around the end of the workday.
 
 One fall is an accident. Two identical falls in the same stairwell is a pattern — and patterns have a source. The stairwell is badge-controlled: every door swipe into it is logged against the incident it happened during. Facilities also logs WORK ORDERS, and both evenings someone had a camera-maintenance order that cleared Stairwell C of witnesses for exactly the wrong ten minutes.

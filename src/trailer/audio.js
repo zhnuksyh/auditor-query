@@ -13,7 +13,7 @@ import { updateMusic, setMusicSrc } from '../engine/music.js'
 // Import the track as a bundled asset so Vite emits a hashed URL that resolves
 // correctly from the /trailer/ subpath (a plain './music/...' path would 404
 // here because the page isn't at the site root).
-import themeUrl from '../../public/music/true_crime_soundridemusic.mp3'
+import themeUrl from '../../public/music/theme.mp3'
 
 let booted = false
 let muted = false

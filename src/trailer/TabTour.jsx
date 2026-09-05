@@ -171,7 +171,7 @@ function Vital({ term, line1, line2 }) {
 // The real Case Board is taller than the card, so tables sit below the fold.
 // This eases the board's own scroll container down to reveal them, then back
 // to the top, timed off the scene clock — a gentle "here's the whole board"
-// pan before the tab switches. It drives the child CaseBoardTab's scrollable
+// pan before the tab switches. It drives the child DataMapTab's scrollable
 // div (found by ref) rather than owning the scroll itself.
 function BoardScroller({ t, children }) {
   const wrapRef = useRef(null)
@@ -179,7 +179,7 @@ function BoardScroller({ t, children }) {
   useEffect(() => {
     const wrap = wrapRef.current
     if (!wrap) return
-    // The CaseBoardTab root is the scrollable element (overflow-auto).
+    // The DataMapTab root is the scrollable element (overflow-auto).
     const scroller = wrap.querySelector('div')
     if (!scroller) return
     const max = scroller.scrollHeight - scroller.clientHeight

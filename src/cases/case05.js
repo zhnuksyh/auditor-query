@@ -30,10 +30,12 @@ export const case05 = {
   folderTheme: 'vendor',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Evelyn Cho, 48', line2: 'Forensic auditor' },
-    location: { line1: 'Halvard & Pope, 40 Exchange Row', line2: '6th floor — audit bureau' },
-    timeOfDeath: { line1: 'Dosed 08:00 – 09:30', line2: 'June 9th · died 14:10' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Evelyn Cho, 48', line2: 'Forensic auditor' },
+      { term: 'Location', line1: 'Halvard & Pope, 40 Exchange Row', line2: '6th floor — audit bureau' },
+      { term: 'Time of death', line1: 'Dosed 08:00 – 09:30', line2: 'June 9th · died 14:10' },
+    ],
     report: `Evelyn Cho collapsed at her desk at 13:55 on June 9th and was dead within the quarter hour. Toxicology found aconitine in her thermos — the tea she brewed in the office pantry every morning and sipped until lunch. Whoever dosed it did so in the pantry between 08:00 and 09:30, and the pantry door logs every badge.
 
 Evelyn was three days from delivering an internal audit. Her working notes flag one payee: a vendor with no registration filings and invoices that never carried purchase-order numbers. The skim was patient — dozens of small entries, none big enough to trip a review, all booked to the same shell.

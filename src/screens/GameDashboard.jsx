@@ -3,18 +3,18 @@ import { BookOpen, ChevronLeft, X } from 'lucide-react'
 import { getCase } from '../cases/index.js'
 import { createDatabase } from '../engine/sqlEngine.js'
 import TabBar from '../components/TabBar.jsx'
-import CrimeSceneTab from '../components/CrimeSceneTab.jsx'
-import CaseBoardTab from '../components/CaseBoardTab.jsx'
+import ScopeTab from '../components/ScopeTab.jsx'
+import DataMapTab from '../components/DataMapTab.jsx'
 import AnalysisTab from '../components/AnalysisTab.jsx'
-import ReportCardTab from '../components/ReportCardTab.jsx'
+import FindingTab from '../components/FindingTab.jsx'
 import TutorialOverlay from '../components/TutorialOverlay.jsx'
 import Guide from './Guide.jsx'
 
 const TABS = [
-  { key: 'scene', label: 'CRIME SCENE' },
-  { key: 'board', label: 'CASE BOARD' },
+  { key: 'scene', label: 'SCOPE' },
+  { key: 'board', label: 'DATA MAP' },
   { key: 'analysis', label: 'ANALYSIS' },
-  { key: 'report', label: 'REPORT CARD' },
+  { key: 'report', label: 'FINDING' },
 ]
 
 export default function GameDashboard({ game, play, shake }) {
@@ -145,9 +145,9 @@ export default function GameDashboard({ game, play, shake }) {
           <main className="-mt-px min-h-0 flex-1 overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-950">
             <div key={tab} className="h-full animate-fade-up">
               {tab === 'scene' && (
-                <CrimeSceneTab caseData={caseData} game={game} play={play} />
+                <ScopeTab caseData={caseData} game={game} play={play} />
               )}
-              {tab === 'board' && <CaseBoardTab caseData={caseData} />}
+              {tab === 'board' && <DataMapTab caseData={caseData} />}
               {tab === 'analysis' && (
                 <AnalysisTab
                   caseData={caseData}
@@ -161,7 +161,7 @@ export default function GameDashboard({ game, play, shake }) {
                 />
               )}
               {tab === 'report' && (
-                <ReportCardTab
+                <FindingTab
                   caseData={caseData}
                   unlocked={unlocked}
                   game={game}

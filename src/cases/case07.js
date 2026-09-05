@@ -37,10 +37,12 @@ export const case07 = {
   folderTheme: 'continuity',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Rurik Mallen, 52', line2: 'Harbour pilot' },
-    location: { line1: 'Kestrel Harbour, Jetty 4', line2: 'Recovered from the water at 05:40' },
-    timeOfDeath: { line1: '21:00 – 23:00', line2: 'October 11th' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Rurik Mallen, 52', line2: 'Harbour pilot' },
+      { term: 'Location', line1: 'Kestrel Harbour, Jetty 4', line2: 'Recovered from the water at 05:40' },
+      { term: 'Time of death', line1: '21:00 – 23:00', line2: 'October 11th' },
+    ],
     report: `RURIK MALLEN came back with the dawn tide, face-down against the pilings of Jetty 4. The harbour police wrote it up as a fall from a deck — Mallen knew these waters better than anyone, but men slip. The coroner disagreed: water in the lungs says he drowned, but the fracture above his ear came first, and it came from a blow.
 
 Jetty 4 sits at the seaward end of the harbour. Everything upstream of it — the boatyard, the fuel dock, the row of private berths — drains past that jetty on an outgoing tide and nothing at all moves past it on an incoming one. A body in this harbour drifts one way, and only while the water is ebbing.

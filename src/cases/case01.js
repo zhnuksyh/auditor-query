@@ -68,11 +68,13 @@ export const case01 = {
     },
   ],
 
-  crimeScene: {
+  engagement: {
     // Each vital renders as two stacked lines within one row cell.
-    victim: { line1: 'Adrian Vale, 54', line2: 'Publisher' },
-    location: { line1: 'Vale Press, 118 Harbor St.', line2: 'East Wing study — Floor 3' },
-    timeOfDeath: { line1: '23:10 – 23:25', line2: 'June 14th' },
+    vitals: [
+      { term: 'Victim', line1: 'Adrian Vale, 54', line2: 'Publisher' },
+      { term: 'Location', line1: 'Vale Press, 118 Harbor St.', line2: 'East Wing study — Floor 3' },
+      { term: 'Time of death', line1: '23:10 – 23:25', line2: 'June 14th' },
+    ],
     report: `At 00:04 the night custodian found ADRIAN VALE face-down at his desk in the East Wing study. A single deep wound to the left side of the neck. No forced entry. The door was locked from the inside — but the East Wing is keycard-controlled, and every door logs every swipe.
 
 The coroner fixed the time of death to a tight window: 23:10 to 23:25. The angle and depth of the wound indicate a downward left-handed strike from someone standing over the seated victim. The murder weapon was never recovered, but a brass LETTER OPENER is missing from the desk set.

@@ -4,7 +4,7 @@ import { sql, SQLite } from '@codemirror/lang-sql'
 import { runQuery } from '../engine/sqlEngine.js'
 import { evaluateUnlocks } from '../engine/verification.js'
 import ResultsTable from './ResultsTable.jsx'
-import { LockedCase } from './CrimeSceneTab.jsx'
+import { LockedCase } from './ScopeTab.jsx'
 
 const STARTER = '-- Query the evidence. Try:\nSELECT * FROM suspects;'
 

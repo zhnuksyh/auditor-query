@@ -1,8 +1,8 @@
 // @ts-check
 /**
- * Crime Scene highlighter — the pure range math behind the marker pen.
+ * Scope-memo highlighter — the pure range math behind the marker pen.
  *
- * A highlight is a character range into a case's `crimeScene.report` string,
+ * A highlight is a character range into a case's `engagement.report` string,
  * carrying the text it covered when it was made. Offsets alone would be
  * brittle: reword a case's report and an old save would paint the wrong words.
  * The stored `text` is the guard — on load, a highlight whose offsets no longer

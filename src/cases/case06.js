@@ -34,10 +34,12 @@ export const case06 = {
   folderTheme: 'privacy',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Hollis Wray, 61', line2: 'Head archivist' },
-    location: { line1: 'Bureau Records Annex, Sub-level 2', line2: 'Cold vault — Row F' },
-    timeOfDeath: { line1: '19:05 – 19:40', line2: 'September 3rd' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Hollis Wray, 61', line2: 'Head archivist' },
+      { term: 'Location', line1: 'Bureau Records Annex, Sub-level 2', line2: 'Cold vault — Row F' },
+      { term: 'Time of death', line1: '19:05 – 19:40', line2: 'September 3rd' },
+    ],
     report: `HOLLIS WRAY was found at 20:12 between the stacks in Row F of the cold vault, a shelf ladder overturned beside him. The fall looked like an accident until the coroner put the blunt injury at the back of the skull, not the front — he was struck, then the ladder was laid down around him. Death came between 19:05 and 19:40.
 
 Wray had spent his last month digitising the Bureau's oldest evidence files, and he kept the queue meticulously. Nothing is stolen from a vault like this without a trace, because the vault keeps two records of everything: the VAULT LEDGER, where a clerk writes down each file signed out and signs it back in on return, and the DOOR SCANS, which log every badge through the vault door and cannot be written by hand.

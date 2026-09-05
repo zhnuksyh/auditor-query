@@ -1,11 +1,11 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 /**
- * Trailer-only copy of the game's CaseBoardTab. It's a copy (not the shared
+ * Trailer-only copy of the game's DataMapTab. It's a copy (not the shared
  * component) so the game's source stays untouched: the trailer renders the
  * dashboard inside a CSS transform: scale(), which the game never does, and the
  * connector measurement has to compensate for that scale. Keeping this separate
- * means the game's CaseBoardTab needs no scale-awareness it would never use.
+ * means the game's DataMapTab needs no scale-awareness it would never use.
  *
  * Difference from the game version: measured screen-pixel deltas are divided by
  * the container's scale factor before being placed into the SVG's untransformed

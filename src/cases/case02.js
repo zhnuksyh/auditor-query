@@ -30,10 +30,12 @@ export const case02 = {
   folderTheme: 'change',
   locked: true,
 
-  crimeScene: {
-    victim: { line1: 'Celeste Bloom, 41', line2: 'Gallery owner' },
-    location: { line1: 'Bloom Contemporary, 9 Wharf Rd.', line2: '7th-floor balcony → atrium' },
-    timeOfDeath: { line1: '20:40 – 21:00', line2: 'March 3rd' },
+  engagement: {
+    vitals: [
+      { term: 'Victim', line1: 'Celeste Bloom, 41', line2: 'Gallery owner' },
+      { term: 'Location', line1: 'Bloom Contemporary, 9 Wharf Rd.', line2: '7th-floor balcony → atrium' },
+      { term: 'Time of death', line1: '20:40 – 21:00', line2: 'March 3rd' },
+    ],
     report: `Celeste Bloom fell from the seventh-floor balcony of her own gallery during a private viewing and was found in the atrium below at 21:07. The coroner's window for the fall is 20:40 to 21:00.
 
 At first glance it read as a jump — the balcony was empty, the door to it unlocked. But the maintenance team found the railing's corner BRACKET had been deliberately loosened: fresh tool marks from a HEX WRENCH, and two bolts backed most of the way out. Someone wanted that railing to give.
