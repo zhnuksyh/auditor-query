@@ -11,7 +11,9 @@
 schema format, how unlocks are wired. This document covers the **design**: how
 to pitch a new case above the last one, and the rules that keep it solvable.
 
-Read this before writing a case. Fill in `_TEMPLATE.md` after.
+Read `AUDIT_PRACTICE.md` first for what real IT audit work looks like and where
+its difficulty lives. Read this before writing a case. Fill in `_TEMPLATE.md`
+after.
 
 ---
 

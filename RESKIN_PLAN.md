@@ -145,7 +145,9 @@ Cherry-pick engine fixes across if either side diverges.
 ### Phase 3: Author the case ladder (the actual work, ~1 day per case)
 
 90% of the effort, and it is genuine case *design*, not porting. Follow
-`CASE_DESIGN.md` unchanged.
+`CASE_DESIGN.md` unchanged, and pick each case's subject and realism dial from
+`src/cases/AUDIT_PRACTICE.md`, which also recommends two changes to this ladder
+(Case 06 moves to population completeness; IT operations needs a rung).
 
 | # | Case | New query shape | Domain |
 |---|---|---|---|
