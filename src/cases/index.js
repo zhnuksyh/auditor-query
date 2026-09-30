@@ -8,6 +8,7 @@ import { case06 } from './case06.js'
 import { case07 } from './case07.js'
 import { case08 } from './case08.js'
 import { case09 } from './case09.js'
+import { case10 } from './case10.js'
 
 /** @type {import('../types.js').GameCase[]} */
 export const CASES = [
@@ -20,6 +21,7 @@ export const CASES = [
   case07,
   case08,
   case09,
+  case10,
 ]
 
 /**
