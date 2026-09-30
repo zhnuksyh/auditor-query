@@ -328,8 +328,8 @@ export default function Guide({ game, play, overlay = false }) {
                 {CLAUSES.map((c) => (
                   <div key={c.kw} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-mono text-sm font-semibold text-exception">{c.kw}</span>
-                      <span className="text-right text-xs text-zinc-400">{c.desc}</span>
+                      <span className="shrink-0 whitespace-nowrap font-mono text-sm font-semibold text-exception">{c.kw}</span>
+                      <span className="min-w-0 text-right text-xs text-zinc-400">{c.desc}</span>
                     </div>
                     <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
                       {c.ex}
