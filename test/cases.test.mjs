@@ -30,19 +30,6 @@ const SQL = await initSqlJs()
 /** Cases with real content. `comingSoon` stubs are intentionally schema-less. */
 const playable = CASES.filter((c) => !c.comingSoon)
 
-/**
- * Cases authored for THIS game, as opposed to the murder cases inherited from
- * Detective Query. Only these are held to the bare-`SELECT *` anti-cheat rule.
- *
- * Every inherited case fails it (in all seven, `SELECT * FROM suspects` alone
- * unlocks the killer), and they are being replaced one at a time in Phase 3, so
- * aliasing their triggers would be work spent on content that gets deleted.
- * New cases are held to the rule from birth.
- *
- * **Add each case id here as it is rewritten for the audit theme.**
- */
-const AUDIT_CASES = new Set(['case_01', 'case_02', 'case_03', 'case_04', 'case_05', 'case_06', 'case_07', 'case_08'])
-
 /** Mirror of sqlEngine.runQuery's row shaping, minus the UI-facing error handling. */
 function execRows(db, sql) {
   const results = db.exec(sql)
@@ -175,11 +162,11 @@ for (const gameCase of playable) {
       // a real leak: the player is handed an answer before earning it.
       //
       // Unlocking an EARLIER blank is fine and often unavoidable: case 02's
-      // alibi query filters `WHERE s.name = 'Marcus Feld'`, so it can only be
-      // written by someone who already identified him.
+      // deployer query filters `WHERE d.change_ref = 'CHG-4388'`, so it can only
+      // be written by someone who already found that reference.
       //
       // A blank may opt out with `coUnlocksWith` when two blanks are genuinely
-      // one deduction (case 03's killer and incident count share a GROUP BY).
+      // one deduction (case 03's reviewer and line count share a GROUP BY).
       const order = Object.keys(gameCase.report.blanks)
 
       order.forEach((key, index) => {
@@ -205,12 +192,7 @@ for (const gameCase of playable) {
       })
     })
 
-    await t.test('a bare SELECT * does not unlock anything', (tt) => {
-      if (!AUDIT_CASES.has(gameCase.id)) {
-        tt.skip('inherited murder case, replaced in Phase 3, see AUDIT_CASES')
-        return
-      }
-
+    await t.test('a bare SELECT * does not unlock anything', () => {
       // The anti-cheat only holds if the lazy query fails. A blank keyed on a
       // raw column (`username`, `reviewer`) is unlocked by a dump of its table,
       // handing the player an answer for typing `SELECT *`, so every blank
