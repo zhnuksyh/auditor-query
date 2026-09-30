@@ -37,10 +37,10 @@ export const CASES = [
   lockedStub({
     id: 'case_09',
     code: 'CODE_09',
-    tag: 'CHORUS',
-    title: 'Second Voice',
+    tag: 'OPERATIONS',
+    title: 'Restore Point',
     folderTheme: 'continuity',
-    teaser: 'The confession tape runs eleven minutes. Two of them belong to someone else.',
+    teaser: 'The backups reported success every night for a year. Nobody had ever tried to restore one.',
     comingSoon: true,
   }),
 ]
