@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react'
 
 // Curated beginner SQL video tutorials (open in a new tab).
 const VIDEOS = [
@@ -325,11 +325,13 @@ export default function Guide({ game, play, overlay = false }) {
             {/* SQL cheat sheet */}
             <Section title="SQL you'll actually use">
               <div className="space-y-3">
-                {CLAUSES.map((c) => (
+                {CLAUSES.map((c, i) => (
                   <div key={c.kw} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="shrink-0 whitespace-nowrap font-mono text-sm font-semibold text-exception">{c.kw}</span>
-                      <span className="min-w-0 text-right text-xs text-zinc-400">{c.desc}</span>
+                    {/* The tooltip anchors to this row, not the icon, so it
+                        spans the card instead of running off a narrow screen. */}
+                    <div className="relative flex items-center gap-2">
+                      <span className="whitespace-nowrap font-mono text-sm font-semibold text-exception">{c.kw}</span>
+                      <InfoTip id={`clause-${i}`} label={c.kw} text={c.desc} />
                     </div>
                     <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
                       {c.ex}
@@ -497,6 +499,31 @@ function Section({ title, children }) {
       <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">{title}</h2>
       {children}
     </section>
+  )
+}
+
+// An "i" icon that reveals `text` on hover, or on focus so a keyboard or a tap
+// on a touch screen can open it too. Positioned against the nearest `relative`
+// ancestor, which the caller chooses.
+function InfoTip({ id, label, text }) {
+  return (
+    <span className="group/tip inline-flex">
+      <button
+        type="button"
+        aria-label={`What ${label} does`}
+        aria-describedby={id}
+        className="flex h-5 w-5 items-center justify-center rounded-full text-zinc-500 transition-colors hover:text-exception focus:text-exception focus:outline-none"
+      >
+        <Info className="h-3.5 w-3.5" strokeWidth={2} />
+      </button>
+      <span
+        id={id}
+        role="tooltip"
+        className="pointer-events-none invisible absolute left-0 top-full z-10 mt-2 w-full max-w-sm rounded-lg border border-zinc-700 bg-zinc-900 p-3 text-xs leading-relaxed text-zinc-300 opacity-0 shadow-xl transition-opacity group-focus-within/tip:visible group-focus-within/tip:opacity-100 group-hover/tip:visible group-hover/tip:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
   )
 }
 
