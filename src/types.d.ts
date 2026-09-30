@@ -1,5 +1,5 @@
 /**
- * Shared type definitions for Detective Query.
+ * Shared type definitions for Auditor Query.
  *
  * This file is types ONLY: it emits no JavaScript and is never imported at
  * runtime. Source files opt into checking with `// @ts-check` at the top and
@@ -18,7 +18,7 @@ export interface ErdColumn {
   type: 'INTEGER' | 'TEXT'
   /** Marks the primary key, rendered with a key badge. */
   pk?: boolean
-  /** Foreign-key target in `table.column` form, e.g. `'suspects.id'`. */
+  /** Foreign-key target in `table.column` form, e.g. `'accounts.id'`. */
   fk?: string
 }
 
@@ -36,7 +36,7 @@ export interface ErdTable {
  * `src/engine/verification.js` for the comparison rules.
  */
 export interface ReportBlank {
-  /** Short description of what the blank is, e.g. `'the killer'`. */
+  /** Short description of what the blank is, e.g. `'the orphaned account'`. */
   label: string
   /** The correct answer. Must be one of `options`. */
   targetValue: string
@@ -104,13 +104,6 @@ export interface Engagement {
   vitals: EngagementVital[]
   /** 2–4 paragraphs. Must contain every fact the player has to deduce. */
   report: string
-  /**
-   * Control objectives / scope limitations. Optional because only cases 01 and
-   * 06 define them and nothing in the UI currently renders the array; see the
-   * note in CASE_DESIGN.md. Typed as present-or-absent rather than required so
-   * the existing cases check without being edited.
-   */
-  constraints?: string[]
 }
 
 /** One step of the guided tutorial (Case 01 only). */
