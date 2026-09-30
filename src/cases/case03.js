@@ -1,266 +1,255 @@
 // @ts-check
 /**
- * CASE 03 — "TERMINAL VELOCITY"
+ * CASE 03: "RUBBER STAMP"
  *
- * A step harder again than Case 02. Seven tables, six suspects, and two linked
- * incidents. The trick here is a PATTERN across events, which pushes the player
- * toward subqueries / GROUP BY … HAVING rather than a single filter:
+ * Recertification. Brannock Savings runs a quarterly user access review: every
+ * line manager marks each entitlement their team holds Keep or Revoke. The Q2
+ * review was signed off complete. Six weeks later an account outside the
+ * Payments team released a payment it should never have been able to release.
  *
- *   - Two people died a week apart in the same stairwell (incidents table).
- *   - access_logs record who badged into that stairwell for each incident.
- *   - The killer is the one suspect present at BOTH incidents (intersection).
- *   - A maintenance work_orders row shows they arranged to be alone in the
- *     stairwell each time (the "camera maintenance").
- *   - badge_audit reveals their badge was cloned onto a spare, explaining how
- *     they appear to be two places at once in other logs.
+ * The player must:
+ *   1. GROUP BY reviewer to see how each one reviewed: how many lines, how many
+ *      revoked, first and last decision time.
+ *   2. HAVING no revokes leaves two reviewers. One had three lines over 25
+ *      minutes (a small, stable team). The other cleared twelve lines in six
+ *      minutes. Revoking nothing is not the exception; revoking nothing at that
+ *      pace is.
+ *   3. Find the Payment Release line kept for someone outside Payments.
+ *   4. Follow that account to the payment it released.
  *
- * Everything remains provable with SQL — the difficulty is in the query shape,
- * not in any hidden information.
+ * Deductive shape: the first obvious query (reviewers who revoked nothing)
+ * returns two. The realism dial is PRECISION of a review control: the review
+ * happened and was signed off; the question is whether it could have caught
+ * anything. A decoy mover (k.vale) held the same entitlement and had it revoked
+ * properly by a reviewer who did the job.
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case03 = {
   id: 'case_03',
   code: 'CODE_03',
-  tag: 'FALLING',
-  title: 'Terminal Velocity',
+  tag: 'REVIEW',
+  title: 'Rubber Stamp',
   teaser:
-    'Two falls, one week apart, the same stairwell. Coincidence has a foreign key — and only one person badged into both.',
-  folderTheme: 'change',
+    'Four managers signed off the access review. Six weeks later, an account in Marketing released a payment it should never have been able to touch.',
+  folderTheme: 'access',
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Two victims — Owen Pike & Rosa Delgado', line2: 'Both employees, Meridian Tower' },
-      { term: 'Location', line1: 'Meridian Tower, Stairwell C', line2: 'Between the 12th and 11th landings' },
-      { term: 'Time of death', line1: 'Incident 1: 18:30 · Incident 2: 18:20', line2: 'April 6th & April 13th' },
+      { term: 'Control', line1: 'ITGC-A07: User access review', line2: 'Quarterly recertification by line managers' },
+      { term: 'System', line1: 'Brannock Savings: Tessera', line2: 'Core banking, payments, lending' },
+      { term: 'Audit period', line1: 'Q2 review, 1–3 July 2026', line2: 'Payments to 17 August 2026' },
     ],
-    report: `Two deaths, seven days apart, in the same place: Stairwell C of Meridian Tower, on the flight between the twelfth and eleventh landings. Owen Pike on April 6th; Rosa Delgado on April 13th. Both "fell." Both around the end of the workday.
+    report: `Brannock Savings is a building society, and Tessera is the core banking system its staff use to open accounts, lend and move money. The most dangerous entitlement in Tessera is PAYMENT RELEASE: the final click that sends money out of the society. Policy says only the Payments team may hold it.
 
-One fall is an accident. Two identical falls in the same stairwell is a pattern — and patterns have a source. The stairwell is badge-controlled: every door swipe into it is logged against the incident it happened during. Facilities also logs WORK ORDERS, and both evenings someone had a camera-maintenance order that cleared Stairwell C of witnesses for exactly the wrong ten minutes.
+Keeping it that way is the job of ITGC-A07, the quarterly USER ACCESS REVIEW, also called recertification. Every line manager receives a list of the entitlements their team holds, one line per user per entitlement, and marks each line Keep or Revoke. Revoke removes the access. The review tool records the minute each decision was made. The Q2 review ran from 1 to 3 July. Four managers took part, every one of them signed off, and the review was reported complete.
 
-There's a wrinkle. Security flagged that one employee's badge was CLONED onto a spare card, so their swipes sometimes appear in two places. Don't let the decoy swipes fool you — trace who actually badged into Stairwell C on both nights.
+A review that happened is not the same as a review that worked. Auditors call this PRECISION. A manager who clears a line every thirty seconds and never revokes anything is not reviewing; they are clicking. But revoking nothing is not proof on its own: a small, stable team may genuinely need everything it has.
 
-Six people had access that week. Only one of them connects to everything: both incidents, both work orders, and the cloned badge.`,
+In mid-August a payment left the society for a company Brannock had never dealt with. It was released by an account outside the Payments team, using a Payment Release entitlement the Q2 review had certified. You have the users, the reviewers, every review line with its decision and timestamp, and the payments. Find the review that was not really a review, how many lines it waved through, whose Payment Release it kept, and where the money went.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    -- Everyone with a Tessera login, by their CURRENT department.
+    CREATE TABLE users (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      department TEXT,
-      badge_id INTEGER
+      username TEXT,
+      name TEXT,
+      department TEXT
     );
-    INSERT INTO suspects (id, name, department, badge_id) VALUES
-      (1, 'Gil Auerbach', 'Facilities',  201),
-      (2, 'Hana Vos',     'Finance',     202),
-      (3, 'Reuben Sato',  'Security',    203),
-      (4, 'Delia Frost',  'Legal',       204),
-      (5, 'Amos Bright',  'Facilities',  205),
-      (6, 'Cora Nunn',    'IT',          206);
+    INSERT INTO users (id, username, name, department) VALUES
+      (1,  'a.hale',     'Amara Hale',     'Payments'),
+      (2,  'b.osei',     'Ben Osei',       'Payments'),
+      (3,  'c.moreau',   'Claire Moreau',  'Payments'),
+      (4,  'd.kowal',    'Dominik Kowal',  'Marketing'),  -- moved out of Payments in May
+      (5,  'e.lund',     'Erik Lund',      'Lending'),
+      (6,  'f.nakamura', 'Fumi Nakamura',  'Lending'),
+      (7,  'g.pryce',    'Gethin Pryce',   'Branch'),
+      (8,  'h.idowu',    'Hana Idowu',     'Branch'),
+      (9,  'k.vale',     'Kit Vale',       'Branch'),     -- also ex-Payments; revoked properly
+      (10, 'j.brenner',  'Jonas Brenner',  'Marketing'),
+      (11, 'm.quinn',    'Maeve Quinn',    'Marketing'),
+      (12, 'l.ferro',    'Luca Ferro',     'Lending');
 
-    CREATE TABLE incidents (
+    -- The managers who performed the Q2 review.
+    CREATE TABLE reviewers (
       id INTEGER PRIMARY KEY,
-      victim TEXT,
-      incident_date TEXT,
-      location TEXT,
-      fall_time TEXT
+      name TEXT,
+      team TEXT
     );
-    INSERT INTO incidents (id, victim, incident_date, location, fall_time) VALUES
-      (1, 'Owen Pike',    '2026-04-06', 'Stairwell C', '18:30'),
-      (2, 'Rosa Delgado', '2026-04-13', 'Stairwell C', '18:20');
+    INSERT INTO reviewers (id, name, team) VALUES
+      (1, 'Nadia Frost',  'Payments'),
+      (2, 'Tom Ashby',    'Branch'),
+      (3, 'Grace Mbeki',  'Lending'),
+      (4, 'Owen Tarrant', 'Marketing');
 
-    -- Every badge-in to Stairwell C, tagged with which incident it occurred during.
-    CREATE TABLE access_logs (
+    -- One line per user per entitlement, with the reviewer's decision and the
+    -- minute the review tool recorded it.
+    CREATE TABLE review_lines (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      incident_id INTEGER REFERENCES incidents(id),
-      area TEXT,
-      swipe_time TEXT
+      reviewer_id INTEGER REFERENCES reviewers(id),
+      user_id INTEGER REFERENCES users(id),
+      entitlement TEXT,
+      decision TEXT,          -- 'Keep' or 'Revoke'
+      decided_at TEXT         -- 'YYYY-MM-DD HH:MM'
     );
-    INSERT INTO access_logs (id, suspect_id, incident_id, area, swipe_time) VALUES
-      (1, 2, 1, 'Stairwell C', '18:05'),
-      (2, 5, 1, 'Stairwell C', '18:26'),   -- Amos: present at incident 1
-      (3, 3, 1, 'Stairwell C', '17:40'),
-      (4, 5, 2, 'Stairwell C', '18:14'),   -- Amos: present at incident 2 as well
-      (5, 4, 2, 'Stairwell C', '18:02'),
-      (6, 2, 2, 'Lobby',       '18:15'),   -- Hana was elsewhere on night 2
-      (7, 6, 1, 'Stairwell C', '18:40'),   -- Cora arrived after the fall
-      (8, 1, 2, 'Stairwell C', '17:50');   -- Gil, only night 2
+    INSERT INTO review_lines (id, reviewer_id, user_id, entitlement, decision, decided_at) VALUES
+      (1,  1, 1,  'Payment Release',  'Keep',   '2026-07-01 09:30'),
+      (2,  1, 1,  'Payment Entry',    'Keep',   '2026-07-01 09:36'),
+      (3,  1, 2,  'Payment Release',  'Keep',   '2026-07-01 09:41'),
+      (4,  1, 2,  'Payment Entry',    'Keep',   '2026-07-01 09:47'),
+      (5,  1, 3,  'Payment Entry',    'Keep',   '2026-07-01 09:55'),
+      (6,  1, 3,  'Statement Export', 'Revoke', '2026-07-01 10:04'),
+      (7,  2, 7,  'Customer View',    'Keep',   '2026-07-03 15:00'),
+      (8,  2, 8,  'Customer View',    'Keep',   '2026-07-03 15:06'),
+      (9,  2, 8,  'Cash Desk',        'Keep',   '2026-07-03 15:13'),
+      (10, 2, 9,  'Customer View',    'Keep',   '2026-07-03 15:21'),
+      (11, 2, 9,  'Payment Release',  'Revoke', '2026-07-03 15:30'), -- the review working
+      (12, 2, 9,  'Cash Desk',        'Keep',   '2026-07-03 15:38'),
+      (13, 3, 5,  'Loan Origination', 'Keep',   '2026-07-02 14:10'), -- no revokes, but three
+      (14, 3, 6,  'Loan Origination', 'Keep',   '2026-07-02 14:22'), -- considered lines
+      (15, 3, 12, 'Loan Approval',    'Keep',   '2026-07-02 14:35'),
+      (16, 4, 4,  'Customer View',    'Keep',   '2026-07-02 11:02'), -- twelve lines,
+      (17, 4, 4,  'Campaign Admin',   'Keep',   '2026-07-02 11:02'), -- six minutes
+      (18, 4, 4,  'Payment Release',  'Keep',   '2026-07-02 11:03'),
+      (19, 4, 4,  'Statement Export', 'Keep',   '2026-07-02 11:03'),
+      (20, 4, 10, 'Customer View',    'Keep',   '2026-07-02 11:04'),
+      (21, 4, 10, 'Campaign Admin',   'Keep',   '2026-07-02 11:04'),
+      (22, 4, 10, 'Statement Export', 'Keep',   '2026-07-02 11:05'),
+      (23, 4, 11, 'Customer View',    'Keep',   '2026-07-02 11:06'),
+      (24, 4, 11, 'Campaign Admin',   'Keep',   '2026-07-02 11:06'),
+      (25, 4, 11, 'Statement Export', 'Keep',   '2026-07-02 11:07'),
+      (26, 4, 4,  'Payment Entry',    'Keep',   '2026-07-02 11:08'),
+      (27, 4, 10, 'Customer Export',  'Keep',   '2026-07-02 11:08');
 
-    -- Facilities work orders. 'assigned_to' is a suspect id.
-    CREATE TABLE work_orders (
+    -- Outbound payments released from Tessera after the review.
+    CREATE TABLE payments (
       id INTEGER PRIMARY KEY,
-      assigned_to INTEGER REFERENCES suspects(id),
-      task TEXT,
-      area TEXT,
-      order_date TEXT
+      released_by INTEGER REFERENCES users(id),
+      payee TEXT,
+      amount INTEGER,
+      released_on TEXT
     );
-    INSERT INTO work_orders (id, assigned_to, task, area, order_date) VALUES
-      (1, 5, 'Camera maintenance', 'Stairwell C', '2026-04-06'),  -- Amos, night 1
-      (2, 5, 'Camera maintenance', 'Stairwell C', '2026-04-13'),  -- Amos, night 2
-      (3, 1, 'Light replacement',  'Lobby',       '2026-04-10'),
-      (4, 5, 'Filter change',      'Roof',        '2026-04-02');
-
-    -- Security's badge audit: which badges were cloned onto a spare card.
-    CREATE TABLE badge_audit (
-      id INTEGER PRIMARY KEY,
-      badge_id INTEGER,
-      status TEXT,           -- 'ok' or 'cloned'
-      note TEXT
-    );
-    INSERT INTO badge_audit (id, badge_id, status, note) VALUES
-      (1, 201, 'ok',     'Normal usage.'),
-      (2, 202, 'ok',     'Normal usage.'),
-      (3, 205, 'cloned', 'Duplicate spare card detected on same badge id.'),  -- Amos's badge
-      (4, 206, 'ok',     'Normal usage.');
-
-    CREATE TABLE forensics (
-      id INTEGER PRIMARY KEY,
-      finding TEXT,
-      detail TEXT,
-      implicates TEXT
-    );
-    INSERT INTO forensics (id, finding, detail, implicates) VALUES
-      (1, 'No defensive wounds', 'Both victims pushed from behind on the stairs.', NULL),
-      (2, 'Camera gap',          'Stairwell C cameras offline during both falls.', 'work order'),
-      (3, 'Scuff pattern',       'Heel scuffs consistent with a shove, both scenes.', NULL);
+    INSERT INTO payments (id, released_by, payee, amount, released_on) VALUES
+      (1, 1, 'Harlow Utilities',        12400,  '2026-08-03'),
+      (2, 2, 'Brannock Payroll Bureau', 310500, '2026-08-07'),
+      (3, 1, 'Selby Office Supply',     2180,   '2026-08-11'),
+      (4, 4, 'Quillon Trading Ltd',     48200,  '2026-08-14'),
+      (5, 2, 'Harlow Utilities',        11950,  '2026-08-17');
   `,
 
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'users',
+        columns: [
+          { name: 'id', type: 'INTEGER', pk: true },
+          { name: 'username', type: 'TEXT' },
+          { name: 'name', type: 'TEXT' },
+          { name: 'department', type: 'TEXT' },
+        ],
+      },
+      {
+        name: 'reviewers',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'name', type: 'TEXT' },
-          { name: 'department', type: 'TEXT' },
-          { name: 'badge_id', type: 'INTEGER', fk: 'badge_audit.badge_id' },
+          { name: 'team', type: 'TEXT' },
         ],
       },
       {
-        name: 'incidents',
+        name: 'review_lines',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'incident_date', type: 'TEXT' },
-          { name: 'location', type: 'TEXT' },
-          { name: 'fall_time', type: 'TEXT' },
+          { name: 'reviewer_id', type: 'INTEGER', fk: 'reviewers.id' },
+          { name: 'user_id', type: 'INTEGER', fk: 'users.id' },
+          { name: 'entitlement', type: 'TEXT' },
+          { name: 'decision', type: 'TEXT' },
+          { name: 'decided_at', type: 'TEXT' },
         ],
       },
       {
-        name: 'access_logs',
+        name: 'payments',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'incident_id', type: 'INTEGER', fk: 'incidents.id' },
-          { name: 'area', type: 'TEXT' },
-          { name: 'swipe_time', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'work_orders',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'assigned_to', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'task', type: 'TEXT' },
-          { name: 'area', type: 'TEXT' },
-          { name: 'order_date', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'badge_audit',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'badge_id', type: 'INTEGER' },
-          { name: 'status', type: 'TEXT' },
-          { name: 'note', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'forensics',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'finding', type: 'TEXT' },
-          { name: 'detail', type: 'TEXT' },
-          { name: 'implicates', type: 'TEXT' },
+          { name: 'released_by', type: 'INTEGER', fk: 'users.id' },
+          { name: 'payee', type: 'TEXT' },
+          { name: 'amount', type: 'INTEGER' },
+          { name: 'released_on', type: 'TEXT' },
         ],
       },
     ],
   },
 
+  // The template names no times or teams: either would point straight at the
+  // reviewer before a query was run.
   report: {
     template:
-      'The stairwell falls were serial, not accidental. {{killer}} of {{department}} was the only person who badged into Stairwell C during {{count}} separate incidents. Each time, a “{{task}}” work order assigned to them took the cameras offline. And Security had flagged their badge as {{badge}}, letting decoy swipes place them elsewhere while they waited on the stairs.',
+      'Control ITGC-A07 operated in form but not in substance. {{reviewer}} certified all {{lines}} of their review lines without revoking one, at a pace no real review could keep. One of those lines kept Payment Release for {{user}}, who no longer worked in Payments. On 14 August that account released £48,200 to {{payee}}.',
     blanks: {
-      killer: {
-        label: 'the killer',
-        targetValue: 'Amos Bright',
-        unlockedByColumn: 'name',
-        triggerValue: 'Amos Bright',
-        options: ['Gil Auerbach', 'Hana Vos', 'Reuben Sato', 'Delia Frost', 'Amos Bright', 'Cora Nunn'],
+      reviewer: {
+        label: 'the reviewer',
+        targetValue: 'Owen Tarrant',
+        // HAVING no revokes returns two reviewers; the row itself carries the
+        // count and time span that separate them, so the choice is the player's.
+        unlockedByColumn: 'rubber_stamp_reviewer',
+        triggerValue: 'Owen Tarrant',
+        options: ['Nadia Frost', 'Tom Ashby', 'Grace Mbeki', 'Owen Tarrant'],
+        // "Who rubber-stamped" and "how many lines" come out of the same
+        // GROUP BY row; splitting them would be busywork.
+        coUnlocksWith: 'lines',
         provingQuery: `
-          SELECT s.name, COUNT(DISTINCT a.incident_id) AS incident_count
-          FROM access_logs a JOIN suspects s ON s.id = a.suspect_id
-          WHERE a.area = 'Stairwell C'
-          GROUP BY s.name
-          HAVING COUNT(DISTINCT a.incident_id) = 2
+          SELECT r.name AS rubber_stamp_reviewer, COUNT(*) AS lines_certified,
+                 MIN(l.decided_at) AS first_decision, MAX(l.decided_at) AS last_decision
+          FROM review_lines l JOIN reviewers r ON r.id = l.reviewer_id
+          GROUP BY r.name
+          HAVING SUM(l.decision = 'Revoke') = 0
         `,
-        hint: 'In access_logs, group by suspect and count DISTINCT incident_id — who has 2?',
+        hint: 'GROUP BY reviewer and HAVING no Revoke decisions. Two survive: compare how many lines each cleared and how long it took (MIN and MAX of decided_at). Alias the name AS rubber_stamp_reviewer and COUNT(*) AS lines_certified.',
       },
-      department: {
-        label: 'their department',
-        targetValue: 'Facilities',
-        unlockedByColumn: 'department',
-        triggerValue: 'Facilities',
-        options: ['Facilities', 'Finance', 'Security', 'Legal', 'IT'],
+      lines: {
+        label: 'how many lines',
+        targetValue: '12',
+        unlockedByColumn: 'lines_certified',
+        triggerValue: 12,
+        options: ['3', '6', '12', '27'],
+        coUnlocksWith: 'reviewer',
         provingQuery: `
-          SELECT name, department, badge_id FROM suspects WHERE department = 'Facilities'
+          SELECT r.name AS rubber_stamp_reviewer, COUNT(*) AS lines_certified,
+                 MIN(l.decided_at) AS first_decision, MAX(l.decided_at) AS last_decision
+          FROM review_lines l JOIN reviewers r ON r.id = l.reviewer_id
+          GROUP BY r.name
+          HAVING SUM(l.decision = 'Revoke') = 0
         `,
-        hint: 'Look up the killer in the suspects table.',
+        hint: 'The same GROUP BY row: COUNT(*) for that reviewer, aliased AS lines_certified.',
       },
-      count: {
-        label: 'how many incidents',
-        targetValue: 'two',
-        unlockedByColumn: 'incident_count',
-        triggerValue: 2,
-        // Deliberately shares the killer's query: "who badged into both
-        // incidents" and "how many incidents" are one deduction, and the count
-        // IS the reason he's the killer. Splitting them would be busywork.
-        coUnlocksWith: 'killer',
-        options: ['one', 'two', 'three', 'four'],
+      user: {
+        label: 'whose access it kept',
+        targetValue: 'd.kowal',
+        unlockedByColumn: 'unrevoked_user',
+        triggerValue: 'd.kowal',
+        options: ['k.vale', 'd.kowal', 'j.brenner', 'a.hale'],
         provingQuery: `
-          SELECT s.name, COUNT(DISTINCT a.incident_id) AS incident_count
-          FROM access_logs a JOIN suspects s ON s.id = a.suspect_id
-          WHERE a.area = 'Stairwell C'
-          GROUP BY s.name
-          HAVING COUNT(DISTINCT a.incident_id) = 2
+          SELECT u.username AS unrevoked_user, u.department, l.entitlement, l.decision
+          FROM review_lines l JOIN users u ON u.id = l.user_id
+          WHERE l.entitlement = 'Payment Release' AND l.decision = 'Keep'
+            AND u.department <> 'Payments'
         `,
-        hint: 'COUNT(DISTINCT incident_id) for the killer in access_logs.',
+        hint: 'Join review_lines to users: which Payment Release line was kept for someone whose department is not Payments? Alias the username AS unrevoked_user.',
       },
-      task: {
-        label: 'the work order',
-        targetValue: 'Camera maintenance',
-        unlockedByColumn: 'task',
-        triggerValue: 'Camera maintenance',
-        options: ['Camera maintenance', 'Light replacement', 'Filter change', 'Elevator service'],
+      payee: {
+        label: 'where the money went',
+        targetValue: 'Quillon Trading Ltd',
+        unlockedByColumn: 'payee_paid',
+        triggerValue: 'Quillon Trading Ltd',
+        options: ['Harlow Utilities', 'Quillon Trading Ltd', 'Selby Office Supply', 'Brannock Payroll Bureau'],
         provingQuery: `
-          SELECT s.name, w.task, w.area, w.order_date FROM work_orders w
-          JOIN suspects s ON s.id = w.assigned_to WHERE w.area = 'Stairwell C'
+          SELECT p.payee AS payee_paid, p.amount, p.released_on
+          FROM payments p JOIN users u ON u.id = p.released_by
+          WHERE u.username = 'd.kowal'
         `,
-        hint: 'work_orders assigned to the killer in Stairwell C — what was the task?',
-      },
-      badge: {
-        label: 'the badge status',
-        targetValue: 'cloned',
-        unlockedByColumn: 'status',
-        triggerValue: 'cloned',
-        options: ['cloned', 'expired', 'ok', 'suspended'],
-        provingQuery: `
-          SELECT s.name, b.badge_id, b.status, b.note FROM badge_audit b
-          JOIN suspects s ON s.badge_id = b.badge_id WHERE b.status = 'cloned'
-        `,
-        hint: 'Join the killer’s badge_id to badge_audit — what status did Security flag?',
+        hint: 'Join payments to users for that account. Alias the payee AS payee_paid.',
       },
     },
   },
