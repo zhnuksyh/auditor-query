@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, ChevronLeft, X } from 'lucide-react'
+import { BookOpen, ChevronLeft, Lightbulb, X } from 'lucide-react'
 import { getCase } from '../cases/index.js'
 import { createDatabase } from '../engine/sqlEngine.js'
 import TabBar from '../components/TabBar.jsx'
@@ -9,6 +9,7 @@ import AnalysisTab from '../components/AnalysisTab.jsx'
 import FindingTab from '../components/FindingTab.jsx'
 import TutorialOverlay from '../components/TutorialOverlay.jsx'
 import Guide from './Guide.jsx'
+import WhereToBegin from './WhereToBegin.jsx'
 
 const TABS = [
   { key: 'scene', label: 'SCOPE' },
@@ -20,7 +21,13 @@ const TABS = [
 export default function GameDashboard({ game, play, shake }) {
   const caseData = getCase(game.openCaseId)
   const [tab, setTab] = useState('scene')
-  const [showBrief, setShowBrief] = useState(false)
+  // Which reference overlay covers the case: 'manual' (the Audit Manual),
+  // 'begin' (Where to Begin), or null for none.
+  const [panel, setPanel] = useState(null)
+  const togglePanel = (name) => {
+    play(panel === name ? 'back' : 'click')
+    setPanel(panel === name ? null : name)
+  }
 
   const selectTab = (key) => {
     if (key !== tab) play('paper') // page-flip rustle on tab change
@@ -29,17 +36,17 @@ export default function GameDashboard({ game, play, shake }) {
   const [db, setDb] = useState(null)
   const [dbError, setDbError] = useState(null)
 
-  // Tab key toggles the Case Brief overlay from anywhere in the case.
+  // Tab key toggles the Audit Manual overlay from anywhere in the case.
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Tab') return
       e.preventDefault()
-      play(showBrief ? 'back' : 'click')
-      setShowBrief(!showBrief)
+      play(panel === 'manual' ? 'back' : 'click')
+      setPanel(panel === 'manual' ? null : 'manual')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showBrief, play])
+  }, [panel, play])
 
   // Unlocked report blanks for THIS case, hydrated from the save.
   const unlocked = useMemo(
@@ -110,23 +117,25 @@ export default function GameDashboard({ game, play, shake }) {
                 CASE CLOSED
               </span>
             )}
-            {/* Toggles the Case Brief. z-50 keeps it clickable above the
-                overlay (z-40), so the X sits exactly where the book was. */}
-            <button
-              onClick={() => {
-                play(showBrief ? 'back' : 'click')
-                setShowBrief((v) => !v)
-              }}
-              className="press relative z-50 rounded-lg border border-zinc-800 p-1.5 text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-100"
-              aria-label={showBrief ? 'Close the Case Brief' : 'Open the Case Brief'}
-              title="Case Brief (Tab)"
-            >
-              {showBrief ? (
-                <X className="h-4 w-4" strokeWidth={2} />
-              ) : (
-                <BookOpen className="h-4 w-4" strokeWidth={2} />
-              )}
-            </button>
+            {/* Overlay toggles. z-50 keeps them clickable above the overlay
+                (z-40), so an open panel's X sits exactly where its icon was
+                and the other icon switches straight to its own panel. */}
+            <div className="relative z-50 flex items-center gap-2">
+              <PanelButton
+                open={panel === 'begin'}
+                onClick={() => togglePanel('begin')}
+                icon={Lightbulb}
+                name="Where to Begin"
+                title="Where to Begin"
+              />
+              <PanelButton
+                open={panel === 'manual'}
+                onClick={() => togglePanel('manual')}
+                icon={BookOpen}
+                name="the Audit Manual"
+                title="Audit Manual (Tab)"
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -174,10 +183,11 @@ export default function GameDashboard({ game, play, shake }) {
         </div>
       </div>
 
-      {/* Case Brief overlay: the guide, accessible without leaving the case. */}
-      {showBrief && (
-        <div className="absolute inset-0 z-40 animate-pop-in bg-zinc-950">
-          <Guide game={game} play={play} overlay />
+      {/* Reference overlays, reachable without leaving the case. Keyed so
+          switching between them replays the pop-in. */}
+      {panel && (
+        <div key={panel} className="absolute inset-0 z-40 animate-pop-in bg-zinc-950">
+          {panel === 'manual' ? <Guide game={game} play={play} overlay /> : <WhereToBegin />}
         </div>
       )}
 
@@ -190,5 +200,21 @@ export default function GameDashboard({ game, play, shake }) {
         />
       )}
     </div>
+  )
+}
+
+function PanelButton({ open, onClick, icon: Icon, name, title }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`press rounded-lg border p-1.5 transition-colors hover:border-zinc-600 hover:text-zinc-100 ${
+        open ? 'border-zinc-600 text-zinc-100' : 'border-zinc-800 text-zinc-500'
+      }`}
+      aria-label={open ? `Close ${name}` : `Open ${name}`}
+      aria-pressed={open}
+      title={title}
+    >
+      {open ? <X className="h-4 w-4" strokeWidth={2} /> : <Icon className="h-4 w-4" strokeWidth={2} />}
+    </button>
   )
 }

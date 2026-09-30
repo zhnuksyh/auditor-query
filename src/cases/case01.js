@@ -65,7 +65,7 @@ export const case01 = {
     },
     {
       title: 'Tip · Audit Manual',
-      body: 'Stuck on SQL, or on a term? Click the book icon at the top right, or press the Tab key, to toggle the Audit Manual: a cheat sheet of every clause you’ll need, plus a glossary. Good luck.',
+      body: 'Stuck on SQL, or on a term? Click the book icon at the top right, or press the Tab key, to toggle the Audit Manual: a cheat sheet of every clause you’ll need, plus a glossary. Not sure how to start? The bulb icon beside it walks you through this engagement’s first queries. Good luck.',
     },
   ],
 
