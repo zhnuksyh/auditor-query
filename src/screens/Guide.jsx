@@ -117,6 +117,14 @@ const GLOSSARY = [
     desc: 'The body that approves production changes. A deploy with no CAB record — or one approved after it shipped — is an exception.',
   },
   {
+    term: 'Change ticket',
+    desc: 'The record of one proposed change, with its own reference (CHG-4410). It names the system the change is for, and a CAB approval covers exactly that — not any change that happens to quote the number.',
+  },
+  {
+    term: 'Automated control',
+    desc: 'A control enforced by a system rather than a person, such as a pipeline gate that blocks unapproved releases. It is only as good as what it checks: test the rule it enforces, not just that it ran.',
+  },
+  {
     term: 'ITGC',
     desc: 'IT General Controls: access, change management, and operations. The baseline an IT audit tests.',
   },
