@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         // Active accents. `crimson` keeps its name because ~56 usages across the
-        // UI mean "alert / exception / wrong answer" — the semantic the audit
+        // UI mean "alert / exception / wrong answer", which is the semantic the audit
         // theme wants too. Only the value moved: rose red to a register amber,
         // which reads as an exception raised rather than blood spilled.
         crimson: {
@@ -64,7 +64,7 @@ export default {
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
         // Rubber-stamp slam: overshoot large, then settle. Only scale/opacity
-        // here — the stamp's own element owns the rotation, so they compose
+        // here: the stamp's own element owns the rotation, so they compose
         // without fighting over the transform property.
         'stamp-in': {
           '0%': { opacity: '0', transform: 'scale(2.4)' },
@@ -73,7 +73,7 @@ export default {
         },
         // Full-board stamp slam: falls from way above the page (blurred while
         // in the air), hits with a hard squash, then rebounds and settles.
-        // Scale/opacity/blur only — the rotation lives on the stamp element
+        // Scale/opacity/blur only; the rotation lives on the stamp element
         // inside, so the two transforms compose.
         'stamp-slam': {
           '0%': { opacity: '0', transform: 'scale(6)', filter: 'blur(14px)' },

@@ -68,7 +68,7 @@ export async function createDatabase(schemaSql) {
 /**
  * Execute an arbitrary SQL string.
  * Returns the LAST result set (the one the player usually cares about) as
- * { columns, rows } plus any error message. Never throws — errors are returned
+ * { columns, rows } plus any error message. Never throws; errors are returned
  * so the UI can render them in the results panel.
  *
  * `allRows` covers every result set of a multi-statement run, so unlock checks

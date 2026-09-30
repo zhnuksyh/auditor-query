@@ -28,7 +28,7 @@ function ensureAudio() {
   audio.preload = 'auto'
   // A missing/unsupported file shouldn't spam the console or break anything.
   audio.addEventListener('error', () => {
-    /* file absent or blocked — stay silent */
+    /* file absent or blocked: stay silent */
   })
   return audio
 }

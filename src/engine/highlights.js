@@ -1,11 +1,11 @@
 // @ts-check
 /**
- * Scope-memo highlighter — the pure range math behind the marker pen.
+ * Scope-memo highlighter: the pure range math behind the marker pen.
  *
  * A highlight is a character range into a case's `engagement.report` string,
  * carrying the text it covered when it was made. Offsets alone would be
  * brittle: reword a case's report and an old save would paint the wrong words.
- * The stored `text` is the guard — on load, a highlight whose offsets no longer
+ * The stored `text` is the guard: on load, a highlight whose offsets no longer
  * spell the same substring is dropped rather than rendered in the wrong place.
  *
  * Ranges are kept sorted and non-overlapping. Re-highlighting across an
@@ -17,7 +17,7 @@
  * Split a report into paragraphs, each with its absolute start offset.
  *
  * The report renders as one `whitespace-pre-line` block, but selection math is
- * far simpler when every paragraph is its own single text node — then a DOM
+ * far simpler when every paragraph is its own single text node, then a DOM
  * Range's offset is just an index into that paragraph, and `base` converts it
  * to an absolute index into the report. Splitting on the blank line keeps the
  * separator length known (2), so bases stay exact.
@@ -60,7 +60,7 @@ export function reconcile(highlights, report) {
 /**
  * Add a range, merging it with any highlights it touches or overlaps.
  *
- * Adjacent ranges (`end === start`) merge too — dragging over two halves of a
+ * Adjacent ranges (`end === start`) merge too: dragging over two halves of a
  * phrase in separate strokes should leave one continuous mark, not a seam.
  *
  * @param {import('../types.js').Highlight[]} highlights
@@ -90,7 +90,7 @@ export function addRange(highlights, start, end, report) {
 
 /**
  * Remove whichever highlight contains `offset`. Clicking a mark clears the
- * whole mark — simpler to reason about mid-case than splitting it in two, and
+ * whole mark, simpler to reason about mid-case than splitting it in two, and
  * re-dragging the part you wanted back is one gesture.
  *
  * @param {import('../types.js').Highlight[]} highlights

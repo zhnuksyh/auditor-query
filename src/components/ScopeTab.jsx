@@ -40,7 +40,7 @@ function SceneReport({ caseData, scene, game, play }) {
 
   // Turn a browser selection into an absolute range in `report`. Each paragraph
   // is rendered as its own element carrying `data-base`, so an offset within a
-  // paragraph plus that base is the absolute index — no tree walking needed.
+  // paragraph plus that base is the absolute index: no tree walking needed.
   const offsetOf = useCallback((node, offset) => {
     const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node
     const seg = el?.closest?.('[data-seg-start]')
@@ -71,7 +71,7 @@ function SceneReport({ caseData, scene, game, play }) {
     commit(addRange(highlights, start, end, report))
   }, [marking, offsetOf, highlights, report, commit, play])
 
-  // Clicking an existing mark clears it — the whole mark, not a slice of it.
+  // Clicking an existing mark clears it: the whole mark, not a slice of it.
   const onClickSegment = useCallback(
     (segStart) => {
       if (!marking) return
@@ -114,9 +114,9 @@ function SceneReport({ caseData, scene, game, play }) {
         </div>
 
         {/* Engagement vitals. The case supplies its own terms, so a case can
-            head its scope with whatever a reader of that engagement needs —
-            control and system for an access review, period and ledger for a
-            financial one — instead of three labels fixed in the markup. */}
+            head its scope with whatever a reader of that engagement needs
+            (control and system for an access review, period and ledger for a
+            financial one) instead of three labels fixed in the markup. */}
         <dl
           className="mb-8 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800"
           style={{
@@ -128,7 +128,7 @@ function SceneReport({ caseData, scene, game, play }) {
           ))}
         </dl>
 
-        {/* Memo body — the control detail is woven into this narrative.
+        {/* Memo body: the control detail is woven into this narrative.
             Paragraphs are separate nodes so selection offsets map cleanly onto
             the underlying report string. */}
         <div
@@ -219,7 +219,7 @@ export function LockedCase({ caseData }) {
         <h2 className="text-2xl font-semibold text-zinc-400">{caseData.title}</h2>
         <p className="mt-2 text-sm text-zinc-600">{caseData.teaser}</p>
         <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-zinc-600">
-          engagement not yet assigned — close the prior file to unlock
+          engagement not yet assigned; close the prior file to unlock
         </p>
       </div>
     </div>

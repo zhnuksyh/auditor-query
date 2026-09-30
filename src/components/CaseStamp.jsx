@@ -1,5 +1,5 @@
 /**
- * A "CASE CLOSED" rubber-stamp badge — rotated, distressed-ink look. Used on
+ * A "CASE CLOSED" rubber-stamp badge, rotated, distressed-ink look. Used on
  * solved level cards (bottom-right, `sm`) and slammed across the whole report
  * card once a case is closed (`board`). Sizing/positioning via the wrapper
  * `className`.

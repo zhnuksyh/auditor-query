@@ -41,7 +41,7 @@ export function useSound(game) {
   // the ambience bed and let music begin, then detach the listeners.
   useEffect(() => {
     // Optimistic attempt: some browsers (with prior media-engagement) allow
-    // autoplay. Try immediately on load — if it's blocked the promise rejects
+    // autoplay. Try immediately on load; if it's blocked the promise rejects
     // silently and the gesture listeners below still catch the first interaction.
     const musicOn = enabled && musicEnabled
     updateMusic({ enabled: musicOn, volume: masterVolume * musicVolume, gesture: true })
@@ -49,7 +49,7 @@ export function useSound(game) {
 
     // Browsers block audio until the user interacts with the page. Listen for
     // the widest set of "first gesture" events so music/ambience begin the
-    // instant the user does *anything* — tap, click, key, scroll, or move.
+    // instant the user does *anything*: tap, click, key, scroll, or move.
     const GESTURES = ['pointerdown', 'keydown', 'touchstart', 'click', 'wheel']
     const start = () => {
       startAmbience()

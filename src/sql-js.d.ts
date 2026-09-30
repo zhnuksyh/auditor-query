@@ -35,7 +35,7 @@ declare module 'sql.js' {
   }
 
   export interface InitSqlJsConfig {
-    /** Maps the `.wasm` filename to a URL — Vite gives us a hashed asset path. */
+    /** Maps the `.wasm` filename to a URL; Vite gives us a hashed asset path. */
     locateFile?: (file: string) => string
   }
 

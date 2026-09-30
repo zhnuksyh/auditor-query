@@ -1,7 +1,7 @@
 /**
  * Shared type definitions for Detective Query.
  *
- * This file is types ONLY — it emits no JavaScript and is never imported at
+ * This file is types ONLY: it emits no JavaScript and is never imported at
  * runtime. Source files opt into checking with `// @ts-check` at the top and
  * reference these shapes through JSDoc (`@type`, `@param`, `@returns`), so the
  * shipped bundle is byte-for-byte identical to the untyped build.
@@ -59,7 +59,7 @@ export interface ReportBlank {
   /**
    * Names another blank this one deliberately shares a proving query with,
    * when both are genuinely the same deduction. Without it, the case tests
-   * reject a query that unlocks more than one blank — see CASE_DESIGN.md.
+   * reject a query that unlocks more than one blank; see CASE_DESIGN.md.
    */
   coUnlocksWith?: string
 }
@@ -85,7 +85,7 @@ export interface Highlight {
 }
 
 /**
- * One labelled vital in the Scope header — a two-line cell under its own term.
+ * One labelled vital in the Scope header: a two-line cell under its own term.
  *
  * The term travels with the case rather than being fixed in the markup, so an
  * access review can head its scope with "Control" and "System" while a change
@@ -106,7 +106,7 @@ export interface Engagement {
   report: string
   /**
    * Control objectives / scope limitations. Optional because only cases 01 and
-   * 06 define them and nothing in the UI currently renders the array — see the
+   * 06 define them and nothing in the UI currently renders the array; see the
    * note in CASE_DESIGN.md. Typed as present-or-absent rather than required so
    * the existing cases check without being edited.
    */
@@ -124,7 +124,7 @@ export interface TutorialStep {
 /**
  * Audit domain for the filing-cabinet folder tone. Maps to `paper.*` in
  * Tailwind. Declared per case and type-checked, though no component reads it
- * yet — the folder art is uniform yardstock today.
+ * yet; the folder art is uniform yardstock today.
  */
 export type FolderTheme =
   | 'access'
@@ -135,7 +135,7 @@ export type FolderTheme =
   | 'continuity'
 
 /**
- * A playable case. Everything the game needs is plain data — no binary .db
+ * A playable case. Everything the game needs is plain data: no binary .db
  * file, no per-case code.
  */
 export interface PlayableCase {
@@ -187,7 +187,7 @@ export type ResultRow = Record<string, unknown>
 /** What `runQuery` hands back to the UI. Never throws; errors come back here. */
 export interface QueryResult {
   columns: string[]
-  /** Rows of the LAST result set — what the grid displays. */
+  /** Rows of the LAST result set: what the grid displays. */
   rows: ResultRow[]
   /** Rows across EVERY result set, so unlock checks see multi-statement runs. */
   allRows: ResultRow[]

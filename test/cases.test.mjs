@@ -5,7 +5,7 @@
  * by running SQL against the case database. This suite builds each case's real
  * schema in sql.js and, for every blank, runs that blank's `provingQuery` and
  * asserts the query genuinely unlocks it through the production
- * `evaluateUnlocks` — the same function the app calls after a player's query.
+ * `evaluateUnlocks`, the same function the app calls after a player's query.
  *
  * That closes the failure mode that hurts most: a case that reads fine but is
  * unsolvable because a trigger value was mistyped, a seed row drifted, or a
@@ -34,8 +34,8 @@ const playable = CASES.filter((c) => !c.comingSoon)
  * Cases authored for THIS game, as opposed to the murder cases inherited from
  * Detective Query. Only these are held to the bare-`SELECT *` anti-cheat rule.
  *
- * Every inherited case fails it — in all seven, `SELECT * FROM suspects` alone
- * unlocks the killer — and they are being replaced one at a time in Phase 3, so
+ * Every inherited case fails it (in all seven, `SELECT * FROM suspects` alone
+ * unlocks the killer), and they are being replaced one at a time in Phase 3, so
  * aliasing their triggers would be work spent on content that gets deleted.
  * New cases are held to the rule from birth.
  *
@@ -71,7 +71,7 @@ test('the case roster is well-formed', () => {
 })
 
 for (const gameCase of playable) {
-  test(`${gameCase.id} — ${gameCase.title}`, async (t) => {
+  test(`${gameCase.id}: ${gameCase.title}`, async (t) => {
     const db = new SQL.Database()
 
     t.after(() => db.close())
@@ -95,7 +95,7 @@ for (const gameCase of playable) {
           `ERD shows table "${table.name}" but the schema never creates it`,
         )
 
-        // The board is the player's map of what's queryable — a column drawn
+        // The board is the player's map of what's queryable; a column drawn
         // there that doesn't exist sends them down a dead end.
         const liveColumns = execRows(db, `PRAGMA table_info(${table.name})`).map((r) => r.name)
         for (const column of table.columns) {
@@ -154,7 +154,7 @@ for (const gameCase of playable) {
 
           assert.ok(rows.length > 0, 'provingQuery returned no rows')
 
-          // The real unlock path — not a re-implementation of it.
+          // The real unlock path, not a re-implementation of it.
           const { unlocked } = evaluateUnlocks(
             { [key]: blank },
             rows,
@@ -174,7 +174,7 @@ for (const gameCase of playable) {
       // unlock blanks at or before its own position. Unlocking a LATER blank is
       // a real leak: the player is handed an answer before earning it.
       //
-      // Unlocking an EARLIER blank is fine and often unavoidable — case 02's
+      // Unlocking an EARLIER blank is fine and often unavoidable: case 02's
       // alibi query filters `WHERE s.name = 'Marcus Feld'`, so it can only be
       // written by someone who already identified him.
       //
@@ -200,20 +200,20 @@ for (const gameCase of playable) {
           premature,
           [],
           `the "${key}" proving query already unlocks ${premature.map((k) => `"${k}"`).join(', ')}, ` +
-            'which the player has not reached yet — key those blanks on a column this query does not select',
+            'which the player has not reached yet; key those blanks on a column this query does not select',
         )
       })
     })
 
     await t.test('a bare SELECT * does not unlock anything', (tt) => {
       if (!AUDIT_CASES.has(gameCase.id)) {
-        tt.skip('inherited murder case — replaced in Phase 3, see AUDIT_CASES')
+        tt.skip('inherited murder case, replaced in Phase 3, see AUDIT_CASES')
         return
       }
 
       // The anti-cheat only holds if the lazy query fails. A blank keyed on a
       // raw column (`username`, `reviewer`) is unlocked by a dump of its table,
-      // handing the player an answer for typing `SELECT *` — so every blank
+      // handing the player an answer for typing `SELECT *`, so every blank
       // must key on a name that exists in no table (an aggregate or a plain
       // alias) and name it in the hint.
       //
@@ -233,7 +233,7 @@ for (const gameCase of playable) {
           [...unlocked],
           [],
           `SELECT * FROM ${table} unlocks ${[...unlocked].map((k) => `"${k}"`).join(', ')} ` +
-            'without the player deducing anything — key those blanks on an alias that exists in no table',
+            'without the player deducing anything; key those blanks on an alias that exists in no table',
         )
       }
     })

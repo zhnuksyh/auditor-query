@@ -9,7 +9,7 @@ import { case07 } from './case07.js'
 import { case08 } from './case08.js'
 
 /**
- * The trailing "coming soon" placeholder — it renders as a folder but has no
+ * The trailing "coming soon" placeholder. It renders as a folder but has no
  * playable schema yet. `comingSoon` marks it for the level-select card.
  *
  * @param {Pick<import('../types.js').ComingSoonCase, 'id' | 'code' | 'tag' | 'title' | 'teaser' | 'folderTheme' | 'comingSoon'>} over

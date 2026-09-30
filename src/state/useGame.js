@@ -3,7 +3,7 @@ import { loadState, saveState, resetState } from '../engine/storage.js'
 
 /**
  * Top-level game state: which screen we're on, the persisted save, and the
- * currently open case. Persistence is transparent — any mutation via the
+ * currently open case. Persistence is transparent: any mutation via the
  * returned helpers writes through to localStorage.
  */
 export function useGame() {

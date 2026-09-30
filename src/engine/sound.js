@@ -1,6 +1,6 @@
 /**
  * Procedural sound engine. Every effect is synthesized with the Web Audio API
- * at play time — there are NO audio asset files, which keeps the zero-barrier,
+ * at play time: there are NO audio asset files, which keeps the zero-barrier,
  * $0-hosting pillar intact (nothing extra to download, no binaries in the repo).
  *
  * The engine is a lazy singleton: the AudioContext is only created on the first
@@ -24,7 +24,7 @@ let sfxBoost = 1
 // Ambience graph (built lazily on first start). A soft, slowly-drifting room
 // tone that sits far under the effects to give the app a "live workspace" feel.
 // It plays only when sound is on AND background music isn't (so they don't
-// muddy each other) — see `ambienceAllowed`.
+// muddy each other); see `ambienceAllowed`.
 let ambience = null
 let musicActive = false // set by the app so ambience yields to music
 
@@ -169,7 +169,7 @@ function tone({ freq, type = 'sine', start = 0, dur = 0.12, gain = 1, glideTo = 
   osc.frequency.setValueAtTime(freq, t0)
   if (glideTo != null) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur)
 
-  // Fast attack, exponential decay — reads as a clean digital "blip".
+  // Fast attack, exponential decay, reads as a clean digital "blip".
   g.gain.setValueAtTime(0.0001, t0)
   g.gain.exponentialRampToValueAtTime(gain, t0 + 0.008)
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
@@ -181,7 +181,7 @@ function tone({ freq, type = 'sine', start = 0, dur = 0.12, gain = 1, glideTo = 
 }
 
 /**
- * A short burst of band-passed noise — the raw material for "paper" and other
+ * A short burst of band-passed noise: the raw material for "paper" and other
  * textural, non-pitched sounds. The band-pass centre sweeps over the burst so
  * it reads as a quick rustle/flip rather than a flat shhh.
  */
@@ -216,7 +216,7 @@ const EFFECTS = {
   hover: () => tone({ freq: 620, type: 'sine', dur: 0.05, gain: 0.55 }),
   click: () => tone({ freq: 420, type: 'triangle', dur: 0.08, gain: 1.05, glideTo: 300 }),
   tab: () => tone({ freq: 520, type: 'triangle', dur: 0.09, gain: 0.9, glideTo: 660 }),
-  // Tab switch: a paper-flip rustle — two overlapping noise sweeps for the
+  // Tab switch: a paper-flip rustle: two overlapping noise sweeps for the
   // "page lifting then settling" texture, with a soft low thump underneath.
   paper: () => {
     noiseBurst({ dur: 0.14, gain: 0.75, freq: 2600, sweepTo: 1100, q: 0.7 })
@@ -248,7 +248,7 @@ const EFFECTS = {
 
   // The game's key moments.
   unlock: () => {
-    // Bright ascending arpeggio — "evidence obtained".
+    // Bright ascending arpeggio: "evidence obtained".
     tone({ freq: 659, type: 'sine', dur: 0.12, gain: 0.6 })
     tone({ freq: 880, type: 'sine', start: 0.09, dur: 0.12, gain: 0.6 })
     tone({ freq: 1175, type: 'sine', start: 0.18, dur: 0.18, gain: 0.55 })

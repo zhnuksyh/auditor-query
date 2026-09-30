@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 // Curated beginner SQL video tutorials (open in a new tab).
 const VIDEOS = [
   {
-    title: 'SQL Tutorial — Full Database Course for Beginners',
+    title: 'SQL Tutorial: Full Database Course for Beginners',
     by: 'freeCodeCamp',
     url: 'https://www.youtube.com/watch?v=HXV3zeQKqGY',
   },
@@ -20,8 +20,8 @@ const VIDEOS = [
 ]
 
 // The core clauses a player needs to work an engagement. The examples run
-// against the kind of tables the cases actually ship — accounts, entitlements,
-// changes, approvals — so pasting one into Analysis means something.
+// against the kind of tables the cases actually ship (accounts, entitlements,
+// changes, approvals), so pasting one into Analysis means something.
 const CLAUSES = [
   {
     kw: 'SELECT … FROM',
@@ -40,7 +40,7 @@ const CLAUSES = [
   },
   {
     kw: 'IN',
-    desc: 'Match any value from a set — shorter than chaining ORs.',
+    desc: 'Match any value from a set. Shorter than chaining ORs.',
     ex: "SELECT * FROM accounts WHERE department IN ('Finance', 'IT');",
   },
   {
@@ -55,7 +55,7 @@ const CLAUSES = [
   },
   {
     kw: 'LEFT JOIN … IS NULL',
-    desc: 'Find rows with NO match in the other table — the auditor’s workhorse.',
+    desc: 'Find rows with NO match in the other table: the auditor’s workhorse.',
     ex: 'SELECT c.id\nFROM changes c\nLEFT JOIN approvals ap ON ap.change_id = c.id\nWHERE ap.id IS NULL;',
   },
   {
@@ -65,7 +65,7 @@ const CLAUSES = [
   },
   {
     kw: 'DISTINCT',
-    desc: 'Drop duplicate rows/values — handy for “how many different …”.',
+    desc: 'Drop duplicate rows/values; handy for “how many different …”.',
     ex: 'SELECT COUNT(DISTINCT system_id) FROM entitlements;',
   },
   {
@@ -77,12 +77,12 @@ const CLAUSES = [
 
 // Domain vocabulary. A murder mystery needs no glossary; an audit does. Every
 // case leans on at least one of these, and the scope memo introduces a term in
-// plain language before the player has to query it — but this is where someone
+// plain language before the player has to query it, but this is where someone
 // who has never sat an audit can look it up without leaving the game.
 const GLOSSARY = [
   {
     term: 'Control',
-    desc: 'A rule the organisation says it enforces — “every production change is approved before it ships”. The engagement tests whether the records bear that out.',
+    desc: 'A rule the organisation says it enforces, such as “every production change is approved before it ships”. The engagement tests whether the records bear that out.',
   },
   {
     term: 'Exception',
@@ -90,7 +90,7 @@ const GLOSSARY = [
   },
   {
     term: 'Segregation of duties (SoD)',
-    desc: 'No one person should hold two powers that together let them act unchecked — raise a payment and approve it, write the code and deploy it.',
+    desc: 'No one person should hold two powers that together let them act unchecked: raise a payment and approve it, write the code and deploy it.',
   },
   {
     term: 'Entitlement',
@@ -98,7 +98,7 @@ const GLOSSARY = [
   },
   {
     term: 'Privileged access',
-    desc: 'Rights beyond an ordinary user — admin, root, superuser. Audited hardest, because they can erase their own tracks.',
+    desc: 'Rights beyond an ordinary user: admin, root, superuser. Audited hardest, because they can erase their own tracks.',
   },
   {
     term: 'Joiner-mover-leaver (JML)',
@@ -114,11 +114,11 @@ const GLOSSARY = [
   },
   {
     term: 'Change advisory board (CAB)',
-    desc: 'The body that approves production changes. A deploy with no CAB record — or one approved after it shipped — is an exception.',
+    desc: 'The body that approves production changes. A deploy with no CAB record, or one approved after it shipped, is an exception.',
   },
   {
     term: 'Change ticket',
-    desc: 'The record of one proposed change, with its own reference (CHG-4410). It names the system the change is for, and a CAB approval covers exactly that — not any change that happens to quote the number.',
+    desc: 'The record of one proposed change, with its own reference (CHG-4410). It names the system the change is for, and a CAB approval covers exactly that, not any change that happens to quote the number.',
   },
   {
     term: 'Automated control',
@@ -130,7 +130,7 @@ const GLOSSARY = [
   },
   {
     term: 'Audit period',
-    desc: 'The window under examination. Evidence outside it is out of scope — check the dates before you conclude.',
+    desc: 'The window under examination. Evidence outside it is out of scope. Check the dates before you conclude.',
   },
   {
     term: 'Workpaper',
@@ -169,11 +169,11 @@ export default function Guide({ game, play, overlay = false }) {
         <Section title="How an engagement works">
           <ol className="space-y-2 text-sm leading-relaxed text-zinc-300">
             <Step n="1">
-              Read the <b className="text-zinc-100">Scope</b> — the memo names the control being
+              Read the <b className="text-zinc-100">Scope</b>: the memo names the control being
               tested and states every fact you'll need to evidence the exception.
             </Step>
             <Step n="2">
-              Study the <b className="text-zinc-100">Data Map</b> — the tables you've been given,
+              Study the <b className="text-zinc-100">Data Map</b>: the tables you've been given,
               their columns, and how they connect (foreign keys).
             </Step>
             <Step n="3">
@@ -182,12 +182,12 @@ export default function Guide({ game, play, overlay = false }) {
             </Step>
             <Step n="4">
               Write up the <b className="text-zinc-100">Finding</b>. Each blank unlocks only after
-              you run the query that evidences it — then submit to close the engagement.
+              you run the query that evidences it, then submit to close the engagement.
             </Step>
           </ol>
           <p className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
             You can't guess your way through, and a finding you can't evidence isn't a finding.
-            The records never lie — find where the <i>control</i> does.
+            The records never lie. Find where the <i>control</i> does.
           </p>
         </Section>
 
@@ -208,7 +208,7 @@ export default function Guide({ game, play, overlay = false }) {
           </div>
         </Section>
 
-        {/* Domain glossary — the thing the murder game never needed. */}
+        {/* Domain glossary: the thing the murder game never needed. */}
         <Section title="Audit vocabulary">
           <div className="space-y-2">
             {GLOSSARY.map((g) => (
@@ -221,7 +221,7 @@ export default function Guide({ game, play, overlay = false }) {
         </Section>
 
         {/* Video tutorials */}
-        <Section title="Learn SQL — video tutorials">
+        <Section title="Learn SQL: video tutorials">
           <div className="space-y-2">
             {VIDEOS.map((v) => (
               <a

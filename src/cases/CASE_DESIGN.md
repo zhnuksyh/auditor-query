@@ -1,14 +1,14 @@
-# Case Design — what makes a case *harder*
+# Case Design: what makes a case *harder*
 
 > **Note on the examples.** This document carried over from Detective Query, the
 > murder-mystery game this project forked from, and its worked examples still
 > cite those eight cases. They are kept deliberately: the design rules are about
 > SQL shape and deduction, not about the theme, and the cases are real evidence
-> for them. Read "killer" as "the exception" and "suspect" as "the account" — the
+> for them. Read "killer" as "the exception" and "suspect" as "the account"; the
 > reasoning transfers exactly. Phase 3 replaces the table as audit cases ship.
 
 `_TEMPLATE.md` covers the **mechanics** of a case: the fields to fill in, the
-schema format, how unlocks are wired. This document covers the **design** — how
+schema format, how unlocks are wired. This document covers the **design**: how
 to pitch a new case above the last one, and the rules that keep it solvable.
 
 Read this before writing a case. Fill in `_TEMPLATE.md` after.
@@ -19,11 +19,11 @@ Read this before writing a case. Fill in `_TEMPLATE.md` after.
 
 These are independent, and confusing them is the easiest mistake to make.
 
-**Mechanical difficulty — "which query do I have to write?"**
+**Mechanical difficulty: "which query do I have to write?"**
 How advanced the SQL is. A case needing `GROUP BY … HAVING` is mechanically
 harder than one needing a `WHERE` clause.
 
-**Deductive difficulty — "even with the right query, is the answer obvious?"**
+**Deductive difficulty: "even with the right query, is the answer obvious?"**
 How much reasoning is left *after* the SQL runs. A case where the killer is the
 only row returned is deductively trivial no matter how clever the query was.
 
@@ -35,8 +35,8 @@ A case can be hard in one and easy in the other. The best cases raise both.
 
 ### Measuring deductive difficulty
 
-Run the **first obvious query** a player would try — the one-table filter the
-narrative points at (who held that entitlement during the audit period?) — and
+Run the **first obvious query** a player would try (the one-table filter the
+narrative points at (who held that entitlement during the audit period?) and
 count the candidates it returns. That number is your deductive difficulty.
 
 | Survivors | Verdict |
@@ -89,17 +89,17 @@ backbone of the ladder and the reason the game teaches anything.
 | 05 | `SUM … HAVING` + a TEXT join across tables |
 | 06 | anti-join / absence (`IS NULL`), correlated subquery |
 | 07 | **self-join** (a table against itself), `EXCEPT` |
-| 08 | **window function** — `LAG() OVER (ORDER BY …)`, subquery-wrapped |
+| 08 | **window function**: `LAG() OVER (ORDER BY …)`, subquery-wrapped |
 
 **Still unused, roughly in order of difficulty:** `LEAD` and `PARTITION BY`
 (case 08 used only `LAG`, so the rest of the window family is still fresh),
 `UNION` for combining evidence sets, recursive CTEs (probably a step too far).
 
 sql.js ships SQLite **3.49.1**, and `LAG`, `LEAD`, `ROW_NUMBER`, `PARTITION BY`
-and CTEs are all confirmed working — no need to re-check before using them.
+and CTEs are all confirmed working; no need to re-check before using them.
 
 Case 07 used the self-join and `EXCEPT`. Note that a self-join pairs naturally
-with any hourly log where the *transition* matters rather than the value —
+with any hourly log where the *transition* matters rather than the value:
 tide turning, a door state changing, a temperature crossing a threshold.
 
 Case 08 used `LAG()` to expose a **gap that exists in no column**: ordering the
@@ -107,13 +107,13 @@ shift roster by start time and pulling the previous row's end shows where the
 relay failed to overlap. Reach for a window function whenever the answer lives
 *between* two consecutive rows rather than inside either one. Note that SQLite
 won't let you filter on a window alias in the same `WHERE`, so the query has to
-wrap it in a subquery — which is itself a useful difficulty step.
+wrap it in a subquery, which is itself a useful difficulty step.
 
 ### 2. Evidence sets to intersect
 
 The exception must never fall out of a single filter. Case 05 is the model: two
 suspects were in the pantry, two booked entries to the shell vendor, and only
-one account is in **both** — then the address match seals it.
+one account is in **both**, and then the address match seals it.
 
 Design rule: **keep more than one candidate per single-table filter**, so
 presence alone never convicts. Three sets of 2–3 candidates intersecting to one
@@ -122,7 +122,7 @@ person is the sweet spot.
 ### 3. Misdirection
 
 The most memorable dial and the most expensive to author. Case 04 is the
-standout: the headline fact — a 02:14 text "from the victim" — is **false**, and
+standout: the headline fact, a 02:14 text "from the victim", is **false**, and
 the data disproves itself via `MAX(ping_time)`. The player must dismantle a
 stated fact before the real question even makes sense.
 
@@ -131,7 +131,7 @@ contradicts; a physical impossibility (travel time between two logged
 locations); a record everyone treats as authoritative that turns out to be
 hand-written.
 
-Use sparingly — one misdirection per case, at most.
+Use sparingly: one misdirection per case, at most.
 
 ### 4. Table and suspect count (the weakest dial)
 
@@ -154,7 +154,7 @@ Violate these and the case breaks.
   spanning midnight (`'23:30'`–`'03:00'`) or every gap/overlap filter silently
   breaks. Clamp to same-day times. (This bit Case 04 during authoring.)
 - **Don't let a plain `SELECT *` unlock a blank you want earned.** Key it on a
-  column name that exists in no table and name the alias in the hint —
+  column name that exists in no table and name the alias in the hint:
   an aggregate (`incident_count`, `last_ping`, `skimmed_total`) or a plain
   aliased column (`orphan_account`, `signed_off_by`). `SELECT MAX(x)` *without*
   the alias deliberately does not unlock.
@@ -163,33 +163,33 @@ Violate these and the case breaks.
   a raw column like `username` or `reviewer` is unlocked by a bare dump of that
   table, and the player is handed an answer for typing `SELECT *`. Case 01
   shipped that way in draft: `SELECT * FROM accounts` alone unlocked four of its
-  five blanks, and the suite stayed green throughout — `npm test` only checks
+  five blanks, and the suite stayed green throughout: `npm test` only checks
   that a proving query *does* unlock its blank, never that a lazy query *does
-  not*. `npm test` now checks this for you — but **only for cases listed in
+  not*. `npm test` now checks this for you, but **only for cases listed in
   `AUDIT_CASES` in `test/cases.test.mjs`**. The inherited murder cases all fail
   it and are skipped there, since they are being replaced anyway.
 
   > **When you add a new audit case, add its id to `AUDIT_CASES`.** Forget, and
-  > the check silently does not apply to your case — the suite goes green and
+  > the check silently does not apply to your case: the suite goes green and
   > your blanks may still fall to a bare `SELECT *`.
 - **No proving query may give away a LATER answer.** Blanks are declared in the
   intended solve order, and a query may only unlock blanks at or before its own
   position. Unlocking a later blank hands the player an answer they haven't
-  earned — usually because a helper query selected `s.name` it didn't need.
+  earned, usually because a helper query selected `s.name` it didn't need.
 
   Unlocking an *earlier* blank is fine and often unavoidable: Case 02's alibi
   query filters `WHERE s.name = 'Marcus Feld'`, so only someone who already
   identified him can write it.
 
-  When two blanks are genuinely **one deduction** — Case 03's killer and
+  When two blanks are genuinely **one deduction** (Case 03's killer and
   incident count come from the same `GROUP BY`; Case 05's poison and its window
-  come from the same toxicology row — declare `coUnlocksWith: 'otherKey'` rather
+  come from the same toxicology row), declare `coUnlocksWith: 'otherKey'` rather
   than splitting the query into busywork.
 
   `npm test` enforces all of this. It found real leaks in five of seven cases
   the first time it ran, so do not rely on spotting them by eye.
 - **Every deduction must be UNIQUE in the data, not just in your proving query.**
-  `npm test` only checks that your query unlocks its blank — it cannot tell you
+  `npm test` only checks that your query unlocks its blank; it cannot tell you
   that the *general* form of the same question returns three rows. Case 08 nearly
   shipped with three countersignatures written after their signer's shift ended;
   the proving query looked fine because it filtered on `dose_mg = 60`. Run the
@@ -224,5 +224,5 @@ Deductive:
 - [ ] Every fact needed is in the narrative prose.
 - [ ] The contradiction cannot be spotted without running a query.
 - [ ] A player who guesses the most suspicious-sounding account is wrong.
-- [ ] The unfiltered form of every deduction returns exactly **one** row —
+- [ ] The unfiltered form of every deduction returns exactly **one** row:
       no second row anywhere in the seed data answers the same question.

@@ -10,7 +10,7 @@ const STARTER = '-- Test the control. Try:\nSELECT * FROM accounts;'
 
 // Last run result per case, kept in memory so switching tabs (or leaving and
 // reopening the case) doesn't clear the results grid. Deliberately not in the
-// localStorage save — result sets can be large, and a fresh session re-runs fine.
+// localStorage save: result sets can be large, and a fresh session re-runs fine.
 const resultCache = new Map()
 
 export default function AnalysisTab({ caseData, db, dbError, game, play, shake, unlocked, onUnlocksChange }) {
@@ -159,7 +159,7 @@ export default function AnalysisTab({ caseData, db, dbError, game, play, shake, 
         </div>
       </div>
 
-      {/* Auditor's Workpaper — full width when stacked, fixed sidebar on desktop. */}
+      {/* Auditor's Workpaper: full width when stacked, fixed sidebar on desktop. */}
       <aside className="flex h-48 shrink-0 flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40 lg:h-auto lg:w-72">
         {/* Header height matches the SQL-input header so their bottom borders
             sit on the same line. */}

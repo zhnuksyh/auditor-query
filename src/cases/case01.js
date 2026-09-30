@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * CASE 01 — "THE LEAVER"
+ * CASE 01: "THE LEAVER"
  *
  * The tutorial engagement. A quarterly access review at Kestrel Freight passed
  * clean, then the payroll export walked out of the building on a Sunday. The
@@ -11,12 +11,12 @@
  *   1. Read the leavers table to find who left and when.
  *   2. Join it to accounts to see which of those accounts is still enabled.
  *   3. Check sessions to find which live account was actually USED after its
- *      owner's last day — that use is the exception, not the mere existence.
+ *      owner's last day. That use is the exception, not the mere existence.
  *   4. Read the system that account reaches (payroll) and the review that
  *      signed it off anyway.
  *
  * Deductive shape: three people left in the period, and two of them still have
- * an enabled account — leaving alone does not convict. Only one of those two
+ * an enabled account, so leaving alone does not convict. Only one of those two
  * shows a session after their last day. The intersection of "left", "still
  * enabled" and "used since" is a single account.
  *
@@ -31,7 +31,7 @@ export const case01 = {
   tag: 'ACCESS',
   title: 'The Leaver',
   teaser:
-    'Three people left in March. The access review passed clean. On a Sunday in April, someone pulled the payroll export — and every one of them had already handed back their laptop.',
+    'Three people left in March. The access review passed clean. On a Sunday in April, someone pulled the payroll export, and every one of them had already handed back their laptop.',
   folderTheme: 'access', // maps to paper.access tone
   locked: false,
 
@@ -41,22 +41,22 @@ export const case01 = {
     {
       tab: 'scene',
       title: 'Welcome to Internal Audit',
-      body: 'You test controls by querying the records with SQL — no guessing. Work left to right through the four tabs. Let’s walk through this engagement.',
+      body: 'You test controls by querying the records with SQL. No guessing. Work left to right through the four tabs. Let’s walk through this engagement.',
     },
     {
       tab: 'scene',
       title: '1 · Scope',
-      body: 'Read the memo carefully. It names the control being tested and states every fact you’ll need — who left, what the control promises, and what happened anyway.',
+      body: 'Read the memo carefully. It names the control being tested and states every fact you’ll need: who left, what the control promises, and what happened anyway.',
     },
     {
       tab: 'board',
       title: '2 · Data Map',
-      body: 'These are the tables you’ve been given, with their columns. Dotted lines are foreign keys — they show how tables connect (e.g. accounts.person_id → people.id).',
+      body: 'These are the tables you’ve been given, with their columns. Dotted lines are foreign keys: they show how tables connect (e.g. accounts.person_id → people.id).',
     },
     {
       tab: 'analysis',
       title: '3 · Analysis',
-      body: 'Write SQL here and press RUN. Try “SELECT * FROM accounts;” to list them all. Then dig deeper — join the leavers against their accounts to find which one outlived its owner.',
+      body: 'Write SQL here and press RUN. Try “SELECT * FROM accounts;” to list them all. Then dig deeper: join the leavers against their accounts to find which one outlived its owner.',
     },
     {
       tab: 'analysis',
@@ -66,26 +66,26 @@ export const case01 = {
     {
       tab: 'report',
       title: '4 · Finding',
-      body: 'Fill each blank from the dropdowns. A blank stays locked until you’ve run the query that evidences it — then submit to close the engagement and unlock the next file.',
+      body: 'Fill each blank from the dropdowns. A blank stays locked until you’ve run the query that evidences it, then submit to close the engagement and unlock the next file.',
     },
     {
       title: 'Tip · Audit Manual',
-      body: 'Stuck on SQL, or on a term? Click the book icon at the top right — or press the Tab key — to toggle the Audit Manual: a cheat sheet of every clause you’ll need, plus a glossary. Good luck.',
+      body: 'Stuck on SQL, or on a term? Click the book icon at the top right, or press the Tab key, to toggle the Audit Manual: a cheat sheet of every clause you’ll need, plus a glossary. Good luck.',
     },
   ],
 
   engagement: {
     // Each vital renders as two stacked lines within one row cell.
     vitals: [
-      { term: 'Control', line1: 'ITGC-A04 — Deprovisioning', line2: 'Access revoked within 1 working day of exit' },
-      { term: 'System', line1: 'Kestrel Freight — Helios HR', line2: 'Payroll, expenses, personnel records' },
+      { term: 'Control', line1: 'ITGC-A04: Deprovisioning', line2: 'Access revoked within 1 working day of exit' },
+      { term: 'System', line1: 'Kestrel Freight: Helios HR', line2: 'Payroll, expenses, personnel records' },
       { term: 'Audit period', line1: '1 March – 30 April 2026', line2: 'Q1 leavers, post-review sample' },
     ],
     report: `Kestrel Freight runs a control it is rather proud of: ITGC-A04. When someone leaves the company, IT disables their account within one working day of their last day. Every quarter, a system owner reviews who still has access and signs that the list is correct. The March review was signed off clean.
 
-On Sunday 12 April, at 02:47, somebody exported the full payroll file out of Helios HR — every salary, every bank detail, for the whole company. Nobody was working that night. THREE PEOPLE LEFT KESTREL IN MARCH, and all three returned their laptops at the door.
+On Sunday 12 April, at 02:47, somebody exported the full payroll file out of Helios HR: every salary, every bank detail, for the whole company. Nobody was working that night. THREE PEOPLE LEFT KESTREL IN MARCH, and all three returned their laptops at the door.
 
-Here is the thing the review was supposed to catch. An account that outlives its owner is called an ORPHANED ACCOUNT, and it is the oldest finding in access management: nobody owns it, so nobody misses it, and it keeps every permission it had on the day its owner walked out. Leaving alone is not the exception — plenty of leavers are deprovisioned properly, and a disabled account can sit in the table forever doing no harm. The exception is an account that was still ENABLED after its owner's last day, and was then USED.
+Here is the thing the review was supposed to catch. An account that outlives its owner is called an ORPHANED ACCOUNT, and it is the oldest finding in access management: nobody owns it, so nobody misses it, and it keeps every permission it had on the day its owner walked out. Leaving alone is not the exception: plenty of leavers are deprovisioned properly, and a disabled account can sit in the table forever doing no harm. The exception is an account that was still ENABLED after its owner's last day, and was then USED.
 
 You have the people, their leaving dates, their accounts, the login sessions, and the review sign-off. One account in this data was live when it should have been dead, and somebody logged into it. Find it, find what it could reach, and find who signed to say the list was correct.`,
   },
@@ -249,7 +249,7 @@ You have the people, their leaving dates, their accounts, the login sessions, an
   report: {
     // Template: {{key}} tokens are replaced by dropdowns.
     template:
-      'Control ITGC-A04 failed. The account {{username}} belonged to a leaver whose last day was {{lastDay}}, but it was never disabled — and at 02:47 on 12 April, sixteen days after its owner had gone, somebody logged into it from outside the network. The account held {{accessLevel}} rights on {{system}}, which is where the payroll export came from. The March access review was signed off by {{reviewer}} as having no exceptions noted.',
+      'Control ITGC-A04 failed. The account {{username}} belonged to a leaver whose last day was {{lastDay}}, but it was never disabled, and at 02:47 on 12 April, sixteen days after its owner had gone, somebody logged into it from outside the network. The account held {{accessLevel}} rights on {{system}}, which is where the payroll export came from. The March access review was signed off by {{reviewer}} as having no exceptions noted.',
     blanks: {
       username: {
         label: 'the orphaned account',
@@ -268,7 +268,7 @@ You have the people, their leaving dates, their accounts, the login sessions, an
           JOIN sessions s ON s.account_id = a.id
           WHERE a.status = 'enabled' AND s.login_date > l.last_day
         `,
-        hint: 'Join leavers to accounts to find the ones still enabled, then to sessions — which was logged into after its owner’s last day? Alias it AS orphan_account.',
+        hint: 'Join leavers to accounts to find the ones still enabled, then to sessions. Which was logged into after its owner’s last day? Alias it AS orphan_account.',
       },
       lastDay: {
         label: 'their last day',
@@ -334,7 +334,7 @@ You have the people, their leaving dates, their accounts, the login sessions, an
           SELECT system_name, review_date, reviewer AS signed_off_by, outcome
           FROM access_reviews WHERE system_name = 'Helios HR'
         `,
-        hint: 'access_reviews records who signed off each system in March — take the one for the system the orphaned account reached, aliased AS signed_off_by.',
+        hint: 'access_reviews records who signed off each system in March. Take the one for the system the orphaned account reached, aliased AS signed_off_by.',
       },
     },
   },

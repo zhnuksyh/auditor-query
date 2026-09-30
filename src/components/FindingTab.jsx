@@ -10,7 +10,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
   // the menu, and opening other cases.
   const answers = game.save.reportAnswers?.[caseData.id] || {}
   const [graded, setGraded] = useState(null)
-  // True only for the solve that just happened in this session — it drives the
+  // True only for the solve that just happened in this session; it drives the
   // slam animation + sound; a previously solved case shows the stamp at rest.
   const [justSolved, setJustSolved] = useState(false)
 
@@ -70,7 +70,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
           </p>
         </div>
 
-        {/* The narrative with inline blanks — no surrounding box, roomy line spacing. */}
+        {/* The narrative with inline blanks: no surrounding box, roomy line spacing. */}
         <div className="text-base leading-[2.6] text-zinc-300">
           {parts.map((part, i) => {
             const m = part.match(/\{\{(\w+)\}\}/)
@@ -103,7 +103,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
           })}
         </div>
 
-        {/* Result banner — only for a wrong deduction; a correct one gets the
+        {/* Result banner: only for a wrong deduction; a correct one gets the
             full-board stamp instead. */}
         {graded && !graded.correct && (
           <div className="mt-6 animate-pop-in rounded-xl border border-crimson bg-crimson-dim/10 p-4 text-sm text-crimson">
@@ -111,7 +111,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
           </div>
         )}
 
-        {/* Submit — gone for good once the case is closed. */}
+        {/* Submit: gone for good once the case is closed. */}
         {!stamped && (
           <div className="mt-6 flex justify-end">
             <button

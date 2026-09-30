@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * CASE 02 — "THE GREEN LIGHT"
+ * CASE 02: "THE GREEN LIGHT"
  *
  * Change management. Vantor Mutual's claims system paid 214 claims twice in a
  * single overnight run. Every release that week passed the deployment
@@ -9,11 +9,11 @@
  * on that system.
  *
  * The player must:
- *   1. List the releases to Claims Engine in the audit week — three of them.
+ *   1. List the releases to Claims Engine in the audit week: three of them.
  *   2. Triangulate each release across deployments, change_tickets and
  *      cab_approvals. One was blocked (the gate worked). Two carry an approved
  *      reference, and look identical at that depth.
- *   3. Notice that one of those approvals was granted for a DIFFERENT SYSTEM —
+ *   3. Notice that one of those approvals was granted for a DIFFERENT SYSTEM:
  *      a Broker Portal change, reused as a key to get a Claims Engine release
  *      past a gate that only checks "is this reference approved?".
  *   4. Follow that release to the engineer who shipped it and the commit it
@@ -25,7 +25,7 @@
  * isolates the exception. The Friday-evening release looks the riskiest and is
  * clean.
  *
- * Also a trap on the deployer: CHG-4388 was deployed TWICE — legitimately to
+ * Also a trap on the deployer: CHG-4388 was deployed TWICE, legitimately to
  * Broker Portal, then again to Claims Engine. Filtering on the reference alone
  * names two engineers; the system has to be in the filter too.
  */
@@ -43,8 +43,8 @@ export const case02 = {
 
   engagement: {
     vitals: [
-      { term: 'Control', line1: 'ITGC-C02 — Change approval', line2: 'Every production change CAB-approved first' },
-      { term: 'System', line1: 'Vantor Mutual — Claims Engine', line2: 'Claim assessment and payment runs' },
+      { term: 'Control', line1: 'ITGC-C02: Change approval', line2: 'Every production change CAB-approved first' },
+      { term: 'System', line1: 'Vantor Mutual: Claims Engine', line2: 'Claim assessment and payment runs' },
       { term: 'Audit period', line1: '13 – 17 July 2026', line2: 'Releases before incident INC-2207' },
     ],
     report: `Vantor Mutual is an insurer, and its Claims Engine decides which claims get paid. Before each overnight payment run, the engine checks every claim against those already paid, so nobody is paid twice. On Saturday 18 July, the run paid 214 claims twice. Finance opened incident INC-2207 at 09:10 and clawed most of it back by Wednesday. Internal Audit has been asked how a change that broke the duplicate-claim check reached production.
@@ -226,7 +226,7 @@ THREE RELEASES REACHED CLAIMS ENGINE BETWEEN 13 AND 17 JULY. You have the engine
         label: 'the change reference it quoted',
         targetValue: 'CHG-4388',
         // Keyed on an alias. A dump of deployments lists every reference, and
-        // the approved ones look alike — only the ticket-vs-deployment system
+        // the approved ones look alike; only the ticket-vs-deployment system
         // comparison singles this one out.
         unlockedByColumn: 'unapproved_change',
         triggerValue: 'CHG-4388',
@@ -242,7 +242,7 @@ THREE RELEASES REACHED CLAIMS ENGINE BETWEEN 13 AND 17 JULY. You have the engine
           JOIN cab_approvals c ON c.change_ref = d.change_ref
           WHERE d.status = 'Succeeded' AND t.system_name <> d.system_name
         `,
-        hint: 'Join deployments to change_tickets and cab_approvals. Both Claims Engine releases that got through have an approval — so compare the system on the ticket with the system deployed to. Alias the reference AS unapproved_change.',
+        hint: 'Join deployments to change_tickets and cab_approvals. Both Claims Engine releases that got through have an approval, so compare the system on the ticket with the system deployed to. Alias the reference AS unapproved_change.',
       },
       approvedFor: {
         label: 'what the approval actually covered',
@@ -274,7 +274,7 @@ THREE RELEASES REACHED CLAIMS ENGINE BETWEEN 13 AND 17 JULY. You have the engine
           FROM deployments d JOIN engineers e ON e.id = d.deployed_by
           WHERE d.change_ref = 'CHG-4388' AND d.system_name = 'Claims Engine'
         `,
-        hint: 'Join deployments to engineers for that reference — careful, it was released more than once. Alias the name AS deployer_name.',
+        hint: 'Join deployments to engineers for that reference. Careful, it was released more than once. Alias the name AS deployer_name.',
       },
       commit: {
         label: 'the commit it carried',

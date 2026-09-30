@@ -42,7 +42,7 @@ export function evaluateUnlocks(blanks, rows, alreadyUnlocked) {
  * Resolve a configured column against the row's keys ignoring case. SQLite
  * reports result columns with whatever casing the player typed, so an unlock
  * keyed on `last_ping` must also accept `AS Last_Ping` / `AS LAST_PING`.
- * Only own keys count — never fall through to Object.prototype.
+ * Only own keys count; never fall through to Object.prototype.
  * @param {Record<string, unknown>} row
  * @param {string} column
  * @returns {unknown}

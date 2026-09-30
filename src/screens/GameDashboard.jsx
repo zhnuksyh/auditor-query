@@ -85,7 +85,7 @@ export default function GameDashboard({ game, play, shake }) {
 
   return (
     <div className="relative flex h-full w-full flex-col">
-      {/* Case header — its inner container matches the content-card container
+      {/* Case header: its inner container matches the content-card container
           below (same px-6 outer padding + max-w-4xl), so their left/right edges
           line up exactly. */}
       <header className="px-4 pb-4 pt-5 sm:px-6 sm:pt-8">
@@ -175,7 +175,7 @@ export default function GameDashboard({ game, play, shake }) {
         </div>
       </div>
 
-      {/* Case Brief overlay — the guide, accessible without leaving the case. */}
+      {/* Case Brief overlay: the guide, accessible without leaving the case. */}
       {showBrief && (
         <div className="absolute inset-0 z-40 animate-pop-in bg-zinc-950">
           <Guide game={game} play={play} overlay />

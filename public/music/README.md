@@ -10,7 +10,7 @@ The game loops a single background track while you work a case.
 3. Point `MUSIC_FILE` in [`src/engine/music.js`](../../src/engine/music.js) at
    its filename.
 
-The current track is `theme.mp3` — carried over from Detective Query, this
+The current track is `theme.mp3`, carried over from Detective Query, this
 project's parent, and still a crime-drama cue rather than anything audit-flavoured.
 Replacing it is on the reskin list. Until the file named in `MUSIC_FILE` is
 present the game stays silent; everything else works fine without it.

@@ -35,7 +35,7 @@ export default function TabBar({ tabs, active, onSelect }) {
   return (
     // The row carries a real 1px bottom border in the SAME colour/weight as the
     // content card's border, so the seam under the inactive tabs is literally
-    // the card border rendered by CSS — guaranteed to match. `w-fit` keeps the
+    // the card border rendered by CSS, guaranteed to match. `w-fit` keeps the
     // border from extending past the last tab; the ml-5 offsets the first tab
     // without adding a bare border segment to its left.
     <div className="relative z-10 ml-5 flex w-fit items-end border-b border-zinc-100">

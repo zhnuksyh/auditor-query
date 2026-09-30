@@ -16,14 +16,14 @@ const GameDashboard = lazy(() => lazyWithReload(() => import('./screens/GameDash
 // After a redeploy, GitHub Pages serves fresh chunk filenames (content-hashed),
 // but a browser holding a stale index.html still points at the OLD hashes. The
 // dynamic import then 404s with "Failed to fetch dynamically imported module".
-// A hard reload pulls the current HTML and fixes it — so on such a failure we
+// A hard reload pulls the current HTML and fixes it, so on such a failure we
 // reload once. A sessionStorage guard prevents an infinite reload loop: if the
 // fresh build is genuinely broken, we let the error propagate to the boundary.
 function lazyWithReload(importer) {
   const RELOAD_FLAG = 'dq-chunk-reloaded'
   return importer().then(
     (mod) => {
-      // Success — clear the guard so a future stale chunk can reload again.
+      // Success: clear the guard so a future stale chunk can reload again.
       sessionStorage.removeItem(RELOAD_FLAG)
       return mod
     },

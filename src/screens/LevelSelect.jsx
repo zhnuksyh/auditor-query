@@ -19,7 +19,7 @@ export default function LevelSelect({ game, play }) {
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Top bar — "Menu" button placed exactly where the case page shows
+      {/* Top bar: "Menu" button placed exactly where the case page shows
           "‹ FILES". The min-height matches the case header's taller row (which is
           sized by its title) so the back button sits at the same Y on both
           screens for a seamless transition. */}
@@ -117,7 +117,7 @@ function Folder({ c, index = 0, unlocked, solved, onOpen, onHover }) {
       )
     }
 
-    // Locked but real case — show a blurred silhouette of its title/teaser as a
+    // Locked but real case: show a blurred silhouette of its title/teaser as a
     // teaser, with a lock badge, so the player sees there's something there.
     return (
       <div

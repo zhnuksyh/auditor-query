@@ -39,7 +39,7 @@ export default function MainMenu({ game, play }) {
     play('click')
     switch (key) {
       case 'new':
-        // Starting fresh wipes progress — confirm first if there's any.
+        // Starting fresh wipes progress; confirm first if there's any.
         if (hasProgress) setConfirmNew(true)
         else startNewGame()
         break
@@ -139,7 +139,7 @@ export default function MainMenu({ game, play }) {
               Start a new game?
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-              This will erase your current progress — solved cases, unlocked files, and
+              This will erase your current progress: solved cases, unlocked files, and
               notebook notes. This can’t be undone.
             </p>
             <div className="mt-6 flex justify-end gap-3">

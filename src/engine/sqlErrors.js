@@ -23,22 +23,22 @@ export function friendlySqlError(raw) {
   m = msg.match(/near\s+"([^"]*)":\s*syntax error/i)
   if (m) {
     return m[1]
-      ? `There’s a syntax slip near “${m[1]}” — check for a typo or a missing keyword.`
-      : `There’s a syntax slip near the end — check for a missing keyword.`
+      ? `There’s a syntax slip near “${m[1]}”. Check for a typo or a missing keyword.`
+      : `There’s a syntax slip near the end. Check for a missing keyword.`
   }
 
   if (lower.includes('incomplete input')) {
-    return 'The query looks unfinished — you may be missing part of the statement.'
+    return 'The query looks unfinished; you may be missing part of the statement.'
   }
   if (lower.includes('unrecognized token')) {
-    return 'There’s an unexpected character in the query — check for stray symbols.'
+    return 'There’s an unexpected character in the query. Check for stray symbols.'
   }
   if (lower.includes('ambiguous column name')) {
     m = msg.match(/ambiguous column name:\s*(\S+)/i)
-    return `“${m ? m[1] : 'A column'}” exists in more than one table — prefix it with the table name (e.g. accounts.id).`
+    return `“${m ? m[1] : 'A column'}” exists in more than one table. Prefix it with the table name (e.g. accounts.id).`
   }
   if (lower.includes('wrong number of arguments')) {
-    return 'A function got the wrong number of arguments — check its parentheses.'
+    return 'A function got the wrong number of arguments. Check its parentheses.'
   }
 
   // Strip the "Error: " prefix if present, otherwise return as-is.

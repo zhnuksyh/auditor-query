@@ -1,5 +1,5 @@
 {
-  // Type-checking ONLY. TypeScript never emits anything here — Vite still does
+  // Type-checking ONLY. TypeScript never emits anything here; Vite still does
   // all the building, and the shipped bundle is untouched. Files opt in with
   // `// @ts-check` at the top; everything else is ignored.
   //
@@ -30,7 +30,7 @@
   },
   // The test suite is deliberately excluded: checking it would pull in
   // @types/node for `node:test` and force restructuring assert.doesNotThrow
-  // patterns, for no real safety gain — the tests are verified by running.
+  // patterns, for no real safety gain; the tests are verified by running.
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

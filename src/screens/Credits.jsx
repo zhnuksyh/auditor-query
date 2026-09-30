@@ -19,14 +19,14 @@ export default function Credits({ game, play }) {
 
       <div className="space-y-5 text-sm text-zinc-400">
         <Credit role="Concept & Design" who="Zahin Ukasyah" />
-        <Credit role="Main Menu Art" who="Rebecca Hu — Illustrator & Concept Artist" />
-        <Credit role="SQL Engine" who="sql.js — SQLite compiled to WebAssembly" />
+        <Credit role="Main Menu Art" who="Rebecca Hu, Illustrator & Concept Artist" />
+        <Credit role="SQL Engine" who="sql.js (SQLite compiled to WebAssembly)" />
         <Credit role="Editor" who="CodeMirror 6" />
         <Credit role="Data Grid" who="TanStack Table" />
         <Credit role="Frontend" who="React + Vite + Tailwind CSS" />
         <Credit role="Visual reference" who="GRID DAILY archive aesthetic" />
         <Credit role="Inspired by" who="SQL Noir & SQL Murder Mystery" />
-        <Credit role="Engine" who="Detective Query — same engine, different beat" />
+        <Credit role="Engine" who="Detective Query: same engine, different beat" />
 
         <p className="border-t border-zinc-800 pt-5 text-xs text-zinc-600">
           All engagements, systems, accounts, and audit data are entirely fictional. Any

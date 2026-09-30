@@ -65,7 +65,7 @@ export default function ResultsTable({ result }) {
   if (result.empty || result.rows.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-xs text-zinc-600">
-        Query executed — 0 rows returned.
+        Query executed. 0 rows returned.
       </div>
     )
   }
