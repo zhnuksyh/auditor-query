@@ -35,6 +35,16 @@ const CLAUSES = [
     ex: "SELECT * FROM accounts WHERE status = 'active';",
   },
   {
+    kw: '= <> < >',
+    desc: 'Compare two values; <> means “not equal”. Dates written YYYY-MM-DD compare correctly as text, so > means “later than”.',
+    ex: 'SELECT * FROM changes WHERE approved_on > deployed_on;',
+  },
+  {
+    kw: 'IS NULL / IS NOT NULL',
+    desc: 'Test for a missing value. “= NULL” never matches anything, not even a missing value, so always use IS NULL.',
+    ex: 'SELECT * FROM accounts WHERE disabled_on IS NULL;',
+  },
+  {
     kw: 'LIKE',
     desc: 'Match text by pattern: % = any run of characters, _ = one character.',
     ex: "SELECT * FROM entitlements WHERE role_name LIKE '%admin%';",
@@ -93,6 +103,11 @@ const CLAUSES = [
     kw: 'Subquery · NOT IN',
     desc: 'Use one query’s result inside another, e.g. to leave out a list of names.',
     ex: 'SELECT * FROM accounts\nWHERE id NOT IN (SELECT account_id FROM exceptions);',
+  },
+  {
+    kw: 'NOT EXISTS',
+    desc: 'Keep a row only if a subquery finds nothing for it. Does the same job as LEFT JOIN … IS NULL, and often reads more plainly.',
+    ex: 'SELECT * FROM changes c\nWHERE NOT EXISTS (\n  SELECT 1 FROM approvals ap WHERE ap.change_id = c.id\n);',
   },
   {
     kw: 'EXCEPT',
