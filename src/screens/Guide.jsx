@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Curated beginner SQL video tutorials (open in a new tab).
@@ -239,114 +240,254 @@ const GLOSSARY = [
   },
 ]
 
+// The vocabulary view lists terms alphabetically, a page at a time; the
+// GLOSSARY array stays in the order terms were introduced.
+const TERMS = [...GLOSSARY].sort((a, b) => a.term.localeCompare(b.term))
+const TERMS_PER_PAGE = 8
+
 // Renders as a full screen from the main menu, or as an in-place overlay when
 // `overlay` is set (opened via the book icon / Tab key in the case header,
-// which also owns the close control).
+// which also owns the close control). The vocabulary opens as a second view
+// inside it, so it works the same from either entry point.
 export default function Guide({ game, play, overlay = false }) {
+  const [view, setView] = useState('manual')
+  const [page, setPage] = useState(0)
+  const scrollRef = useRef(null)
+
+  const toTop = () => scrollRef.current?.scrollTo({ top: 0 })
+  const showView = (next) => {
+    setView(next)
+    toTop()
+  }
+  const showPage = (next) => {
+    setPage(next)
+    toTop()
+  }
+
   return (
-    <div className="h-full w-full overflow-y-auto">
+    <div ref={scrollRef} className="h-full w-full overflow-y-auto">
       <div className="mx-auto max-w-3xl px-6 py-8">
-        <header className="mb-8 border-b border-zinc-800 pb-4">
-          {!overlay && (
-            <button
-              onClick={() => {
-                play?.('click')
-                game.setScreen('menu')
-              }}
-              onMouseEnter={() => play?.('hover')}
-              className="flex items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-zinc-500 hover:text-zinc-100"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
-              main menu
-            </button>
-          )}
-          <h1 className="mt-3 font-display text-4xl font-black text-zinc-100">AUDIT MANUAL</h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            Everything you need to work an engagement with SQL.
-          </p>
-        </header>
+        {view === 'vocab' ? (
+          <Vocabulary
+            page={page}
+            onPage={showPage}
+            onBack={() => showView('manual')}
+            play={play}
+          />
+        ) : (
+          <>
+            <header className="mb-8 border-b border-zinc-800 pb-4">
+              {!overlay && (
+                <button
+                  onClick={() => {
+                    play?.('click')
+                    game.setScreen('menu')
+                  }}
+                  onMouseEnter={() => play?.('hover')}
+                  className="flex items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-zinc-500 hover:text-zinc-100"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+                  main menu
+                </button>
+              )}
+              <h1 className="mt-3 font-display text-4xl font-black text-zinc-100">AUDIT MANUAL</h1>
+              <p className="mt-2 text-sm text-zinc-500">
+                Everything you need to work an engagement with SQL.
+              </p>
+            </header>
 
-        {/* How the game works */}
-        <Section title="How an engagement works">
-          <ol className="space-y-2 text-sm leading-relaxed text-zinc-300">
-            <Step n="1">
-              Read the <b className="text-zinc-100">Scope</b>: the memo names the control being
-              tested and states every fact you'll need to evidence the exception.
-            </Step>
-            <Step n="2">
-              Study the <b className="text-zinc-100">Data Map</b>: the tables you've been given,
-              their columns, and how they connect (foreign keys).
-            </Step>
-            <Step n="3">
-              Write SQL in <b className="text-zinc-100">Analysis</b> to test the control and
-              surface the records that contradict it.
-            </Step>
-            <Step n="4">
-              Write up the <b className="text-zinc-100">Finding</b>. Each blank unlocks only after
-              you run the query that evidences it, then submit to close the engagement.
-            </Step>
-          </ol>
-          <p className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
-            You can't guess your way through, and a finding you can't evidence isn't a finding.
-            The records never lie. Find where the <i>control</i> does.
-          </p>
-        </Section>
+            {/* How the game works */}
+            <Section title="How an engagement works">
+              <ol className="space-y-2 text-sm leading-relaxed text-zinc-300">
+                <Step n="1">
+                  Read the <b className="text-zinc-100">Scope</b>: the memo names the control being
+                  tested and states every fact you'll need to evidence the exception.
+                </Step>
+                <Step n="2">
+                  Study the <b className="text-zinc-100">Data Map</b>: the tables you've been given,
+                  their columns, and how they connect (foreign keys).
+                </Step>
+                <Step n="3">
+                  Write SQL in <b className="text-zinc-100">Analysis</b> to test the control and
+                  surface the records that contradict it.
+                </Step>
+                <Step n="4">
+                  Write up the <b className="text-zinc-100">Finding</b>. Each blank unlocks only after
+                  you run the query that evidences it, then submit to close the engagement.
+                </Step>
+              </ol>
+              <p className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
+                You can't guess your way through, and a finding you can't evidence isn't a finding.
+                The records never lie. Find where the <i>control</i> does.
+              </p>
+            </Section>
 
-        {/* SQL cheat sheet */}
-        <Section title="SQL you'll actually use">
-          <div className="space-y-3">
-            {CLAUSES.map((c) => (
-              <div key={c.kw} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-mono text-sm font-semibold text-exception">{c.kw}</span>
-                  <span className="text-right text-xs text-zinc-400">{c.desc}</span>
-                </div>
-                <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
-                  {c.ex}
-                </pre>
+            {/* SQL cheat sheet */}
+            <Section title="SQL you'll actually use">
+              <div className="space-y-3">
+                {CLAUSES.map((c) => (
+                  <div key={c.kw} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="font-mono text-sm font-semibold text-exception">{c.kw}</span>
+                      <span className="text-right text-xs text-zinc-400">{c.desc}</span>
+                    </div>
+                    <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
+                      {c.ex}
+                    </pre>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </Section>
+            </Section>
 
-        {/* Domain glossary: the thing the murder game never needed. */}
-        <Section title="Audit vocabulary">
-          <div className="space-y-2">
-            {GLOSSARY.map((g) => (
-              <div key={g.term} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-                <div className="text-sm font-semibold text-zinc-200">{g.term}</div>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-400">{g.desc}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* Video tutorials */}
-        <Section title="Learn SQL: video tutorials">
-          <div className="space-y-2">
-            {VIDEOS.map((v) => (
-              <a
-                key={v.url}
-                href={v.url}
-                target="_blank"
-                rel="noopener noreferrer"
+            {/* Domain glossary: the thing the murder game never needed. Too long
+                to list inline, so it opens as its own paged view. */}
+            <Section title="Audit vocabulary">
+              <button
+                onClick={() => {
+                  play?.('paper')
+                  showView('vocab')
+                }}
                 onMouseEnter={() => play?.('hover')}
-                className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"
+                className="group flex w-full items-center justify-between gap-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-left transition-colors hover:border-exception/60"
               >
                 <div>
-                  <div className="text-sm font-medium text-zinc-200">{v.title}</div>
-                  <div className="text-xs text-zinc-500">{v.by}</div>
+                  <div className="text-sm font-semibold text-zinc-200">
+                    Browse all {TERMS.length} terms
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                    {TERMS.slice(0, 4).map((t) => t.term).join(' · ')} …
+                  </p>
                 </div>
-                <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase leading-none tracking-widest text-zinc-500">
-                  <span className="pt-px">watch</span>
-                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-                </span>
-              </a>
-            ))}
-          </div>
-        </Section>
+                <ChevronRight
+                  className="h-4 w-4 shrink-0 text-zinc-500 transition-colors group-hover:text-exception"
+                  strokeWidth={2.5}
+                />
+              </button>
+            </Section>
+
+            {/* Video tutorials */}
+            <Section title="Learn SQL: video tutorials">
+              <div className="space-y-2">
+                {VIDEOS.map((v) => (
+                  <a
+                    key={v.url}
+                    href={v.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onMouseEnter={() => play?.('hover')}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-600"
+                  >
+                    <div>
+                      <div className="text-sm font-medium text-zinc-200">{v.title}</div>
+                      <div className="text-xs text-zinc-500">{v.by}</div>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase leading-none tracking-widest text-zinc-500">
+                      <span className="pt-px">watch</span>
+                      <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </Section>
+          </>
+        )}
       </div>
     </div>
+  )
+}
+
+function Vocabulary({ page, onPage, onBack, play }) {
+  const pages = Math.ceil(TERMS.length / TERMS_PER_PAGE)
+  const first = page * TERMS_PER_PAGE
+  const shown = TERMS.slice(first, first + TERMS_PER_PAGE)
+
+  return (
+    <>
+      <header className="mb-6 border-b border-zinc-800 pb-4">
+        <button
+          onClick={() => {
+            play?.('back')
+            onBack()
+          }}
+          onMouseEnter={() => play?.('hover')}
+          className="flex items-center gap-1 text-[11px] uppercase tracking-[0.3em] text-zinc-500 hover:text-zinc-100"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+          audit manual
+        </button>
+        <h1 className="mt-3 font-display text-4xl font-black text-zinc-100">AUDIT VOCABULARY</h1>
+        <p className="mt-2 text-sm text-zinc-500">
+          {TERMS.length} terms the engagements use, A to Z.
+        </p>
+      </header>
+
+      <ol className="space-y-2">
+        {shown.map((g) => (
+          <li key={g.term} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+            <div className="text-sm font-semibold text-zinc-200">{g.term}</div>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-400">{g.desc}</p>
+          </li>
+        ))}
+      </ol>
+
+      {/* Pinned to the bottom of the scroll area so the pages stay reachable
+          while a long page of terms scrolls underneath. */}
+      <div className="sticky -bottom-8 mt-6 border-t border-zinc-800 bg-zinc-950/95 pb-11 pt-4 backdrop-blur">
+        <nav
+          aria-label="Vocabulary pages"
+          className="flex items-center justify-between gap-3"
+        >
+          <PageButton disabled={page === 0} onClick={() => onPage(page - 1)} play={play}>
+            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.5} />
+            prev
+          </PageButton>
+
+          <div className="flex flex-wrap justify-center gap-1.5">
+            {Array.from({ length: pages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  play?.('click')
+                  onPage(i)
+                }}
+                aria-current={i === page ? 'page' : undefined}
+                className={`h-7 min-w-7 rounded-md border px-2 font-mono text-[11px] transition-colors ${
+                  i === page
+                    ? 'border-exception text-exception'
+                    : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-200'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <PageButton disabled={page === pages - 1} onClick={() => onPage(page + 1)} play={play}>
+            next
+            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </PageButton>
+        </nav>
+        <p className="mt-2 text-center text-[11px] text-zinc-600">
+          {first + 1}–{first + shown.length} of {TERMS.length}
+        </p>
+      </div>
+    </>
+  )
+}
+
+function PageButton({ disabled, onClick, play, children }) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={() => {
+        play?.('click')
+        onClick()
+      }}
+      onMouseEnter={() => !disabled && play?.('hover')}
+      className="flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-zinc-400 transition-colors hover:text-zinc-100 disabled:cursor-not-allowed disabled:text-zinc-700"
+    >
+      {children}
+    </button>
   )
 }
 
