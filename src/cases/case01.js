@@ -66,7 +66,7 @@ export const case01 = {
     {
       tab: 'report',
       title: '4 · Finding',
-      body: 'Fill each blank from the dropdowns. A blank stays locked until you’ve run the query that evidences it, then submit to close the engagement and unlock the next file.',
+      body: 'Fill each blank from the dropdowns. A blank stays locked until you’ve run the query that evidences it. Under the Finding, each blank shows the column name your query must return it as, with a hint if you’re stuck. Submit to close the engagement and unlock the next file.',
     },
     {
       title: 'Tip · Audit Manual',

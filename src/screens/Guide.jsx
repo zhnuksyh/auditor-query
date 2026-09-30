@@ -86,7 +86,7 @@ const CLAUSES = [
   },
   {
     kw: 'AS (alias)',
-    desc: 'Name a result column. Every Finding blank unlocks on a named alias, so use the name the hint asks for.',
+    desc: 'Name a result column. Every Finding blank unlocks on a named alias, listed under the Finding, so use exactly that name.',
     ex: 'SELECT username AS flagged_account FROM accounts;',
   },
   {
@@ -374,9 +374,9 @@ export default function Guide({ game, play, overlay = false }) {
                   <Mono>last_day</Mono>. When exactly one row survives, you have the exception.
                 </Step>
                 <Step n="5">
-                  <b className="text-zinc-100">Name the evidence.</b> Alias the column that answers
-                  the blank with the name its hint asks for (see <Mono>AS</Mono> below) and run it
-                  again. An <b className="text-zinc-100">EVIDENCE OBTAINED</b> toast means that
+                  <b className="text-zinc-100">Name the evidence.</b> Under the Finding, each blank
+                  lists the column name it needs. Alias your answering column to that name (see{' '}
+                  <Mono>AS</Mono> below) and run it again. An <b className="text-zinc-100">EVIDENCE OBTAINED</b> toast means that
                   blank is now unlocked on the Finding.
                 </Step>
                 <Step n="6">

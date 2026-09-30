@@ -169,6 +169,11 @@ Violate these and the case breaks.
   plain aliased column (`orphan_account`, `signed_off_by`). `SELECT MAX(x)`
   *without* the alias deliberately does not unlock.
 
+  Players see each blank's `label` and alias under the Finding at all times,
+  and its `hint` on request. So the alias and label must not give the answer
+  away (`orphan_account`, not `brecht_account`), and the hint should point at
+  the method, not the row.
+
   This applies to **every** blank, not just the aggregate ones. A blank keyed on
   a raw column like `username` or `reviewer` is unlocked by a bare dump of that
   table, and the player is handed an answer for typing `SELECT *`. Case 01
