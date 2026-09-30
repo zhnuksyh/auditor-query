@@ -5,11 +5,9 @@ Porting **Detective Query** (murder mystery) to **Auditor Query** (IT auditing).
 This repo began as a git clone of `../deduction-query` at commit `a21816a`.
 This document is the plan for the port and the record of what has been done.
 
-Status: **Phases 0–2 done; Phase 3 in progress.** Cases 01 (The Leaver) and 02
-(The Green Light) are real audit engagements. Cases 03–08 are still the parent
-game's murder mysteries, so the game currently reads as two audits followed by
-six killings: expected mid-port, but not shippable until the ladder is
-finished.
+Status: **Phases 0–3 done.** All eight cases are audit engagements. Still
+outstanding: the trailer (Phase 4), the music track, and a playtest of the
+ladder (see Recommended sequencing).
 
 `npm test`, `npm run typecheck` and `npm run build` are green.
 
@@ -144,21 +142,22 @@ Cherry-pick engine fixes across if either side diverges.
 
 ### Phase 3: Author the case ladder (the actual work, ~1 day per case)
 
-90% of the effort, and it is genuine case *design*, not porting. Follow
-`CASE_DESIGN.md` unchanged, and pick each case's subject and realism dial from
-`src/cases/AUDIT_PRACTICE.md`, which also recommends two changes to this ladder
-(Case 06 moves to population completeness; IT operations needs a rung).
+90% of the effort, and it is genuine case *design*, not porting. Each case's
+subject and realism dial came from `src/cases/AUDIT_PRACTICE.md`, which also
+moved Case 06 from a repeat of Case 01 to population completeness. IT
+operations is still uncovered and is the natural Case 09 (the coming-soon stub,
+"Restore Point", already points at it).
 
 | # | Case | New query shape | Domain |
 |---|---|---|---|
 | 01 | ✅ **The Leaver**: orphaned account (tutorial) | `WHERE` + `JOIN` | Access management |
 | 02 | ✅ **The Green Light**: approval reused across systems | multi-table triangulation | Change management |
-| 03 | Rubber-stamp access review | `GROUP BY … HAVING` | Recertification |
-| 04 | Backdated approval (misdirection) | aggregate alias | Change management |
-| 05 | Segregation-of-duties breach | `SUM … HAVING` + TEXT join | Financial ITGC |
-| 06 | Termination, no deprovisioning | anti-join / `IS NULL` | Joiner-mover-leaver |
-| 07 | Shared credential, two locations | self-join, `EXCEPT` | Privileged access |
-| 08 | Privilege creep across reviews | `LAG() OVER` | Entitlement drift |
+| 03 | ✅ **Rubber Stamp**: twelve lines certified in six minutes | `GROUP BY … HAVING` | Recertification |
+| 04 | ✅ **Paper Trail**: approval created after go-live, back-dated | aggregate alias | Change management |
+| 05 | ✅ **Both Sides**: SoD conflict exercised, paid to own account | `SUM … HAVING` + TEXT join | Financial ITGC |
+| 06 | ✅ **The Missing Row**: leaver report omitted contractors | anti-join / `IS NULL` | Population completeness (IPE) |
+| 07 | ✅ **Two at Once**: generic admin account open from two hosts | self-join, `EXCEPT` | Privileged access |
+| 08 | ✅ **Nothing Taken Away**: three moves, no access removed | `LAG() OVER (PARTITION BY …)` | Mover access |
 
 **Build Case 01 first, end to end, and play it** before writing 02–08. That
 validates the whole reskin against a real player experience while the cost of
@@ -183,6 +182,25 @@ changing direction is still one file.
   *selects* a later blank's column fails it. Project only what the deduction
   needs.
 
+#### What Cases 02–08 taught
+
+- **The template leaks as easily as the data.** The Finding tab is visible from
+  the start. Case 02's template drafted with the release date and Case 03's with
+  the reviewer's six-minute window; either filters straight to the answer. Keep
+  dates, times, amounts, counts and product names out of the template and memo.
+- **Explained deviations make the best decoys.** A retro-approved emergency
+  change (04), an SoD holder with an approved exception (05) and a mover under a
+  handover exception (08) each look exactly like the exception until a second
+  table is read. That is also how real audits go.
+- **A zero-survivor first query is a valid design** when it is the point: Cases
+  04 and 06 are about an obvious test that passes and proves nothing.
+- **Plant the wrong aggregate on purpose.** Case 04's harmless later edit makes
+  `MAX` flag the wrong change; Case 05's pre-change payment makes an all-payments
+  `SUM` give the wrong total; Case 06's December leaver punishes a missing
+  period filter.
+- **Check every weekday.** Several deductions lean on "one working day" or "the
+  CAB meets on Mondays"; every date was checked against the real 2026 calendar.
+
 ### Phase 4: Trailer (~half day, deferrable)
 
 `src/trailer/` is ~1,300 lines with ~20 theme references. It is a self-contained
@@ -203,9 +221,12 @@ second entry point: safe to defer entirely, or ship without a trailer initially.
 - **`paper.*` folder tones were rekeyed** to audit domains even though nothing
   renders them yet; the `FolderTheme` type is the only thing holding them
   honest, and fixing eight stale values later is worse than fixing them now.
-- **`CASE_DESIGN.md` keeps its murder examples**, with a note at the top. The
-  rules are about SQL shape, not theme, and the shipped cases are real evidence
-  for them. The example table gets replaced as audit cases ship.
+- **`CASE_DESIGN.md` kept its rules and swapped its examples.** The rules are
+  about SQL shape, not theme; once all eight audit cases shipped, its examples
+  and tables were rewritten around them.
+- **The `AUDIT_CASES` opt-in list was removed.** It existed so the inherited
+  murder cases could skip the bare-`SELECT *` check. With every case an audit
+  case, the check now runs on every playable case by default.
 - **Outstanding:** the music track is still the parent game's crime-drama cue,
   renamed to `theme.mp3`. Needs a replacement.
 
@@ -230,6 +251,11 @@ weight), and play them.
 If audit cases feel as satisfying to crack as murder cases, continue the ladder.
 If they feel like homework, you have spent two days finding out instead of two
 weeks.
+
+**What actually happened:** Cases 03–08 were written straight after 01 and 02,
+without the playtest. Every case passes `npm test` and a hand check of its
+deductions, but nobody has yet played the ladder end to end. That playtest is
+the outstanding check.
 
 One upside worth noting: this version has an audience the murder one does not.
 Audit/GRC training is a real market, and "learn SQL by finding control

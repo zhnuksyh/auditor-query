@@ -85,30 +85,36 @@ row makes a case unsolvable without anything else visibly breaking.
 
 ## Project status
 
-The reskin from Detective Query is **in progress**. The shell, the workspace
-structure and the copy are done, and Cases 01 and 02 are real audit engagements.
+All eight engagements are IT audit cases. The reskin from Detective Query is
+done except for the trailer and the music track, which are still the parent
+game's.
 
-**Cases 03–08 are still the parent game's murder mysteries**, wearing
-audit-shaped field names because the structural rename touched every case. So
-the game currently plays as two audits followed by six killings. That is a
-known mid-port state, not a bug. Each inherited case is replaced wholesale when
-its turn comes rather than re-themed piecemeal.
+| # | Engagement | Domain | SQL it teaches |
+|---|---|---|---|
+| 01 | The Leaver | Deprovisioning | `WHERE` + `JOIN` |
+| 02 | The Green Light | Change approval | Multi-table triangulation |
+| 03 | Rubber Stamp | Access recertification | `GROUP BY … HAVING` |
+| 04 | Paper Trail | Backdated change approval | Aggregate alias |
+| 05 | Both Sides | Segregation of duties | `SUM … HAVING`, TEXT join |
+| 06 | The Missing Row | Population completeness | Anti-join |
+| 07 | Two at Once | Shared privileged account | Self-join, `EXCEPT` |
+| 08 | Nothing Taken Away | Privilege creep | `LAG() OVER (PARTITION BY …)` |
 
 See [`RESKIN_PLAN.md`](RESKIN_PLAN.md) for the phase breakdown, the decisions
 already made, and the lessons from authoring the audit cases. The short version:
 
 | Phase | What | Status |
 |---|---|---|
-| 0 | Rebrand: identity, save key, palette | done |
+| 0 | Rebrand: identity, save key, palette | done (music track outstanding) |
 | 1 | Scope/Data Map/Finding rename, case-supplied vitals | done |
 | 2 | Audit manual, glossary, workspace copy | done |
-| 3 | Author the eight audit cases | **2 of 8**: "The Leaver", "The Green Light" |
+| 3 | Author the eight audit cases | done |
 | 4 | Trailer | deferred |
 
-Before writing a case, read [`src/cases/CASE_DESIGN.md`](src/cases/CASE_DESIGN.md),
-especially the rule that every Finding blank must be keyed on an alias that
-exists in no table, and the note that the test enforcing it only covers case ids
-listed in `AUDIT_CASES`.
+Before writing a case, read [`src/cases/AUDIT_PRACTICE.md`](src/cases/AUDIT_PRACTICE.md)
+for how real IT audit work is done, then
+[`src/cases/CASE_DESIGN.md`](src/cases/CASE_DESIGN.md), especially the rule that
+every Finding blank must be keyed on an alias that exists in no table.
 
 ## Deployment (GitHub Pages)
 
@@ -161,9 +167,9 @@ SPA-fallback rewrites.
 
 Cases are pure data. `src/cases/CASE_DESIGN.md` explains what makes a case harder
 than the one before it: the difficulty dials, the constraints that keep a case
-solvable, and the checklist to run it against. It carried over from the murder
-game essentially unchanged, because the design rules are about SQL and deduction
-rather than about the theme.
+solvable, and the checklist to run it against. Its rules carried over from the
+murder game, because they are about SQL and deduction rather than the theme;
+its examples are now the audit cases.
 
 `src/cases/_TEMPLATE.md` is a design form covering everything a case needs:
 identity, the engagement memo, the database schema and seed rows (with the single
