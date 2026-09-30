@@ -86,7 +86,7 @@ const CLAUSES = [
   },
   {
     kw: 'AS (alias)',
-    desc: 'Name a result column. Every Finding blank unlocks on a named alias, listed under the Finding, so use exactly that name.',
+    desc: 'Name a result column, so a count or a joined value says what it is.',
     ex: 'SELECT username AS flagged_account FROM accounts;',
   },
   {
@@ -327,8 +327,9 @@ export default function Guide({ game, play, overlay = false }) {
                   surface the records that contradict it.
                 </Step>
                 <Step n="4">
-                  Write up the <b className="text-zinc-100">Finding</b>. Each blank unlocks only after
-                  you run the query that evidences it, then submit to close the engagement.
+                  Write up the <b className="text-zinc-100">Finding</b>. Every blank offers several
+                  plausible answers, and only your query results tell them apart. Submit to close
+                  the engagement.
                 </Step>
               </ol>
               <p className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
@@ -374,10 +375,9 @@ export default function Guide({ game, play, overlay = false }) {
                   <Mono>last_day</Mono>. When exactly one row survives, you have the exception.
                 </Step>
                 <Step n="5">
-                  <b className="text-zinc-100">Name the evidence.</b> Under the Finding, each blank
-                  lists the column name it needs. Alias your answering column to that name (see{' '}
-                  <Mono>AS</Mono> below) and run it again. An <b className="text-zinc-100">EVIDENCE OBTAINED</b> toast means that
-                  blank is now unlocked on the Finding.
+                  <b className="text-zinc-100">Write down what you proved.</b> The row that survives
+                  answers a blank on the Finding. Every dropdown there offers several plausible
+                  choices, so pick the one your results show, not the one that sounds right.
                 </Step>
                 <Step n="6">
                   <b className="text-zinc-100">Let each answer lead to the next.</b> The account you
@@ -388,8 +388,8 @@ export default function Guide({ game, play, overlay = false }) {
               </ol>
               <p className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
                 Every engagement opens the same way: turn the control into a question, start from
-                the population, follow the keys, narrow one condition at a time, then name what you
-                found.
+                the population, follow the keys, narrow one condition at a time, then write up
+                what you found.
               </p>
             </Section>
 
