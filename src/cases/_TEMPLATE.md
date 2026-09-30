@@ -162,3 +162,5 @@ Before it's a real case, confirm:
 - [ ] The `targetValue` of every blank is in its `options`.
 - [ ] The contradiction is discoverable **only** by querying (not stated outright).
 - [ ] The narrative contains every fact needed, in plain language.
+- [ ] No em dashes (—) anywhere in the case: narrative, hints, template, comments.
+      Use a colon, semicolon, comma, parentheses or a new sentence.
