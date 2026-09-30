@@ -337,6 +337,62 @@ export default function Guide({ game, play, overlay = false }) {
               </p>
             </Section>
 
+            {/* A worked start on the tutorial case. It walks the method up to
+                the point of the answer and stops, so it never solves Case 01
+                for the player. */}
+            <Section title="Where to begin: Case 01, step by step">
+              <p className="mb-4 text-sm leading-relaxed text-zinc-400">
+                The first query is the hardest one to write. Here is how to open{' '}
+                <b className="text-zinc-200">The Leaver</b> without giving its answer away. The
+                same moves open every engagement.
+              </p>
+              <ol className="space-y-4 text-sm leading-relaxed text-zinc-300">
+                <Step n="1">
+                  <b className="text-zinc-100">Turn the control into a question.</b> The Scope says
+                  ITGC-A04 disables a leaver’s account within one working day, and the memo says the
+                  exception is an account still enabled after its owner left, and then used. So the
+                  question is: <i>which leaver’s account was logged into after their last day?</i>
+                </Step>
+                <Step n="2">
+                  <b className="text-zinc-100">Start from the population.</b> Find the table listing
+                  everything the control should have acted on, here everyone who left, and look at
+                  it whole before you filter anything.
+                  <Code>{'SELECT * FROM leavers;'}</Code>
+                </Step>
+                <Step n="3">
+                  <b className="text-zinc-100">Follow the keys.</b> The Data Map shows{' '}
+                  <Mono>leavers.person_id</Mono> and <Mono>accounts.person_id</Mono> both point at{' '}
+                  <Mono>people.id</Mono>. Join on them to put each leaver beside their account.
+                  <Code>
+                    {'SELECT l.person_id, l.last_day, a.username, a.status\nFROM leavers l\nJOIN accounts a ON a.person_id = l.person_id;'}
+                  </Code>
+                </Step>
+                <Step n="4">
+                  <b className="text-zinc-100">Narrow with each condition in the memo.</b> More than
+                  one leaver still has an enabled account, so that alone convicts nobody. Keep the
+                  enabled ones, then join <Mono>sessions</Mono> and keep only logins dated after{' '}
+                  <Mono>last_day</Mono>. When exactly one row survives, you have the exception.
+                </Step>
+                <Step n="5">
+                  <b className="text-zinc-100">Name the evidence.</b> Alias the column that answers
+                  the blank with the name its hint asks for (see <Mono>AS</Mono> below) and run it
+                  again. An <b className="text-zinc-100">EVIDENCE OBTAINED</b> toast means that
+                  blank is now unlocked on the Finding.
+                </Step>
+                <Step n="6">
+                  <b className="text-zinc-100">Let each answer lead to the next.</b> The account you
+                  found leads to <Mono>entitlements</Mono> (what could it reach?), and that system
+                  leads to <Mono>access_reviews</Mono> (who signed it off?). Note each fact in the
+                  Workpaper as you go.
+                </Step>
+              </ol>
+              <p className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-400">
+                Every engagement opens the same way: turn the control into a question, start from
+                the population, follow the keys, narrow one condition at a time, then name what you
+                found.
+              </p>
+            </Section>
+
             {/* SQL cheat sheet */}
             <Section title="SQL you'll actually use">
               <div className="space-y-3">
@@ -348,9 +404,7 @@ export default function Guide({ game, play, overlay = false }) {
                       <span className="whitespace-nowrap font-mono text-sm font-semibold text-exception">{c.kw}</span>
                       <InfoTip id={`clause-${i}`} label={c.kw} text={c.desc} />
                     </div>
-                    <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
-                      {c.ex}
-                    </pre>
+                    <Code>{c.ex}</Code>
                   </div>
                 ))}
               </div>
@@ -548,7 +602,19 @@ function Step({ n, children }) {
       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-zinc-700 text-[10px] font-bold text-zinc-400">
         {n}
       </span>
-      <span>{children}</span>
+      <div className="min-w-0">{children}</div>
     </li>
   )
+}
+
+function Code({ children }) {
+  return (
+    <pre className="mt-2 overflow-x-auto rounded-lg bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-300">
+      {children}
+    </pre>
+  )
+}
+
+function Mono({ children }) {
+  return <code className="font-mono text-[0.85em] text-zinc-100">{children}</code>
 }
