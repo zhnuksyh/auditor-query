@@ -319,7 +319,7 @@ You have the people, their leaving dates, their accounts, the login sessions, an
           FROM entitlements e JOIN accounts a ON a.id = e.account_id
           WHERE a.username = 'i.brecht'
         `,
-        hint: 'The same entitlements row names the system the account could reach.',
+        hint: 'The same entitlements row names the system the account could reach. Alias it AS orphan_system.',
       },
       reviewer: {
         label: 'who signed the review',
