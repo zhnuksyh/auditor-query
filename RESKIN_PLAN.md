@@ -5,7 +5,7 @@ Porting **Detective Query** (murder mystery) to **Auditor Query** (IT auditing).
 This repo began as a git clone of `../deduction-query` at commit `a21816a`.
 This document is the plan for the port and the record of what has been done.
 
-Status: **Phases 0–3 done.** All eight cases are audit engagements. Still
+Status: **Phases 0–3 done.** All ten cases are audit engagements. Still
 outstanding: the trailer (Phase 4), the music track, and a playtest of the
 ladder (see Recommended sequencing).
 
@@ -144,9 +144,9 @@ Cherry-pick engine fixes across if either side diverges.
 
 90% of the effort, and it is genuine case *design*, not porting. Each case's
 subject and realism dial came from `src/cases/AUDIT_PRACTICE.md`, which also
-moved Case 06 from a repeat of Case 01 to population completeness. IT
-operations is still uncovered and is the natural Case 09 (the coming-soon stub,
-"Restore Point", already points at it).
+moved Case 06 from a repeat of Case 01 to population completeness. Cases 09
+and 10 were added past the original eight: IT operations (the one ITGC domain
+the first eight missed) and a reliance-chain capstone.
 
 | # | Case | New query shape | Domain |
 |---|---|---|---|
@@ -158,6 +158,8 @@ operations is still uncovered and is the natural Case 09 (the coming-soon stub,
 | 06 | ✅ **The Missing Row**: leaver report omitted contractors | anti-join / `IS NULL` | Population completeness (IPE) |
 | 07 | ✅ **Two at Once**: generic admin account open from two hosts | self-join, `EXCEPT` | Privileged access |
 | 08 | ✅ **Nothing Taken Away**: three moves, no access removed | `LAG() OVER (PARTITION BY …)` | Mover access |
+| 09 | ✅ **Restore Point**: backups reported Success while writing 12 MB | CTE (`WITH … AS`) | IT operations |
+| 10 | ✅ **Tolerance**: match tolerance changed straight in the database | `UNION ALL` | Reliance on an automated control |
 
 **Build Case 01 first, end to end, and play it** before writing 02–08. That
 validates the whole reskin against a real player experience while the cost of

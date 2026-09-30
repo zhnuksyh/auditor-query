@@ -57,10 +57,13 @@ Where the shipped cases actually land:
 | 06 The Missing Row | leavers on the report disabled late | 0; the report is the problem |
 | 07 Two at Once | generic-account sessions that evening | 4 |
 | 08 Nothing Taken Away | users whose role count rose | 3 |
+| 09 Restore Point | failed backup jobs | 1, on the wrong system (explained) |
+| 10 Tolerance | config changes without a ticket, in the app audit | 0; the log is incomplete |
 
-Every case needs an intersection to reach the exception. Cases 04 and 06 are
-the deliberate zeros: the obvious test clears everyone, which is exactly the
-false comfort the case is about.
+Every case needs an intersection to reach the exception. Cases 04, 06 and 10
+are the deliberate zeros, and Case 09 the deliberate wrong lead: the obvious
+test clears everyone or points elsewhere, which is exactly the false comfort
+the case is about.
 
 In Detective Query, two cases shipped with a single survivor and had to be
 rebalanced by adding candidates *after* the fact. That is more delicate than
@@ -92,10 +95,12 @@ backbone of the ladder and the reason the game teaches anything.
 | 06 | anti-join / absence (`LEFT JOIN … IS NULL`), `NOT EXISTS`, date arithmetic |
 | 07 | **self-join** (a table against itself), `EXCEPT` |
 | 08 | **window function**: `LAG() OVER (PARTITION BY … ORDER BY …)`, subquery-wrapped |
+| 09 | **CTE** (`WITH … AS`): a per-system baseline every row is compared against |
+| 10 | `UNION ALL`: two logs stacked into one complete population |
 
 **Still unused, roughly in order of difficulty:** `LEAD`, `ROW_NUMBER`,
-`UNION` for combining evidence sets, CTEs (`WITH`), recursive CTEs (probably a
-step too far).
+`RANK`, recursive CTEs (probably a step too far for players; Case 09 uses one
+only to seed its data).
 
 sql.js ships SQLite **3.49.1**, and `LAG`, `LEAD`, `ROW_NUMBER`, `PARTITION BY`
 and CTEs are all confirmed working; no need to re-check before using them.

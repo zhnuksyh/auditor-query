@@ -267,8 +267,8 @@ against sections 4 and 6 shows two things to fix:
   contractors, the control looked clean, and only reconciling payroll against
   the directory reveals the missing leaver. Same SQL rung, a genuinely new
   auditor skill.
-- **IT operations is untested.** No case touches batch jobs or backups. That
-  suits an extra rung beyond Case 08, or a swap if a later case feels thin.
+- **IT operations was untested.** No case touched batch jobs or backups.
+  Case 09 now covers backup and recovery; batch job monitoring is still open.
 
 Recommended ladder, pairing each SQL rung with one realism dial from section 6:
 
@@ -282,7 +282,9 @@ Recommended ladder, pairing each SQL rung with one realism dial from section 6:
 | 06 | The missing leaver | Access: IPE | Anti-join / `IS NULL` | Population completeness |
 | 07 | Shared admin credential | Privileged access | Self-join, `EXCEPT` | Joining identities: one account, two people |
 | 08 | Privilege creep | Entitlement drift | `LAG() OVER` | Explained deviations: which grants were approved exceptions |
-| 09+ | Candidates | Operations; ITAC reliance; vendor master fraud | `LEAD`, `PARTITION BY`, `UNION` | Reliance chains; severity |
+| 09 | ✅ Restore Point | IT operations: backup and recovery | CTE (`WITH … AS`) | A control reporting green while operating on nothing |
+| 10 | ✅ Tolerance | Reliance on an automated control | `UNION ALL` | Reliance chains; completing a change population from two logs |
+| 11+ | Candidates | Vendor master fraud; firefighter log review; batch job failures | `LEAD`, `ROW_NUMBER` | Severity; aggregation |
 
 ### Keep these unrealistic on purpose
 

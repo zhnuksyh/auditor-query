@@ -85,7 +85,7 @@ row makes a case unsolvable without anything else visibly breaking.
 
 ## Project status
 
-All eight engagements are IT audit cases. The reskin from Detective Query is
+All ten engagements are IT audit cases. The reskin from Detective Query is
 done except for the trailer and the music track, which are still the parent
 game's.
 
@@ -99,6 +99,8 @@ game's.
 | 06 | The Missing Row | Population completeness | Anti-join |
 | 07 | Two at Once | Shared privileged account | Self-join, `EXCEPT` |
 | 08 | Nothing Taken Away | Privilege creep | `LAG() OVER (PARTITION BY …)` |
+| 09 | Restore Point | Backup and recovery | CTE (`WITH … AS`) |
+| 10 | Tolerance | Reliance on an automated control | `UNION ALL` |
 
 See [`RESKIN_PLAN.md`](RESKIN_PLAN.md) for the phase breakdown, the decisions
 already made, and the lessons from authoring the audit cases. The short version:
@@ -108,7 +110,7 @@ already made, and the lessons from authoring the audit cases. The short version:
 | 0 | Rebrand: identity, save key, palette | done (music track outstanding) |
 | 1 | Scope/Data Map/Finding rename, case-supplied vitals | done |
 | 2 | Audit manual, glossary, workspace copy | done |
-| 3 | Author the eight audit cases | done |
+| 3 | Author the audit cases | done (ten) |
 | 4 | Trailer | deferred |
 
 Before writing a case, read [`src/cases/AUDIT_PRACTICE.md`](src/cases/AUDIT_PRACTICE.md)
