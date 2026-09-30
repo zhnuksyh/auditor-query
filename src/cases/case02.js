@@ -1,273 +1,298 @@
 // @ts-check
 /**
- * CASE 02 — "A LONG WAY DOWN"
+ * CASE 02 — "THE GREEN LIGHT"
  *
- * A step harder than Case 01. Six tables, five suspects. Solving it needs the
- * player to JOIN across several tables and reason over more moving parts:
- *   - an elevator log (who rode to which floor, when),
- *   - phone tower pings (where each suspect's phone actually was),
- *   - purchase records (who bought the sabotaged item),
- *   - plus alibis and forensics.
+ * Change management. Vantor Mutual's claims system paid 214 claims twice in a
+ * single overnight run. Every release that week passed the deployment
+ * pipeline's approval gate. The control under test is change approval: every
+ * production change needs a change ticket the CAB has approved, for that change,
+ * on that system.
  *
- * The victim, Celeste Bloom, fell from her 7th-floor gallery balcony. Ruled a
- * possible suicide — but the balcony railing bracket was loosened (sabotage),
- * and the data exposes the one suspect who: (a) rode the elevator to Floor 7 in
- * the fall window while claiming to be off-site, (b) whose phone pinged the
- * gallery's tower at that time, and (c) bought a hex wrench matching the tool
- * marks on the bracket.
+ * The player must:
+ *   1. List the releases to Claims Engine in the audit week — three of them.
+ *   2. Triangulate each release across deployments, change_tickets and
+ *      cab_approvals. One was blocked (the gate worked). Two carry an approved
+ *      reference, and look identical at that depth.
+ *   3. Notice that one of those approvals was granted for a DIFFERENT SYSTEM —
+ *      a Broker Portal change, reused as a key to get a Claims Engine release
+ *      past a gate that only checks "is this reference approved?".
+ *   4. Follow that release to the engineer who shipped it and the commit it
+ *      carried.
  *
- * Every step is provable with SQL; nothing is guessable.
+ * Deductive shape: three releases reach the first obvious query. Status
+ * eliminates one; the approval itself eliminates nobody, because both survivors
+ * have one. Only comparing the ticket's system to the deployment's system
+ * isolates the exception. The Friday-evening release looks the riskiest and is
+ * clean.
+ *
+ * Also a trap on the deployer: CHG-4388 was deployed TWICE — legitimately to
+ * Broker Portal, then again to Claims Engine. Filtering on the reference alone
+ * names two engineers; the system has to be in the filter too.
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case02 = {
   id: 'case_02',
   code: 'CODE_02',
-  tag: 'FALLING',
-  title: 'A Long Way Down',
+  tag: 'CHANGE',
+  title: 'The Green Light',
   teaser:
-    'A gallery owner falls seven floors onto the atrium. The coroner says jump. The elevator, the towers, and a hardware receipt say otherwise.',
-  folderTheme: 'change',
+    'Every release that week passed the pipeline’s approval gate. On Saturday morning the claims system had paid 214 people twice.',
+  folderTheme: 'change', // maps to paper.change tone
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Celeste Bloom, 41', line2: 'Gallery owner' },
-      { term: 'Location', line1: 'Bloom Contemporary, 9 Wharf Rd.', line2: '7th-floor balcony → atrium' },
-      { term: 'Time of death', line1: '20:40 – 21:00', line2: 'March 3rd' },
+      { term: 'Control', line1: 'ITGC-C02 — Change approval', line2: 'Every production change CAB-approved first' },
+      { term: 'System', line1: 'Vantor Mutual — Claims Engine', line2: 'Claim assessment and payment runs' },
+      { term: 'Audit period', line1: '13 – 17 July 2026', line2: 'Releases before incident INC-2207' },
     ],
-    report: `Celeste Bloom fell from the seventh-floor balcony of her own gallery during a private viewing and was found in the atrium below at 21:07. The coroner's window for the fall is 20:40 to 21:00.
+    report: `Vantor Mutual is an insurer, and its Claims Engine decides which claims get paid. Before each overnight payment run, the engine checks every claim against those already paid, so nobody is paid twice. On Saturday 18 July, the run paid 214 claims twice. Finance opened incident INC-2207 at 09:10 and clawed most of it back by Wednesday. Internal Audit has been asked how a change that broke the duplicate-claim check reached production.
 
-At first glance it read as a jump — the balcony was empty, the door to it unlocked. But the maintenance team found the railing's corner BRACKET had been deliberately loosened: fresh tool marks from a HEX WRENCH, and two bolts backed most of the way out. Someone wanted that railing to give.
+The control is ITGC-C02, change approval. Every change to a production system is raised as a CHANGE TICKET with its own reference, such as CHG-4410. The ticket names the one system the change is for. The CHANGE ADVISORY BOARD (CAB) meets on Mondays and approves or rejects each ticket. A CAB approval covers the change on its ticket, to the system on its ticket, and nothing else.
 
-The building is instrumented. The service elevator logs every trip and floor. Every phone in range pings the nearest cell tower, and the gallery sits under the "Wharf-7" tower. And the hardware shop two blocks over keeps card receipts.
+Nobody enforces this by hand. The deployment pipeline has a gate: every release must quote a change reference, and the gate refuses any release whose reference the CAB has not approved. The gate passed every release that week except one. IT management's position is that the control operated as designed.
 
-Three people rode up to the seventh floor while Celeste was falling, and two of them said so freely. Five guests had a reason to want Celeste gone, and each gave a statement about where they were at 20:50. One of those statements is a lie the records don't support.`,
+THREE RELEASES REACHED CLAIMS ENGINE BETWEEN 13 AND 17 JULY. You have the engineers, every deployment, the change tickets, the CAB's decisions, the commits each release carried and the incident log. One of those releases went through without an approval that covered it. Find which change reference it quoted, what that approval was actually for, who shipped it, and what it changed.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    -- The delivery engineers. Anyone on this list can trigger a release.
+    CREATE TABLE engineers (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
-      relationship TEXT,
-      phone_id INTEGER
+      team TEXT
     );
-    INSERT INTO suspects (id, name, relationship, phone_id) VALUES
-      (1, 'Iris Kwan',    'Rival gallerist',      101),
-      (2, 'Damien Roth',  'Ex-husband',           102),
-      (3, 'Priya Anand',  'Lead artist (unpaid)', 103),
-      (4, 'Marcus Feld',  'Insurance beneficiary',104),
-      (5, 'Lena Sorkin',  'Gallery assistant',    105);
+    INSERT INTO engineers (id, name, team) VALUES
+      (1, 'Mei Tanaka',    'Broker'),
+      (2, 'Leon Varga',    'Claims'),
+      (3, 'Sade Adeyemi',  'Claims'),
+      (4, 'Ruth Ellison',  'Platform'),
+      (5, 'Kofi Mensah',   'Claims');
 
-    CREATE TABLE alibis (
+    -- A change ticket names ONE system. The CAB approves the ticket, so its
+    -- approval is only good for that system.
+    CREATE TABLE change_tickets (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      statement TEXT,
-      claimed_location TEXT
+      change_ref TEXT UNIQUE,
+      system_name TEXT,
+      summary TEXT,
+      requested_by INTEGER REFERENCES engineers(id),
+      risk TEXT
     );
-    INSERT INTO alibis (id, suspect_id, statement, claimed_location) VALUES
-      (1, 1, 'I was on the ground floor by the bar the whole evening.', 'Atrium bar'),
-      (2, 2, 'I left before eight and was driving home.',               'Off-site'),
-      (3, 3, 'I was hanging my canvases on the third floor.',           'Floor 3'),
-      (4, 4, 'I stepped out to take a call in the street.',             'Off-site'),
-      (5, 5, 'I was in the second-floor office doing guest lists.',     'Floor 2');
+    INSERT INTO change_tickets (id, change_ref, system_name, summary, requested_by, risk) VALUES
+      (1, 'CHG-4388', 'Broker Portal', 'Round broker commission to 2 d.p.',   1, 'Low'),
+      (2, 'CHG-4410', 'Claims Engine', 'Add postcode to claim letters',       3, 'Low'),
+      (3, 'CHG-4415', 'Broker Portal', 'Refresh broker login page',           1, 'Low'),
+      (4, 'CHG-4421', 'Claims Engine', 'Raise auto-approve limit to 5000',    5, 'High');
 
-    -- Service elevator: every trip records who swiped, the floor, and the time.
-    CREATE TABLE elevator_logs (
+    -- The CAB's decision on each ticket. Monday meetings.
+    CREATE TABLE cab_approvals (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      to_floor INTEGER,
-      ride_time TEXT       -- 'HH:MM'
+      change_ref TEXT REFERENCES change_tickets(change_ref),
+      meeting_date TEXT,
+      decision TEXT,           -- 'Approved' or 'Rejected'
+      chair TEXT
     );
-    INSERT INTO elevator_logs (id, suspect_id, to_floor, ride_time) VALUES
-      (1, 3, 3, '20:15'),
-      (2, 5, 2, '20:22'),
-      (3, 4, 7, '20:48'),   -- rode to Floor 7 during the fall window, but claims off-site
-      (4, 1, 1, '20:05'),
-      (5, 4, 1, '21:02'),   -- came back down just after
-      (6, 3, 3, '20:55'),
-      (7, 5, 2, '20:59'),
-      -- Two others also reach Floor 7 inside the window, so the elevator alone
-      -- names three people. Iris and Lena both admit to being in the building,
-      -- and their phones and receipts clear them; only Marcus claimed off-site.
-      (8, 1, 7, '20:42'),
-      (9, 1, 1, '20:51'),
-      (10, 5, 7, '20:56'),
-      (11, 5, 2, '21:04');
+    INSERT INTO cab_approvals (id, change_ref, meeting_date, decision, chair) VALUES
+      (1, 'CHG-4388', '2026-07-06', 'Approved', 'Ruth Ellison'),
+      (2, 'CHG-4410', '2026-07-13', 'Approved', 'Ruth Ellison'),
+      (3, 'CHG-4415', '2026-07-13', 'Approved', 'Ruth Ellison'),
+      (4, 'CHG-4421', '2026-07-13', 'Rejected', 'Ruth Ellison');
 
-    -- Cell tower pings. The gallery is under 'Wharf-7'; 'Downtown' is far away.
-    CREATE TABLE phone_pings (
-      id INTEGER PRIMARY KEY,
-      phone_id INTEGER,
-      tower TEXT,
-      ping_time TEXT       -- 'HH:MM'
+    -- What was in each release.
+    CREATE TABLE commits (
+      hash TEXT PRIMARY KEY,
+      author_id INTEGER REFERENCES engineers(id),
+      repo TEXT,
+      message TEXT
     );
-    INSERT INTO phone_pings (id, phone_id, tower, ping_time) VALUES
-      (1, 101, 'Wharf-7',  '20:50'),
-      (2, 102, 'Downtown', '20:50'),   -- Damien really was away
-      (3, 103, 'Wharf-7',  '20:50'),
-      (4, 104, 'Wharf-7',  '20:50'),   -- Marcus's phone was AT the gallery, not off-site
-      (5, 105, 'Wharf-7',  '20:50'),
-      (6, 104, 'Wharf-7',  '20:47');
+    INSERT INTO commits (hash, author_id, repo, message) VALUES
+      ('a1f3c9e', 1, 'broker-portal', 'Round commission to 2 d.p.'),
+      ('e02b7aa', 1, 'broker-portal', 'Refresh login page styles'),
+      ('7be2d04', 3, 'claims-engine', 'Add postcode to claim letter'),
+      ('5d0a8f2', 5, 'claims-engine', 'Raise auto-approve limit'),
+      ('c94e11b', 2, 'claims-engine', 'Skip duplicate check on rerun');
 
-    -- Hardware shop card receipts (buyer name is free text).
-    CREATE TABLE purchases (
+    -- Every release the pipeline handled. The gate sets status: 'Succeeded'
+    -- if the quoted change_ref was approved, 'Blocked' if it was not.
+    CREATE TABLE deployments (
       id INTEGER PRIMARY KEY,
-      buyer TEXT,
-      item TEXT,
-      purchase_date TEXT   -- 'YYYY-MM-DD'
+      system_name TEXT,
+      deployed_on TEXT,
+      deployed_time TEXT,
+      deployed_by INTEGER REFERENCES engineers(id),
+      change_ref TEXT REFERENCES change_tickets(change_ref),
+      commit_hash TEXT REFERENCES commits(hash),
+      status TEXT
     );
-    INSERT INTO purchases (id, buyer, item, purchase_date) VALUES
-      (1, 'Priya Anand', 'Canvas stretchers', '2026-03-01'),
-      (2, 'Marcus Feld', 'Hex wrench set',    '2026-03-02'),   -- the sabotage tool
-      (3, 'Iris Kwan',   'Picture wire',      '2026-02-28'),
-      (4, 'Lena Sorkin', 'Printer toner',     '2026-03-01'),
-      -- Priya bought the same tool, so the receipt alone convicts nobody. She
-      -- was on Floor 3 all evening and never rode to 7.
-      (5, 'Priya Anand', 'Hex wrench set',    '2026-02-27');
+    INSERT INTO deployments (id, system_name, deployed_on, deployed_time, deployed_by, change_ref, commit_hash, status) VALUES
+      (1, 'Broker Portal', '2026-07-07', '10:15', 1, 'CHG-4388', 'a1f3c9e', 'Succeeded'), -- the approval's real use
+      (2, 'Broker Portal', '2026-07-14', '11:40', 1, 'CHG-4415', 'e02b7aa', 'Succeeded'),
+      (3, 'Claims Engine', '2026-07-15', '16:20', 5, 'CHG-4421', '5d0a8f2', 'Blocked'),   -- rejected; the gate held
+      (4, 'Claims Engine', '2026-07-16', '14:05', 2, 'CHG-4388', 'c94e11b', 'Succeeded'), -- a Broker Portal approval on Claims Engine
+      (5, 'Claims Engine', '2026-07-17', '17:30', 3, 'CHG-4410', '7be2d04', 'Succeeded'); -- Friday evening, and clean
 
-    CREATE TABLE forensics (
+    -- Incidents raised against production systems.
+    CREATE TABLE incidents (
       id INTEGER PRIMARY KEY,
-      finding TEXT,
-      detail TEXT,
-      implicates_tool TEXT
+      ref TEXT,
+      system_name TEXT,
+      opened_on TEXT,
+      opened_time TEXT,
+      summary TEXT
     );
-    INSERT INTO forensics (id, finding, detail, implicates_tool) VALUES
-      (1, 'Bracket tampering', 'Railing bracket bolts backed out; fresh tool marks.', 'hex wrench'),
-      (2, 'Tool marks',        'Hex-pattern scoring on the bolt heads.',              'hex wrench'),
-      (3, 'No note',           'No suicide note found on the victim or in the office.', NULL);
+    INSERT INTO incidents (id, ref, system_name, opened_on, opened_time, summary) VALUES
+      (1, 'INC-2198', 'Broker Portal', '2026-07-08', '14:30', 'Commission statement off by 1p on two brokers'),
+      (2, 'INC-2207', 'Claims Engine', '2026-07-18', '09:10', '214 claims paid twice in overnight payment run');
   `,
 
+  // Entity-Relationship diagram for the Data Map tab.
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'engineers',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'name', type: 'TEXT' },
-          { name: 'relationship', type: 'TEXT' },
-          { name: 'phone_id', type: 'INTEGER', fk: 'phone_pings.phone_id' },
+          { name: 'team', type: 'TEXT' },
         ],
       },
       {
-        name: 'alibis',
+        name: 'deployments',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'statement', type: 'TEXT' },
-          { name: 'claimed_location', type: 'TEXT' },
+          { name: 'system_name', type: 'TEXT' },
+          { name: 'deployed_on', type: 'TEXT' },
+          { name: 'deployed_time', type: 'TEXT' },
+          { name: 'deployed_by', type: 'INTEGER', fk: 'engineers.id' },
+          { name: 'change_ref', type: 'TEXT', fk: 'change_tickets.change_ref' },
+          { name: 'commit_hash', type: 'TEXT', fk: 'commits.hash' },
+          { name: 'status', type: 'TEXT' },
         ],
       },
       {
-        name: 'elevator_logs',
+        name: 'change_tickets',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'to_floor', type: 'INTEGER' },
-          { name: 'ride_time', type: 'TEXT' },
+          { name: 'change_ref', type: 'TEXT' },
+          { name: 'system_name', type: 'TEXT' },
+          { name: 'summary', type: 'TEXT' },
+          { name: 'requested_by', type: 'INTEGER', fk: 'engineers.id' },
+          { name: 'risk', type: 'TEXT' },
         ],
       },
       {
-        name: 'phone_pings',
+        name: 'cab_approvals',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'phone_id', type: 'INTEGER' },
-          { name: 'tower', type: 'TEXT' },
-          { name: 'ping_time', type: 'TEXT' },
+          { name: 'change_ref', type: 'TEXT', fk: 'change_tickets.change_ref' },
+          { name: 'meeting_date', type: 'TEXT' },
+          { name: 'decision', type: 'TEXT' },
+          { name: 'chair', type: 'TEXT' },
         ],
       },
       {
-        name: 'purchases',
+        name: 'commits',
         columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'buyer', type: 'TEXT' },
-          { name: 'item', type: 'TEXT' },
-          { name: 'purchase_date', type: 'TEXT' },
+          { name: 'hash', type: 'TEXT', pk: true },
+          { name: 'author_id', type: 'INTEGER', fk: 'engineers.id' },
+          { name: 'repo', type: 'TEXT' },
+          { name: 'message', type: 'TEXT' },
         ],
       },
       {
-        name: 'forensics',
+        name: 'incidents',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'finding', type: 'TEXT' },
-          { name: 'detail', type: 'TEXT' },
-          { name: 'implicates_tool', type: 'TEXT' },
+          { name: 'ref', type: 'TEXT' },
+          { name: 'system_name', type: 'TEXT' },
+          { name: 'opened_on', type: 'TEXT' },
+          { name: 'opened_time', type: 'TEXT' },
+          { name: 'summary', type: 'TEXT' },
         ],
       },
     ],
   },
 
+  // The Finding write-up. The template stays silent on the release's date and
+  // time: the Finding tab is visible from the start, and either would name the
+  // exception before a query was run.
   report: {
     template:
-      'Celeste’s fall was no suicide — it was staged. {{killer}} rode the service elevator to Floor {{floor}} at 20:48, during the coroner’s window, even though they claimed to be {{alibiLie}}. Their phone pinged the {{tower}} tower at the gallery at the same moment. And the loosened bracket bore the marks of a {{tool}}, which the hardware receipts show they had just bought.',
+      'Control ITGC-C02 failed. A release to Claims Engine quoted change reference {{changeRef}}, which the pipeline gate accepted as approved. But the CAB had approved that reference for {{approvedFor}}: a different change, to a different system. The gate checked that a reference was approved, never what it was approved for. The release was shipped by {{deployer}} and carried the commit “{{commit}}”. The overnight payment run that followed paid 214 claims twice.',
     blanks: {
-      killer: {
-        label: 'the killer',
-        targetValue: 'Marcus Feld',
-        unlockedByColumn: 'name',
-        triggerValue: 'Marcus Feld',
-        options: ['Iris Kwan', 'Damien Roth', 'Priya Anand', 'Marcus Feld', 'Lena Sorkin'],
+      changeRef: {
+        label: 'the change reference it quoted',
+        targetValue: 'CHG-4388',
+        // Keyed on an alias. A dump of deployments lists every reference, and
+        // the approved ones look alike — only the ticket-vs-deployment system
+        // comparison singles this one out.
+        unlockedByColumn: 'unapproved_change',
+        triggerValue: 'CHG-4388',
+        options: ['CHG-4388', 'CHG-4410', 'CHG-4415', 'CHG-4421'],
+        // Shares its query with `approvedFor`: the mismatch row IS the finding,
+        // and both halves of it sit side by side in that row.
+        coUnlocksWith: 'approvedFor',
         provingQuery: `
-          SELECT s.name, e.ride_time, a.claimed_location
-          FROM elevator_logs e JOIN suspects s ON s.id = e.suspect_id
-          JOIN alibis a ON a.suspect_id = s.id
-          WHERE e.to_floor = 7
-            AND e.ride_time >= '20:40' AND e.ride_time <= '21:00'
-            AND a.claimed_location = 'Off-site'
+          SELECT d.change_ref AS unapproved_change, d.system_name AS deployed_to,
+                 t.system_name AS approved_for, c.decision
+          FROM deployments d
+          JOIN change_tickets t ON t.change_ref = d.change_ref
+          JOIN cab_approvals c ON c.change_ref = d.change_ref
+          WHERE d.status = 'Succeeded' AND t.system_name <> d.system_name
         `,
-        hint: 'Three people rode to Floor 7 in the window. Only one of them told you they were somewhere else.',
+        hint: 'Join deployments to change_tickets and cab_approvals. Both Claims Engine releases that got through have an approval — so compare the system on the ticket with the system deployed to. Alias the reference AS unapproved_change.',
       },
-      floor: {
-        label: 'the floor',
-        targetValue: '7',
-        unlockedByColumn: 'to_floor',
-        triggerValue: 7,
-        options: ['2', '3', '7', '1'],
+      approvedFor: {
+        label: 'what the approval actually covered',
+        targetValue: 'Broker Portal',
+        unlockedByColumn: 'approved_for',
+        triggerValue: 'Broker Portal',
+        options: ['Broker Portal', 'Claims Engine', 'Payments Hub', 'Policy Admin'],
+        coUnlocksWith: 'changeRef',
         provingQuery: `
-          SELECT e.to_floor, e.ride_time FROM elevator_logs e
-          WHERE e.to_floor = 7
+          SELECT d.change_ref AS unapproved_change, d.system_name AS deployed_to,
+                 t.system_name AS approved_for, c.decision
+          FROM deployments d
+          JOIN change_tickets t ON t.change_ref = d.change_ref
+          JOIN cab_approvals c ON c.change_ref = d.change_ref
+          WHERE d.status = 'Succeeded' AND t.system_name <> d.system_name
         `,
-        hint: 'The elevator log records which floor each ride went to.',
+        hint: 'The same row: the system named on the ticket the CAB approved. Alias it AS approved_for.',
       },
-      alibiLie: {
-        label: 'their false alibi',
-        targetValue: 'off-site',
-        // Keyed on the statement text rather than claimed_location: the killer's
-        // proving query already selects claimed_location, so triggering on that
-        // would unlock this blank for free. The player has to open alibis.
-        unlockedByColumn: 'statement',
-        triggerValue: 'I stepped out to take a call in the street.',
-        options: ['off-site', 'Floor 2', 'Floor 3', 'the atrium bar'],
+      deployer: {
+        label: 'who shipped it',
+        targetValue: 'Leon Varga',
+        // CHG-4388 was released twice, so filtering on the reference alone
+        // returns two engineers. The system filter is the deduction.
+        unlockedByColumn: 'deployer_name',
+        triggerValue: 'Leon Varga',
+        options: ['Mei Tanaka', 'Leon Varga', 'Sade Adeyemi', 'Kofi Mensah'],
         provingQuery: `
-          SELECT s.name, a.statement, a.claimed_location FROM alibis a
-          JOIN suspects s ON s.id = a.suspect_id
-          WHERE s.name = 'Marcus Feld'
+          SELECT e.name AS deployer_name, d.deployed_on, d.deployed_time
+          FROM deployments d JOIN engineers e ON e.id = d.deployed_by
+          WHERE d.change_ref = 'CHG-4388' AND d.system_name = 'Claims Engine'
         `,
-        hint: 'Read the killer’s own alibi row in full — what exactly did they claim?',
+        hint: 'Join deployments to engineers for that reference — careful, it was released more than once. Alias the name AS deployer_name.',
       },
-      tower: {
-        label: 'the cell tower',
-        targetValue: 'Wharf-7',
-        unlockedByColumn: 'tower',
-        triggerValue: 'Wharf-7',
-        options: ['Wharf-7', 'Downtown', 'Harbor-3', 'Midtown'],
+      commit: {
+        label: 'the commit it carried',
+        targetValue: 'Skip duplicate check on rerun',
+        unlockedByColumn: 'deployed_commit',
+        triggerValue: 'Skip duplicate check on rerun',
+        options: [
+          'Add postcode to claim letter',
+          'Raise auto-approve limit',
+          'Skip duplicate check on rerun',
+          'Round commission to 2 d.p.',
+        ],
         provingQuery: `
-          SELECT s.name, p.tower, p.ping_time FROM phone_pings p
-          JOIN suspects s ON s.phone_id = p.phone_id WHERE p.tower = 'Wharf-7'
+          SELECT d.commit_hash, m.message AS deployed_commit
+          FROM deployments d JOIN commits m ON m.hash = d.commit_hash
+          WHERE d.change_ref = 'CHG-4388' AND d.system_name = 'Claims Engine'
         `,
-        hint: 'Join the killer’s phone_id to phone_pings — which tower did it hit at 20:50?',
-      },
-      tool: {
-        label: 'the sabotage tool',
-        targetValue: 'hex wrench',
-        unlockedByColumn: 'implicates_tool',
-        triggerValue: 'hex wrench',
-        options: ['hex wrench', 'crowbar', 'screwdriver', 'bolt cutter'],
-        provingQuery: `
-          SELECT finding, detail, implicates_tool FROM forensics
-          WHERE implicates_tool IS NOT NULL
-        `,
-        hint: 'Forensics names the tool that left the marks. Two people bought one — only one of them went up to 7.',
+        hint: 'Follow the release’s commit_hash into commits. Alias the message AS deployed_commit.',
       },
     },
   },
