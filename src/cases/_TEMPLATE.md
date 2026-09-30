@@ -117,8 +117,8 @@ ROWS
 ## 4. Finding (the deduction)
 
 A fill-in-the-blank paragraph that closes the engagement. Each `{{blank}}` is a
-dropdown the player must complete. **A blank stays locked until the player runs
-the query that proves it**: the anti-cheat.
+dropdown the player must complete. **Every option is shown from the start**, so
+each decoy must be a plausible near-miss that only the query results rule out.
 
 - **template**: the closing paragraph with `{{key}}` tokens inline.
 - For **each blank** (`key`):

@@ -169,10 +169,9 @@ Violate these and the case breaks.
   plain aliased column (`orphan_account`, `signed_off_by`). `SELECT MAX(x)`
   *without* the alias deliberately does not unlock.
 
-  Players see each blank's `label` and alias under the Finding at all times,
-  and its `hint` on request. So the alias and label must not give the answer
-  away (`orphan_account`, not `brecht_account`), and the hint should point at
-  the method, not the row.
+  Unlocking no longer gates the Finding's dropdowns. It drives the EVIDENCE
+  OBTAINED toast in Analysis, and it is how `npm test` proves each blank can
+  be reached from the data.
 
   This applies to **every** blank, not just the aggregate ones. A blank keyed on
   a raw column like `username` or `reviewer` is unlocked by a bare dump of that
@@ -205,8 +204,12 @@ Violate these and the case breaks.
   to use. Run the honest, unfiltered version of each deduction and confirm it
   returns exactly one row. Incidental noise elsewhere in the seed data is how a
   case becomes ambiguous without any test failing.
-- **The locked dropdown must hide the correct answer**, or players can guess
-  past the anti-cheat.
+- **Every decoy must be an answer a wrong deduction reaches.** The Finding
+  offers all of a blank's `options` from the start, so the records are the only
+  thing that separates the answer from its decoys. A decoy nobody could arrive
+  at (a name not in the data, a date outside the audit period) is a free
+  elimination; use the near-misses instead, like the leaver who was
+  deprovisioned properly or the reviewer who signed the other system.
 - **Every blank needs a `provingQuery`**, and `npm test` must pass. The suite
   builds the real schema and verifies the case is actually solvable.
 

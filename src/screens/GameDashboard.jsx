@@ -163,7 +163,6 @@ export default function GameDashboard({ game, play, shake }) {
               {tab === 'report' && (
                 <FindingTab
                   caseData={caseData}
-                  unlocked={unlocked}
                   game={game}
                   play={play}
                   shake={shake}

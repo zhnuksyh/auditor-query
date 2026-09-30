@@ -1,11 +1,10 @@
 import { Fragment, useState } from 'react'
-import { Check, Lock } from 'lucide-react'
 import { gradeReport } from '../engine/verification.js'
 import { LockedCase } from './ScopeTab.jsx'
 import Dropdown from './Dropdown.jsx'
 import CaseStamp from './CaseStamp.jsx'
 
-export default function FindingTab({ caseData, unlocked, game, play, shake }) {
+export default function FindingTab({ caseData, game, play, shake }) {
   const report = caseData.report
   // Selections live in the save so they survive tab switches, returning to
   // the menu, and opening other cases.
@@ -47,11 +46,6 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
 
   const stamped = alreadySolved || graded?.correct
 
-  // Blank keys in template order, so the evidence list reads like the Finding.
-  const keys = [
-    ...new Set(parts.map((part) => part.match(/\{\{(\w+)\}\}/)?.[1]).filter(Boolean)),
-  ]
-
   return (
     <div className="relative h-full overflow-y-auto px-8 py-7">
       {/* Once the case is closed, the stamp fills the board diagonally. The
@@ -71,8 +65,8 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-zinc-100">Finding</h2>
           <p className="mt-1 text-xs text-zinc-500">
-            Fill each blank. The proving query must run in Analysis before the correct answer
-            becomes available.
+            Fill each blank with what your queries in Analysis prove. Every choice is plausible;
+            only the records tell them apart.
           </p>
         </div>
 
@@ -83,21 +77,16 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
             if (!m) return <Fragment key={i}>{part}</Fragment>
             const key = m[1]
             const cfg = report.blanks[key]
-            const isUnlocked = unlocked.has(key)
             const isRight = graded?.results[key]
             const isWrong = graded && !graded.results[key]
 
-            // Dynamic option set: while the proving query hasn't run, the correct
-            // answer is withheld, so the blank cannot be completed by guessing.
-            const options = isUnlocked
-              ? cfg.options
-              : cfg.options.filter((o) => o !== cfg.targetValue)
-
+            // Every option is offered from the start, the answer among
+            // plausible decoys; the queries are how a player tells them apart.
             return (
               <Dropdown
                 key={i}
                 value={answers[key] || ''}
-                options={options}
+                options={cfg.options}
                 play={play}
                 tone={isRight ? 'right' : isWrong ? 'wrong' : 'idle'}
                 onChange={(v) => {
@@ -129,68 +118,7 @@ export default function FindingTab({ caseData, unlocked, game, play, shake }) {
             </button>
           </div>
         )}
-
-        {/* What each blank needs. A blank unlocks only when a result column
-            carries its exact name, which no query can guess, so the name is
-            always shown. The method stays behind a click for players who
-            want to work it out themselves. */}
-        {!stamped && (
-          <div className="mt-10 border-t border-zinc-800 pt-5">
-            <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-zinc-500">
-              Evidence needed
-            </h3>
-            <p className="mb-3 mt-1 text-xs text-zinc-500">
-              Each blank unlocks when a query you run in Analysis returns its answer under the
-              column name shown.
-            </p>
-            <ul className="space-y-2">
-              {keys.map((key) => (
-                <EvidenceRow
-                  key={key}
-                  cfg={report.blanks[key]}
-                  done={unlocked.has(key)}
-                  play={play}
-                />
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
-  )
-}
-
-function EvidenceRow({ cfg, done, play }) {
-  const [showHint, setShowHint] = useState(false)
-
-  return (
-    <li className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        {done ? (
-          <Check className="h-4 w-4 shrink-0 text-zinc-300" strokeWidth={2.5} aria-label="unlocked" />
-        ) : (
-          <Lock className="h-3.5 w-3.5 shrink-0 text-zinc-600" strokeWidth={2} aria-label="locked" />
-        )}
-        <span className={`text-sm ${done ? 'text-zinc-500' : 'text-zinc-200'}`}>{cfg.label}</span>
-        <code className="font-mono text-xs text-exception">AS {cfg.unlockedByColumn}</code>
-        {!done && (
-          <button
-            type="button"
-            onClick={() => {
-              play?.('click')
-              setShowHint((s) => !s)
-            }}
-            onMouseEnter={() => play?.('hover')}
-            aria-expanded={showHint}
-            className="ml-auto text-[11px] uppercase tracking-[0.2em] text-zinc-500 transition-colors hover:text-zinc-100"
-          >
-            {showHint ? 'hide hint' : 'hint'}
-          </button>
-        )}
-      </div>
-      {showHint && !done && (
-        <p className="mt-2 text-xs leading-relaxed text-zinc-400">{cfg.hint}</p>
-      )}
-    </li>
   )
 }

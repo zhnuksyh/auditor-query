@@ -35,9 +35,9 @@ failed.
      foreign-key relationships).
    - **Analysis**: a CodeMirror SQL editor over the engagement database, a
      results grid, and an auto-saving auditor's workpaper.
-   - **Finding**: a fill-in-the-blank write-up. Each blank stays locked until
-     you run the query that evidences it, then submit to close the engagement
-     and unlock the next.
+   - **Finding**: a fill-in-the-blank write-up. Each blank offers the answer
+     among plausible decoys, so only the query results tell them apart; submit
+     to close the engagement and unlock the next.
 
 ## Tech stack
 
