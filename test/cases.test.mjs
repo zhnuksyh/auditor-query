@@ -41,7 +41,7 @@ const playable = CASES.filter((c) => !c.comingSoon)
  *
  * **Add each case id here as it is rewritten for the audit theme.**
  */
-const AUDIT_CASES = new Set(['case_01', 'case_02', 'case_03', 'case_04', 'case_05', 'case_06'])
+const AUDIT_CASES = new Set(['case_01', 'case_02', 'case_03', 'case_04', 'case_05', 'case_06', 'case_07'])
 
 /** Mirror of sqlEngine.runQuery's row shaping, minus the UI-facing error handling. */
 function execRows(db, sql) {

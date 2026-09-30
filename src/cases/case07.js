@@ -1,245 +1,182 @@
 // @ts-check
 /**
- * CASE 07 — "SLACK WATER"
+ * CASE 07: "TWO AT ONCE"
  *
- * The hardest file yet. Seven tables, six suspects, and the first case whose
- * central deduction needs a SELF-JOIN — two rows of the SAME table placed side
- * by side and shown to contradict each other:
+ * Privileged access. Gilmour Retail's generic admin accounts may only be used
+ * through the password vault: one checkout, one person, one workstation. On the
+ * night audit logging was switched off, the database log names an account, not
+ * a person. The finding is that it cannot name a person, because that account's
+ * password was in use outside the vault.
  *
- *   - `tide_readings` logs the harbour's direction each hour: 'ebb' pulls water
- *     (and anything in it) seaward, 'flood' pushes it upstream, and 'slack'
- *     moves nothing. The body was found at Jetty 4, downstream of everything.
- *   - Drift only carries a body downstream on an EBB. Joining tide_readings to
- *     itself an hour apart shows the harbour ebbed for exactly one stretch that
- *     night, which fixes the window when the body could have entered the water.
- *   - `mooring_log` records which boat was in which berth each hour, so the
- *     player can ask who was upstream during that ebb — and three people were.
- *   - The killer is the one whose OWN statement puts them somewhere the harbour
- *     master's log says they were not: `statements` and `mooring_log` disagree
- *     for exactly one person. That is the planted contradiction.
- *   - `harbour_master_log` is the honest record (radioed in, timestamped);
- *     `statements` are what people said afterwards.
+ * The player must:
+ *   1. SELF-JOIN privileged_sessions: the same account, the same night, two
+ *      different workstations, overlapping times. Only db_admin on 10 September.
+ *   2. Read the vault: who legitimately checked db_admin out that evening.
+ *   3. EXCEPT: every workstation that ran a privileged session, minus those
+ *      covered by a vault checkout made by the workstation's own user. One
+ *      workstation is left.
+ *   4. Join that workstation to its assigned owner.
  *
- * Difficulty step: cases 03/05 needed GROUP BY, case 06 needed absence. This
- * one needs a table compared against ITSELF, and the final elimination is a set
- * difference — everyone upstream during the ebb, minus everyone the harbour
- * master actually saw leave. Everything is provable with SQL; no guessing.
+ * Deductive shape: generic-account sessions that evening come from four
+ * workstations. The self-join narrows it to two overlapping sessions, and the
+ * vault tells the legitimate one from the other. The realism dial is JOINING
+ * IDENTITIES: an account is not a person, and a workstation is the only link
+ * from one to the other.
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case07 = {
   id: 'case_07',
   code: 'CODE_07',
-  tag: 'TIDE',
-  title: 'Slack Water',
+  tag: 'PRIVILEGE',
+  title: 'Two at Once',
   teaser:
-    'The harbour gave the body back at dawn. The tide tables say it should never have reached that jetty.',
-  folderTheme: 'continuity',
+    'Audit logging went dark for forty minutes and 1,940 gift cards grew richer. The log names the account that did it. The account belongs to nobody.',
+  folderTheme: 'access',
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Rurik Mallen, 52', line2: 'Harbour pilot' },
-      { term: 'Location', line1: 'Kestrel Harbour, Jetty 4', line2: 'Recovered from the water at 05:40' },
-      { term: 'Time of death', line1: '21:00 – 23:00', line2: 'October 11th' },
+      { term: 'Control', line1: 'ITGC-A11: Privileged access', line2: 'Generic accounts via the vault only' },
+      { term: 'System', line1: 'Gilmour Retail: Store Ledger', line2: 'Tills, stock and gift cards' },
+      { term: 'Audit period', line1: '8 – 11 September 2026', line2: 'All privileged sessions' },
     ],
-    report: `RURIK MALLEN came back with the dawn tide, face-down against the pilings of Jetty 4. The harbour police wrote it up as a fall from a deck — Mallen knew these waters better than anyone, but men slip. The coroner disagreed: water in the lungs says he drowned, but the fracture above his ear came first, and it came from a blow.
+    report: `Gilmour Retail runs its tills, stock and gift cards on Store Ledger, a database with a handful of GENERIC ADMIN ACCOUNTS: powerful logins, such as db_admin and sysops, that belong to no single person. Generic accounts are dangerous because their logs name the account, not the human. So Gilmour's control ITGC-A11 says a generic account may only be used through the PASSWORD VAULT. An engineer checks the account out for a stated window, the vault records who, and the password changes when the window closes. One checkout, one person, one workstation. Every engineer works from a workstation assigned to them.
 
-Jetty 4 sits at the seaward end of the harbour. Everything upstream of it — the boatyard, the fuel dock, the row of private berths — drains past that jetty on an outgoing tide and nothing at all moves past it on an incoming one. A body in this harbour drifts one way, and only while the water is ebbing.
+On the evening of Thursday 10 September, audit logging on Store Ledger was switched off for forty minutes. While it was off, 1,940 gift cards had their balances raised. The database audit log records what each generic account did and when. It does not record who.
 
-The harbour keeps its own memory. The tide board logs the state of the water every hour: EBB going out, FLOOD coming in, SLACK when it hangs still between them. The mooring log records which boat sat in which berth, hour by hour. And the harbour master radios in every vessel that passes the seaward light, with the time it went by.
+If a generic account's password is known outside the vault, two people can be logged into it at once, and nothing can tell you which of them acted. That is exactly the failure this control exists to prevent.
 
-Six people had a berth here and a reason to resent Mallen, who had spent the summer reporting them for one thing or another. Each told the police where they were that night. The water tells a different story about one of them.`,
-    constraints: [
-      'Time of death: 21:00–23:00, October 11th.',
-      'Blunt trauma preceded drowning — he was struck, then went in.',
-      'A body drifts seaward ONLY while the tide is ebbing.',
-      'Jetty 4 is the seaward end; everything upstream drains past it.',
-      'The harbour master logs every vessel passing the seaward light.',
-    ],
+You have the staff, their workstations, the vault checkouts, every privileged session with its source workstation and times, and the database audit log. Find which account was in use from two places at once, who had legitimately checked it out, which workstation was using it with no checkout, and whose workstation that is.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    CREATE TABLE staff (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      vessel TEXT,
-      grievance TEXT
+      name TEXT,
+      team TEXT
     );
-    INSERT INTO suspects (id, name, vessel, grievance) VALUES
-      (1, 'Corin Vasilyev', 'Northern Gale',  'Reported for an unlit mooring'),
-      (2, 'Halina Brecht',  'Sable Marie',    'Reported for dumping bilge'),
-      (3, 'Osgood Lyle',    'Tern',           'Reported for an expired licence'),
-      (4, 'Marisol Quint',  'Ardent',         'Lost a berth to Mallen''s complaint'),
-      (5, 'Teodor Fisk',    'Grey Heron',     'Reported for overloading'),
-      (6, 'Annike Sorrel',  'Kittiwake',      'Fined after Mallen''s report');
+    INSERT INTO staff (id, name, team) VALUES
+      (1, 'Bea Lawson',   'Database'),
+      (2, 'Marco Silva',  'Database'),
+      (3, 'Ade Kuti',     'Store Systems Support'),
+      (4, 'Ivy Chen',     'Platform'),
+      (5, 'Fergus Doyle', 'Store Systems Support');
 
-    -- The tide board. One row per hour; 'ebb' is the only state that carries a
-    -- body seaward. Comparing consecutive hours is the point of the case.
-    CREATE TABLE tide_readings (
-      id INTEGER PRIMARY KEY,
-      reading_hour TEXT,     -- 'HH:MM', on the hour
-      state TEXT,            -- 'ebb' | 'flood' | 'slack'
-      height_m REAL
+    -- Every engineer has one assigned workstation.
+    CREATE TABLE workstations (
+      hostname TEXT PRIMARY KEY,
+      assigned_to INTEGER REFERENCES staff(id),
+      site TEXT
     );
-    INSERT INTO tide_readings (id, reading_hour, state, height_m) VALUES
-      (1,  '18:00', 'flood', 3.1),
-      (2,  '19:00', 'flood', 3.6),
-      (3,  '20:00', 'slack', 3.8),
-      (4,  '21:00', 'ebb',   3.5),
-      (5,  '22:00', 'ebb',   2.9),
-      (6,  '23:00', 'slack', 2.4),
-      (7,  '00:00', 'flood', 2.7),
-      (8,  '01:00', 'flood', 3.2),
-      (9,  '02:00', 'slack', 3.5),
-      (10, '03:00', 'ebb',   3.1),
-      (11, '04:00', 'ebb',   2.6),
-      (12, '05:00', 'slack', 2.2);
+    INSERT INTO workstations (hostname, assigned_to, site) VALUES
+      ('WS-DBA-04',  1, 'Head Office'),
+      ('WS-DBA-07',  2, 'Head Office'),
+      ('WS-SUP-117', 3, 'Leeds Support Centre'),
+      ('WS-PLT-02',  4, 'Head Office'),
+      ('WS-SUP-121', 5, 'Leeds Support Centre');
 
-    -- Which berth each vessel occupied, hour by hour. Berths 1-3 are upstream
-    -- of Jetty 4; berth 9 is the seaward visitor pontoon, downstream of it.
-    CREATE TABLE mooring_log (
+    -- The password vault's record of who checked out which generic account.
+    CREATE TABLE vault_checkouts (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      berth INTEGER,
-      log_hour TEXT          -- 'HH:MM'
+      account TEXT,
+      checked_out_by INTEGER REFERENCES staff(id),
+      checkout_date TEXT,
+      from_time TEXT,
+      to_time TEXT
     );
-    INSERT INTO mooring_log (id, suspect_id, berth, log_hour) VALUES
-      (1,  1, 2, '20:00'),
-      (2,  1, 2, '21:00'),
-      (3,  1, 2, '22:00'),   -- Corin upstream through the whole ebb
-      (4,  2, 9, '20:00'),
-      (5,  2, 9, '21:00'),
-      (6,  2, 9, '22:00'),   -- Halina downstream all night
-      (7,  3, 1, '20:00'),
-      (8,  3, 1, '21:00'),
-      (9,  3, 1, '22:00'),   -- Osgood upstream through the whole ebb
-      (10, 4, 3, '20:00'),
-      (11, 4, 3, '21:00'),
-      (12, 4, 3, '22:00'),   -- Marisol upstream through the whole ebb
-      (13, 5, 9, '20:00'),
-      (14, 5, 9, '21:00'),
-      (15, 5, 9, '22:00'),   -- Teodor downstream all night
-      (16, 6, 9, '20:00'),
-      (17, 6, 9, '21:00'),
-      (18, 6, 9, '22:00');   -- Annike downstream all night
+    INSERT INTO vault_checkouts (id, account, checked_out_by, checkout_date, from_time, to_time) VALUES
+      (1, 'db_admin', 2, '2026-09-08', '10:00', '11:00'),
+      (2, 'sysops',   4, '2026-09-09', '14:00', '15:30'),
+      (3, 'sysops',   4, '2026-09-10', '19:00', '19:45'),
+      (4, 'db_admin', 1, '2026-09-10', '20:45', '22:00'),  -- the on-call DBA
+      (5, 'sysops',   5, '2026-09-10', '21:15', '22:00'),
+      (6, 'db_admin', 2, '2026-09-11', '09:30', '10:15');
 
-    -- What each person told the police afterwards.
-    CREATE TABLE statements (
+    -- Every login to a generic admin account, with the workstation it came from.
+    CREATE TABLE privileged_sessions (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      claimed_berth INTEGER,
-      account TEXT
+      account TEXT,
+      source_host TEXT REFERENCES workstations(hostname),
+      session_date TEXT,
+      start_time TEXT,
+      end_time TEXT
     );
-    INSERT INTO statements (id, suspect_id, claimed_berth, account) VALUES
-      (1, 1, 2, 'Aboard the Northern Gale in my own berth, turned in early.'),
-      (2, 2, 9, 'On the visitor pontoon, playing cards until midnight.'),
-      (3, 3, 1, 'In berth one, scraping the hull. Never left her.'),
-      (4, 4, 9, 'Down on the visitor pontoon with the others all evening.'),
-      (5, 5, 9, 'Visitor pontoon, cards with Halina and Annike.'),
-      (6, 6, 9, 'Visitor pontoon. We were all there.');
+    INSERT INTO privileged_sessions (id, account, source_host, session_date, start_time, end_time) VALUES
+      (1, 'db_admin', 'WS-DBA-07',  '2026-09-08', '10:05', '10:50'),
+      (2, 'sysops',   'WS-PLT-02',  '2026-09-09', '14:10', '15:20'),
+      (3, 'sysops',   'WS-PLT-02',  '2026-09-10', '19:05', '19:40'),
+      (4, 'db_admin', 'WS-DBA-04',  '2026-09-10', '20:50', '21:40'),  -- vaulted
+      (5, 'db_admin', 'WS-SUP-117', '2026-09-10', '21:02', '21:31'),  -- no checkout
+      (6, 'sysops',   'WS-SUP-121', '2026-09-10', '21:20', '21:50'),  -- vaulted, alone
+      (7, 'db_admin', 'WS-DBA-07',  '2026-09-11', '09:35', '10:05');
 
-    -- Vessels radioed past the seaward light. Honest, timestamped record.
-    CREATE TABLE harbour_master_log (
+    -- The database's own audit log. It records the ACCOUNT, never the person.
+    CREATE TABLE db_audit_log (
       id INTEGER PRIMARY KEY,
-      vessel TEXT,
-      passed_light TEXT,     -- 'HH:MM'
-      direction TEXT         -- 'outbound' | 'inbound'
+      account TEXT,
+      action_date TEXT,
+      action_time TEXT,
+      action TEXT
     );
-    INSERT INTO harbour_master_log (id, vessel, passed_light, direction) VALUES
-      (1, 'Tern',          '19:30', 'inbound'),
-      (2, 'Sable Marie',   '18:45', 'inbound'),
-      (3, 'Ardent',        '23:40', 'outbound'),
-      (4, 'Kittiwake',     '17:20', 'inbound');
-
-    CREATE TABLE coroner_reports (
-      id INTEGER PRIMARY KEY,
-      victim TEXT,
-      tod_from TEXT,
-      tod_to TEXT,
-      finding TEXT
-    );
-    INSERT INTO coroner_reports (id, victim, tod_from, tod_to, finding) VALUES
-      (1, 'Rurik Mallen', '21:00', '23:00',
-          'Drowning preceded by blunt trauma above the left ear');
-
-    CREATE TABLE recovery (
-      id INTEGER PRIMARY KEY,
-      victim TEXT,
-      found_at TEXT,
-      found_hour TEXT,
-      note TEXT
-    );
-    INSERT INTO recovery (id, victim, found_at, found_hour, note) VALUES
-      (1, 'Rurik Mallen', 'Jetty 4', '05:40',
-          'Against the seaward pilings. Nothing upstream of Jetty 4 reaches it except on an ebb.');
+    INSERT INTO db_audit_log (id, account, action_date, action_time, action) VALUES
+      (1, 'db_admin', '2026-09-08', '10:20', 'Rebuilt index on sales_2026'),
+      (2, 'sysops',   '2026-09-09', '14:40', 'Rotated TLS certificate'),
+      (3, 'sysops',   '2026-09-10', '19:12', 'Restarted replication'),
+      (4, 'db_admin', '2026-09-10', '21:05', 'Ran nightly health check'),
+      (5, 'db_admin', '2026-09-10', '21:14', 'Disabled audit logging'),
+      (6, 'sysops',   '2026-09-10', '21:54', 'Audit logging restored by monitor'),
+      (7, 'db_admin', '2026-09-11', '09:50', 'Vacuumed gift_cards table');
   `,
 
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'staff',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'name', type: 'TEXT' },
-          { name: 'vessel', type: 'TEXT' },
-          { name: 'grievance', type: 'TEXT' },
+          { name: 'team', type: 'TEXT' },
         ],
       },
       {
-        name: 'tide_readings',
+        name: 'workstations',
         columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'reading_hour', type: 'TEXT' },
-          { name: 'state', type: 'TEXT' },
-          { name: 'height_m', type: 'INTEGER' },
+          { name: 'hostname', type: 'TEXT', pk: true },
+          { name: 'assigned_to', type: 'INTEGER', fk: 'staff.id' },
+          { name: 'site', type: 'TEXT' },
         ],
       },
       {
-        name: 'mooring_log',
+        name: 'vault_checkouts',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'berth', type: 'INTEGER' },
-          { name: 'log_hour', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'statements',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'claimed_berth', type: 'INTEGER' },
           { name: 'account', type: 'TEXT' },
+          { name: 'checked_out_by', type: 'INTEGER', fk: 'staff.id' },
+          { name: 'checkout_date', type: 'TEXT' },
+          { name: 'from_time', type: 'TEXT' },
+          { name: 'to_time', type: 'TEXT' },
         ],
       },
       {
-        name: 'harbour_master_log',
+        name: 'privileged_sessions',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'vessel', type: 'TEXT' },
-          { name: 'passed_light', type: 'TEXT' },
-          { name: 'direction', type: 'TEXT' },
+          { name: 'account', type: 'TEXT' },
+          { name: 'source_host', type: 'TEXT', fk: 'workstations.hostname' },
+          { name: 'session_date', type: 'TEXT' },
+          { name: 'start_time', type: 'TEXT' },
+          { name: 'end_time', type: 'TEXT' },
         ],
       },
       {
-        name: 'coroner_reports',
+        name: 'db_audit_log',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'tod_from', type: 'TEXT' },
-          { name: 'tod_to', type: 'TEXT' },
-          { name: 'finding', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'recovery',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'found_at', type: 'TEXT' },
-          { name: 'found_hour', type: 'TEXT' },
-          { name: 'note', type: 'TEXT' },
+          { name: 'account', type: 'TEXT' },
+          { name: 'action_date', type: 'TEXT' },
+          { name: 'action_time', type: 'TEXT' },
+          { name: 'action', type: 'TEXT' },
         ],
       },
     ],
@@ -247,93 +184,70 @@ Six people had a berth here and a reason to resent Mallen, who had spent the sum
 
   report: {
     template:
-      'Mallen never fell. The harbour only carried him seaward while it was going out, and it ebbed for one stretch that night — from {{ebbStart}} until the water went slack at 23:00 — which puts him in the water inside the coroner’s window. Only a berth upstream of Jetty 4 drains past it, and three vessels sat upstream through that ebb. Two of them told the truth about it. {{killer}} did not: their statement puts them in berth {{claimedBerth}} on the visitor pontoon, while the mooring log has the {{vessel}} tied up upstream the entire time. They struck him, put him in the water on the outgoing tide, and slipped past the seaward light at {{passedLight}} once the harbour had gone quiet.',
+      'Control ITGC-A11 failed. When audit logging was switched off, the generic account {{sharedAccount}} was open from two workstations at once, so its log cannot say who acted. One session was checked out of the vault by {{onCall}}. The other came from {{host}}, the workstation assigned to {{owner}}, with no vault checkout at all: the password was known outside the vault.',
     blanks: {
-      ebbStart: {
-        label: 'when the ebb began',
-        targetValue: '21:00',
-        unlockedByColumn: 'ebb_from',
-        triggerValue: '21:00',
-        // Self-join: pair each hour with the one before it and find where the
-        // tide turns. The alias `ebb_from` exists in no table.
+      sharedAccount: {
+        label: 'the shared account',
+        targetValue: 'db_admin',
+        unlockedByColumn: 'shared_account',
+        triggerValue: 'db_admin',
+        options: ['db_admin', 'sysops', 'backup_svc', 'app_reader'],
         provingQuery: `
-          SELECT prev.reading_hour AS turned_at, cur.reading_hour AS ebb_from
-          FROM tide_readings cur
-          JOIN tide_readings prev ON prev.reading_hour < cur.reading_hour
-          JOIN coroner_reports c ON c.victim = 'Rurik Mallen'
-          WHERE cur.state = 'ebb' AND prev.state = 'slack'
-            AND cur.reading_hour >= c.tod_from AND cur.reading_hour <= c.tod_to
-            AND prev.reading_hour = (
-              SELECT MAX(p.reading_hour) FROM tide_readings p
-              WHERE p.reading_hour < cur.reading_hour
-            )
+          SELECT a.account AS shared_account, a.source_host AS first_host,
+                 b.source_host AS second_host, a.session_date,
+                 a.start_time, a.end_time, b.start_time AS second_start, b.end_time AS second_end
+          FROM privileged_sessions a
+          JOIN privileged_sessions b
+            ON b.account = a.account AND b.session_date = a.session_date
+           AND a.id < b.id AND a.source_host <> b.source_host
+           AND a.start_time < b.end_time AND b.start_time < a.end_time
         `,
-        options: ['20:00', '21:00', '22:00', '23:00'],
-        hint: 'Join tide_readings to itself on consecutive hours to find where slack turns to ebb. Alias it AS ebb_from.',
+        hint: 'Join privileged_sessions to itself: same account, same date, different source_host, and the two sessions overlap (each starts before the other ends). Alias the account AS shared_account.',
       },
-      killer: {
-        label: 'the killer',
-        targetValue: 'Marisol Quint',
-        unlockedByColumn: 'name',
-        triggerValue: 'Marisol Quint',
-        options: ['Corin Vasilyev', 'Halina Brecht', 'Osgood Lyle', 'Marisol Quint', 'Teodor Fisk'],
-        // The planted contradiction: mooring_log and statements disagree for
-        // exactly one person.
+      onCall: {
+        label: 'who checked it out legitimately',
+        targetValue: 'Bea Lawson',
+        unlockedByColumn: 'vault_holder',
+        triggerValue: 'Bea Lawson',
+        options: ['Bea Lawson', 'Marco Silva', 'Ivy Chen', 'Fergus Doyle'],
         provingQuery: `
-          SELECT s.name, m.berth AS actual_berth, st.claimed_berth
-          FROM suspects s
-          JOIN mooring_log m ON m.suspect_id = s.id
-          JOIN statements st ON st.suspect_id = s.id
-          WHERE m.log_hour = '21:00' AND m.berth <> st.claimed_berth
+          SELECT s.name AS vault_holder, v.from_time, v.to_time
+          FROM vault_checkouts v JOIN staff s ON s.id = v.checked_out_by
+          WHERE v.account = 'db_admin' AND v.checkout_date = '2026-09-10'
         `,
-        hint: 'Compare where the mooring log puts each vessel against where its owner claimed to be.',
+        hint: 'Who checked that account out of the vault that evening? Join vault_checkouts to staff. Alias the name AS vault_holder.',
       },
-      claimedBerth: {
-        label: 'the berth they claimed',
-        targetValue: '9',
-        // Keyed on the account text, not claimed_berth: the killer's proving
-        // query already selects claimed_berth, so triggering on that would
-        // unlock this blank for free. The player has to read the statement.
-        unlockedByColumn: 'account',
-        triggerValue: 'Down on the visitor pontoon with the others all evening.',
+      host: {
+        label: 'the workstation with no checkout',
+        targetValue: 'WS-SUP-117',
+        unlockedByColumn: 'unvaulted_host',
+        triggerValue: 'WS-SUP-117',
+        options: ['WS-DBA-04', 'WS-DBA-07', 'WS-SUP-117', 'WS-SUP-121'],
         provingQuery: `
-          SELECT st.account, st.claimed_berth
-          FROM statements st JOIN suspects s ON s.id = st.suspect_id
-          WHERE s.name = 'Marisol Quint'
-        `,
-        options: ['1', '2', '3', '9'],
-        hint: 'Read the killer’s own statement in full — where did they put themselves?',
-      },
-      vessel: {
-        label: 'their vessel',
-        targetValue: 'Ardent',
-        unlockedByColumn: 'vessel',
-        triggerValue: 'Ardent',
-        // EXCEPT: everyone upstream during the ebb, minus everyone the harbour
-        // master actually saw leave.
-        provingQuery: `
-          SELECT s.vessel FROM suspects s
-          JOIN mooring_log m ON m.suspect_id = s.id
-          JOIN statements st ON st.suspect_id = s.id
-          WHERE m.log_hour = '22:00' AND m.berth <= 3
-            AND m.berth <> st.claimed_berth
+          SELECT source_host AS unvaulted_host FROM privileged_sessions
           EXCEPT
-          SELECT vessel FROM harbour_master_log WHERE direction = 'inbound'
+          SELECT s.source_host
+          FROM privileged_sessions s
+          JOIN vault_checkouts v
+            ON v.account = s.account AND v.checkout_date = s.session_date
+           AND s.start_time >= v.from_time AND s.end_time <= v.to_time
+          JOIN workstations w
+            ON w.hostname = s.source_host AND w.assigned_to = v.checked_out_by
         `,
-        options: ['Northern Gale', 'Sable Marie', 'Tern', 'Ardent'],
-        hint: 'List the vessels upstream during the ebb, then EXCEPT the ones the harbour master logged inbound.',
+        hint: 'Take every source_host that ran a privileged session, EXCEPT those covered by a vault checkout of the same account, in the same window, made by the person the workstation belongs to. Alias the first column AS unvaulted_host.',
       },
-      passedLight: {
-        label: 'when the Ardent passed the light',
-        targetValue: '23:40',
-        unlockedByColumn: 'passed_light',
-        triggerValue: '23:40',
+      owner: {
+        label: 'whose workstation it is',
+        targetValue: 'Ade Kuti',
+        unlockedByColumn: 'host_owner',
+        triggerValue: 'Ade Kuti',
+        options: ['Bea Lawson', 'Ade Kuti', 'Fergus Doyle', 'Marco Silva'],
         provingQuery: `
-          SELECT vessel, passed_light, direction
-          FROM harbour_master_log WHERE direction = 'outbound'
+          SELECT w.hostname, s.name AS host_owner, w.site
+          FROM workstations w JOIN staff s ON s.id = w.assigned_to
+          WHERE w.hostname = 'WS-SUP-117'
         `,
-        options: ['17:20', '19:30', '23:40', '05:40'],
-        hint: 'Only one vessel was logged outbound that night. When did it pass the seaward light?',
+        hint: 'Join that workstation to staff on assigned_to. Alias the name AS host_owner.',
       },
     },
   },
