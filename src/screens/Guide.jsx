@@ -99,6 +99,16 @@ const CLAUSES = [
     ex: 'SELECT host FROM sessions\nEXCEPT\nSELECT host FROM approved_hosts;',
   },
   {
+    kw: 'WITH … AS (CTE)',
+    desc: 'Name a query and use it like a table in the next one. Good for a baseline you compare every row against.',
+    ex: 'WITH usual AS (\n  SELECT account, AVG(amount) AS avg_amount\n  FROM payments GROUP BY account\n)\nSELECT p.* FROM payments p JOIN usual u USING (account)\nWHERE p.amount > u.avg_amount * 3;',
+  },
+  {
+    kw: 'UNION ALL',
+    desc: 'Stack the rows of two queries into one result, e.g. two logs of the same kind of event. Both must select the same number of columns.',
+    ex: "SELECT 'web' AS source, user_id, logged_at FROM web_logins\nUNION ALL\nSELECT 'vpn', user_id, logged_at FROM vpn_logins\nORDER BY logged_at;",
+  },
+  {
     kw: 'julianday()',
     desc: 'Turns a date into a day number, so two dates can be subtracted.',
     ex: 'SELECT julianday(closed_on) - julianday(opened_on) AS days_open\nFROM tickets;',
@@ -198,6 +208,22 @@ const GLOSSARY = [
   {
     term: 'Privilege creep',
     desc: 'Access that accumulates across moves because new roles are added and old ones never removed.',
+  },
+  {
+    term: 'Recovery point objective (RPO)',
+    desc: 'The most data the business can afford to lose in a restore, set per system. A weekly backup can only meet an RPO of seven days if it actually backs something up.',
+  },
+  {
+    term: 'Restore test',
+    desc: 'Restoring a backup to prove it works. A backup nobody has restored is a hope, not a control.',
+  },
+  {
+    term: 'Three-way match',
+    desc: 'An automated control that pays an invoice only if it agrees with the purchase order and the goods received, within a set tolerance.',
+  },
+  {
+    term: 'Reliance',
+    desc: 'Trusting an automated control without retesting it, which is only safe while change and access ITGCs stop anyone altering it unnoticed.',
   },
   {
     term: 'ITGC',
