@@ -43,7 +43,7 @@ const TRAILER_CSS = `
    it stops blinking once the CASE CLOSED stamp lands (~1.8s in). */
 @keyframes dq-blink-settle { 0%,49% { opacity: 1; } 50%,99% { opacity: 0; } 100% { opacity: 1; } }
 .dq-blink-stop { animation: dq-blink-settle 0.9s steps(1) 2 forwards; }
-.dq-caret { display: inline-block; width: 0.55em; height: 1.05em; margin-left: 0.2em; vertical-align: text-bottom; background: #e11d48; animation: dq-blink 0.9s steps(1) infinite; }
+.dq-caret { display: inline-block; width: 0.55em; height: 1.05em; margin-left: 0.2em; vertical-align: text-bottom; background: #f2b25c; animation: dq-blink 0.9s steps(1) infinite; }
 .dq-scanlines { background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px); }
 `
 
@@ -288,7 +288,7 @@ function SceneTitle() {
     <Center className="px-6">
       <div className="relative text-center">
         <K at={0} className="font-display text-[clamp(2rem,7vw,5.5rem)] font-black leading-none tracking-tight text-zinc-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
-          DETECTIVE<span className="dq-blink-stop text-[#f26d78]">_</span>QUERY
+          DETECTIVE<span className="dq-blink-stop text-exception">_</span>QUERY
         </K>
         <K at={0.5} kind="rise" className="mt-5 font-display text-sm font-semibold uppercase tracking-[0.35em] text-zinc-400 sm:text-base">
           Write real SQL. Crack the case.
@@ -597,7 +597,7 @@ export default function Trailer() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 30% 40%, rgba(225,29,72,0.06), transparent), radial-gradient(ellipse 55% 45% at 72% 65%, rgba(159,18,57,0.07), transparent)',
+            'radial-gradient(ellipse 60% 50% at 30% 40%, rgba(242,178,92,0.06), transparent), radial-gradient(ellipse 55% 45% at 72% 65%, rgba(168,111,33,0.07), transparent)',
         }}
       />
       <div className="dq-scanlines pointer-events-none absolute inset-0" />

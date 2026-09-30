@@ -225,7 +225,7 @@ function AnalysisView({ t }) {
           <span className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">SQL input</span>
           <button
             className={`rounded-full px-5 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
-              running ? 'bg-crimson text-white' : 'bg-zinc-100 text-zinc-950'
+              running ? 'bg-crimson text-zinc-950' : 'bg-zinc-100 text-zinc-950'
             }`}
           >
             {running ? 'RUNNING…' : 'RUN'}
@@ -274,7 +274,7 @@ function AnalysisView({ t }) {
           )}
 
           {verified && (
-            <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 animate-toast-up rounded-xl border border-[#f26d78]/40 bg-zinc-900 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#f26d78] shadow-lg">
+            <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 animate-toast-up rounded-xl border border-exception/40 bg-zinc-900 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-exception shadow-lg">
               CLUE VERIFIED!
             </div>
           )}
@@ -317,7 +317,7 @@ function colorize(line) {
   strSplit.forEach((chunk) => {
     if (chunk.startsWith("'")) {
       out.push(
-        <span key={key++} className="text-[#f26d78]">
+        <span key={key++} className="text-exception">
           {chunk}
         </span>,
       )
@@ -345,7 +345,7 @@ function colorize(line) {
 // one-shot ring flash pulses out from it as the answer lands.
 const REPORT_CSS = `
 @keyframes dq-slot { 0% { opacity: 0; transform: translateY(-10px) scale(0.7); } 60% { opacity: 1; transform: translateY(0) scale(1.12); } 100% { transform: translateY(0) scale(1); } }
-@keyframes dq-ring { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,0.55); } 100% { box-shadow: 0 0 0 14px rgba(225,29,72,0); } }
+@keyframes dq-ring { 0% { box-shadow: 0 0 0 0 rgba(242,178,92,0.55); } 100% { box-shadow: 0 0 0 14px rgba(242,178,92,0); } }
 .dq-slot { animation: dq-slot 0.34s cubic-bezier(0.34,1.56,0.64,1) both, dq-ring 0.6s ease-out both; }
 `
 
@@ -398,7 +398,7 @@ function ReportView({ t }) {
           <div className="mt-6 flex justify-end">
             <button
               className={`rounded-lg px-8 py-3 text-sm font-semibold uppercase tracking-widest transition-all duration-300 ${
-                allFilled ? 'scale-105 bg-crimson text-white shadow-lg shadow-crimson/30' : 'bg-zinc-800 text-zinc-600'
+                allFilled ? 'scale-105 bg-crimson text-zinc-950 shadow-lg shadow-crimson/30' : 'bg-zinc-800 text-zinc-600'
               }`}
             >
               submit report

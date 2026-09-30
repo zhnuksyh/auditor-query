@@ -218,6 +218,8 @@ second entry point: safe to defer entirely, or ship without a trailer initially.
 - **`crimson` keeps its name.** Its ~56 usages all mean "alert / exception /
   wrong answer", which the audit theme wants too. Only the value moved (rose red
   → register amber). `exception` / `compliant` aliases exist for new code.
+  Hardcoded reds left in components, CSS and the trailer were later moved to
+  the amber token as well, so the whole app, trailer included, uses one accent.
 - **Vitals are case-supplied.** `engagement.vitals` is a `{term, line1, line2}[]`
   and the grid auto-fits, so a case picks its own headline labels and count.
 - **`paper.*` folder tones were rekeyed** to audit domains even though nothing

@@ -37,11 +37,11 @@ export default function TutorialOverlay({ steps, onGoToTab, onFinish, play }) {
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-6">
-      <div className="pointer-events-auto w-full max-w-md animate-fade-up rounded-2xl border border-[#f26d78]/40 bg-zinc-900/95 p-5 shadow-2xl backdrop-blur">
+      <div className="pointer-events-auto w-full max-w-md animate-fade-up rounded-2xl border border-exception/40 bg-zinc-900/95 p-5 shadow-2xl backdrop-blur">
         {/* Header row */}
         <div className="mb-2 flex items-start justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#f26d78]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-exception">
               Tutorial
             </span>
             <span className="text-[10px] tracking-widest text-zinc-500">
@@ -84,7 +84,7 @@ export default function TutorialOverlay({ steps, onGoToTab, onFinish, play }) {
             <button
               onClick={next}
               onMouseEnter={() => play?.('hover')}
-              className="rounded-lg bg-[#f26d78] px-5 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-[#f4808a]"
+              className="rounded-lg bg-exception px-5 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-exception/80"
             >
               {isLast ? 'Got it' : 'Next'}
             </button>

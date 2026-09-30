@@ -149,7 +149,7 @@ export default function AnalysisTab({ caseData, db, dbError, game, play, shake, 
 
           {flash && (
             <div
-              className={`pointer-events-none absolute bottom-3 left-1/2 rounded-xl border border-[#f26d78]/40 bg-zinc-900 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#f26d78] shadow-lg shadow-black/30 ${
+              className={`pointer-events-none absolute bottom-3 left-1/2 rounded-xl border border-exception/40 bg-zinc-900 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-exception shadow-lg shadow-black/30 ${
                 flash === 'in' ? 'animate-toast-up' : 'animate-toast-down'
               }`}
             >

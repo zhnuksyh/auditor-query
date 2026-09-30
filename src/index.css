@@ -134,7 +134,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  background: #e11d48; /* crimson */
+  background: #f2b25c; /* amber accent */
   border: none;
   box-shadow: none;
 }
@@ -143,7 +143,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  background: #e11d48;
+  background: #f2b25c;
   border: none;
   box-shadow: none;
 }

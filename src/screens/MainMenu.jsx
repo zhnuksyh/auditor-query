@@ -90,7 +90,7 @@ export default function MainMenu({ game, play }) {
           nudged further in from the left edge. */}
       <div className="relative flex h-full w-full flex-col justify-center pb-16 pl-8 pr-8 sm:pb-24 sm:pl-32 sm:pr-10 lg:pl-48">
         <h1 className="mb-8 font-display text-3xl font-black leading-none tracking-tight text-zinc-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] sm:mb-10 sm:text-5xl lg:text-6xl">
-          AUDITOR<span className="text-[#f26d78]">_</span>QUERY
+          AUDITOR<span className="text-exception">_</span>QUERY
         </h1>
 
         <ul className="flex w-full max-w-[240px] flex-col gap-2.5">
@@ -103,7 +103,7 @@ export default function MainMenu({ game, play }) {
                   onClick={() => !disabled && handle(item.key)}
                   onMouseEnter={() => !disabled && play('hover')}
                   disabled={disabled}
-                  className="press w-full rounded-xl border border-white/10 bg-zinc-950/50 px-5 py-3 text-left font-display text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 backdrop-blur-sm transition-colors hover:border-[#f26d78]/70 hover:bg-zinc-950/70 disabled:cursor-not-allowed disabled:border-white/5 disabled:text-zinc-600 disabled:hover:border-white/5 disabled:hover:bg-zinc-950/50"
+                  className="press w-full rounded-xl border border-white/10 bg-zinc-950/50 px-5 py-3 text-left font-display text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 backdrop-blur-sm transition-colors hover:border-exception/70 hover:bg-zinc-950/70 disabled:cursor-not-allowed disabled:border-white/5 disabled:text-zinc-600 disabled:hover:border-white/5 disabled:hover:bg-zinc-950/50"
                 >
                   {item.label}
                 </button>
@@ -158,7 +158,7 @@ export default function MainMenu({ game, play }) {
                   setConfirmNew(false)
                   startNewGame()
                 }}
-                className="press rounded-lg bg-crimson px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition-colors hover:bg-crimson/80"
+                className="press rounded-lg bg-crimson px-4 py-2 text-xs font-semibold uppercase tracking-widest text-zinc-950 transition-colors hover:bg-crimson/80"
               >
                 Erase &amp; start
               </button>
