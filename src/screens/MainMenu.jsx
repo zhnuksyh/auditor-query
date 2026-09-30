@@ -90,7 +90,7 @@ export default function MainMenu({ game, play }) {
           nudged further in from the left edge. */}
       <div className="relative flex h-full w-full flex-col justify-center pb-16 pl-8 pr-8 sm:pb-24 sm:pl-32 sm:pr-10 lg:pl-48">
         <h1 className="mb-8 font-display text-3xl font-black leading-none tracking-tight text-zinc-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] sm:mb-10 sm:text-5xl lg:text-6xl">
-          AUDITOR<span className="text-[#f2b25c]">_</span>QUERY
+          AUDITOR<span className="text-[#f26d78]">_</span>QUERY
         </h1>
 
         <ul className="flex w-full max-w-[240px] flex-col gap-2.5">
