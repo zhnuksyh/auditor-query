@@ -1,243 +1,142 @@
 // @ts-check
 /**
- * CASE 06 — "THE ARCHIVIST"
+ * CASE 06: "THE MISSING ROW"
  *
- * The hardest file yet, and the first built on ABSENCE. Seven tables, six
- * suspects. Every earlier case asked the player to find a row that shouldn't
- * exist; this one asks them to find a row that ISN'T THERE:
+ * Population completeness. Quarrow Engineering's leaver control was tested by
+ * management against HR's leaver report and scored 100%. The report was built
+ * from the worker register with a filter that silently left out contractors,
+ * so the test never saw the leavers most likely to fail.
  *
- *   - vault_ledger records every sign-out and its matching return. One file was
- *     signed out and never returned — provable only with an anti-join
- *     (NOT EXISTS / LEFT JOIN ... WHERE return IS NULL), because there is no
- *     "missing" flag anywhere in the data.
- *   - The ledger row covering that file names a clerk who was on leave that
- *     week (leave_records) — the entry was written under a borrowed name.
- *   - door_scans is the honest record: it shows who was physically in the vault
- *     in the minute the entry was timestamped, which is how the borrowed name
- *     gets attached to a real person.
- *   - The victim, the head archivist, had queued that same file for digitisation
- *     (digitisation_queue), which is why it had to disappear before he scanned it.
+ * The player must:
+ *   1. Test the report as management did: every leaver on it was disabled in
+ *      time. Nothing to find. That is the first obvious query, and it clears.
+ *   2. Reconcile the report back to its source with an anti-join: leavers in
+ *      the register during the period with no row in the report. Three.
+ *      Forgetting the period filter counts a December leaver too (four).
+ *   3. See what the missing rows have in common: all contractors.
+ *   4. Check the missing leavers' accounts: one still enabled (and used after
+ *      its owner left), one disabled five weeks late, one disabled on time.
  *
- * Difficulty step: cases 03/05 taught GROUP BY + HAVING; this one needs the
- * negative shape (anti-join) plus a self-consistency check across two tables
- * that disagree. Everything is still provable with SQL — no guessing.
+ * Deductive shape: the report itself returns five compliant leavers. Only the
+ * reconciliation finds anything, and it returns three candidates that differ
+ * by what happened to their accounts. The realism dial is POPULATION
+ * COMPLETENESS of information produced by the entity (IPE).
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case06 = {
   id: 'case_06',
   code: 'CODE_06',
-  tag: 'ARCHIVE',
-  title: 'The Archivist',
+  tag: 'POPULATION',
+  title: 'The Missing Row',
   teaser:
-    'Every file in the vault was signed out in perfect order. Except the one that never came back.',
-  folderTheme: 'privacy',
+    'Management tested every leaver on the list and scored the control 100%. Then a penetration tester logged in as someone who left in February.',
+  folderTheme: 'access',
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Hollis Wray, 61', line2: 'Head archivist' },
-      { term: 'Location', line1: 'Bureau Records Annex, Sub-level 2', line2: 'Cold vault — Row F' },
-      { term: 'Time of death', line1: '19:05 – 19:40', line2: 'September 3rd' },
+      { term: 'Control', line1: 'ITGC-A02: Leaver access removal', line2: 'Disabled within 1 working day of leaving' },
+      { term: 'System', line1: 'Quarrow Engineering: Directory', line2: 'Network logins for all staff' },
+      { term: 'Audit period', line1: '1 January – 30 June 2026', line2: 'H1 leavers, re-performed' },
     ],
-    report: `HOLLIS WRAY was found at 20:12 between the stacks in Row F of the cold vault, a shelf ladder overturned beside him. The fall looked like an accident until the coroner put the blunt injury at the back of the skull, not the front — he was struck, then the ladder was laid down around him. Death came between 19:05 and 19:40.
+    report: `Quarrow Engineering's control ITGC-A02 says that when anyone leaves, their network account is disabled within one working day of their last day. Every half-year, IT management tests it themselves: they take HR's leaver report, check each name against the directory, and report the result to the audit committee. For January to June 2026 they tested every leaver on the report, found every account disabled in time, and reported the control as 100% effective.
 
-Wray had spent his last month digitising the Bureau's oldest evidence files, and he kept the queue meticulously. Nothing is stolen from a vault like this without a trace, because the vault keeps two records of everything: the VAULT LEDGER, where a clerk writes down each file signed out and signs it back in on return, and the DOOR SCANS, which log every badge through the vault door and cannot be written by hand.
+In July, an external penetration tester logged into Quarrow's network with a working account belonging to someone who had left months before.
 
-The ledger for that week looks immaculate — every sign-out paired with a return, every line initialled. But the ledger is only as honest as the person holding the pen, and one clerk whose name appears in it was nowhere near the building: the staff leave records put them away all week. Whoever wrote that line borrowed a name that couldn't contradict them.
+A test is only as good as the list it is run on. Auditors call that list the POPULATION, and when the organisation itself produces it, it is INFORMATION PRODUCED BY THE ENTITY, or IPE. Before relying on IPE, an auditor must show it is COMPLETE: that nothing which belongs on it is missing. The usual way is to reconcile it back to the source it was drawn from.
 
-Three people passed through that door while Wray was dying, and each had a reason to be there. Find the file that went out and never came back, then work out which of them was still inside at the minute that entry was written. The ledger lies. The door does not.`,
-    constraints: [
-      'Time of death: 19:05–19:40, September 3rd.',
-      'Blunt trauma to the BACK of the skull — the fall was staged.',
-      'Every vault sign-out must have a matching return in the ledger.',
-      'Door scans are machine-written and cannot be forged; the ledger is handwritten.',
-      'One name in the ledger belongs to a clerk who was on leave all week.',
-      'Three badges passed the vault door inside the coroner’s window.',
-    ],
+HR's report was drawn from the WORKER REGISTER, which records everyone who works at Quarrow, employees and contractors alike, and the day each of them left. You have the register, the leaver report management tested, and the directory accounts with the day each was disabled and last used. Find how many H1 leavers the report missed, what kind of worker it left out, whose account is still live, and whose was disabled late.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    -- The worker register: the SOURCE. Everyone, employees and contractors.
+    -- left_on is NULL for anyone still working at Quarrow.
+    CREATE TABLE workers (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      role TEXT,
-      badge_id INTEGER
+      name TEXT,
+      worker_type TEXT,        -- 'Employee' or 'Contractor'
+      department TEXT,
+      left_on TEXT
     );
-    INSERT INTO suspects (id, name, role, badge_id) VALUES
-      (1, 'Perrin Oyelaran', 'Records clerk',        301),
-      (2, 'Sabine Marchetti','Conservation officer', 302),
-      (3, 'Dov Lantry',      'Records clerk',        303),
-      (4, 'Ingrid Sahl',     'Vault supervisor',     304),
-      (5, 'Casimir Boyle',   'Digitisation tech',    305),
-      (6, 'Neve Abara',      'Night porter',         306);
+    INSERT INTO workers (id, name, worker_type, department, left_on) VALUES
+      (1,  'Mark Deane',  'Employee',   'Engineering', '2026-01-16'),
+      (2,  'Olu Adebayo', 'Employee',   'Finance',     '2026-02-27'),
+      (3,  'Petra Nowak', 'Contractor', 'Engineering', '2026-02-13'),
+      (4,  'Leona Barr',  'Contractor', 'IT',          '2026-02-20'),
+      (5,  'Sian Price',  'Employee',   'HR',          '2026-03-31'),
+      (6,  'Aaron Quist', 'Contractor', 'Engineering', '2026-03-27'),
+      (7,  'Ravi Menon',  'Employee',   'Sales',       '2026-05-15'),
+      (8,  'Ella Strand', 'Employee',   'Engineering', '2026-06-12'),
+      (9,  'Tobias Grey', 'Employee',   'IT',          NULL),
+      (10, 'Keiko Imai',  'Contractor', 'IT',          NULL),
+      (11, 'Noor Aziz',   'Employee',   'Finance',     NULL),
+      (12, 'Dara Flynn',  'Employee',   'Sales',       '2025-12-19');  -- before the period
 
-    CREATE TABLE case_files (
+    -- The report HR produced for management's test: the IPE.
+    CREATE TABLE hr_leaver_report (
       id INTEGER PRIMARY KEY,
-      file_code TEXT,
-      subject TEXT,
-      shelf TEXT
+      worker_id INTEGER REFERENCES workers(id),
+      last_day TEXT
     );
-    INSERT INTO case_files (id, file_code, subject, shelf) VALUES
-      (1, 'BX-1140', 'Harbour arson, 1998',        'Row F'),
-      (2, 'BX-1207', 'Mill Road fraud, 2001',      'Row F'),
-      (3, 'BX-1315', 'Alder Row disappearance, 1994', 'Row D'),
-      (4, 'BX-1402', 'Foundry contract bribery, 2003', 'Row F'),
-      (5, 'BX-1488', 'Brant Station theft, 1999',  'Row B');
+    INSERT INTO hr_leaver_report (id, worker_id, last_day) VALUES
+      (1, 1, '2026-01-16'),
+      (2, 2, '2026-02-27'),
+      (3, 5, '2026-03-31'),
+      (4, 7, '2026-05-15'),
+      (5, 8, '2026-06-12');
 
-    -- The handwritten record. A sign-out is only closed when returned_time is
-    -- filled in; exactly one row in this table never gets one.
-    CREATE TABLE vault_ledger (
+    -- Network accounts. disabled_on is NULL while an account is live.
+    CREATE TABLE directory_accounts (
       id INTEGER PRIMARY KEY,
-      file_id INTEGER REFERENCES case_files(id),
-      signed_out_by TEXT,        -- written by hand, so it can be a borrowed name
-      signed_out_time TEXT,      -- 'HH:MM'
-      returned_time TEXT         -- NULL means it never came back
+      worker_id INTEGER REFERENCES workers(id),
+      username TEXT,
+      disabled_on TEXT,
+      last_logon TEXT
     );
-    INSERT INTO vault_ledger (id, file_id, signed_out_by, signed_out_time, returned_time) VALUES
-      (1, 3, 'Perrin Oyelaran',  '09:12', '09:48'),
-      (2, 1, 'Casimir Boyle',    '11:30', '12:05'),
-      (3, 5, 'Sabine Marchetti', '14:20', '15:02'),
-      (4, 2, 'Dov Lantry',       '19:14', NULL),    -- never returned: the stolen file
-      (5, 1, 'Ingrid Sahl',      '16:40', '17:15'),
-      (6, 3, 'Casimir Boyle',    '17:50', '18:30');
-
-    -- Machine-written. Cannot be forged, so it overrides the ledger.
-    CREATE TABLE door_scans (
-      id INTEGER PRIMARY KEY,
-      badge_id INTEGER,
-      direction TEXT,            -- 'IN' or 'OUT'
-      scan_time TEXT             -- 'HH:MM'
-    );
-    INSERT INTO door_scans (id, badge_id, direction, scan_time) VALUES
-      (1,  301, 'IN',  '09:10'),
-      (2,  301, 'OUT', '09:50'),
-      (3,  305, 'IN',  '11:28'),
-      (4,  305, 'OUT', '12:07'),
-      (5,  302, 'IN',  '14:18'),
-      (6,  302, 'OUT', '15:04'),
-      (7,  304, 'IN',  '16:38'),
-      (8,  304, 'OUT', '17:17'),
-      (9,  305, 'IN',  '17:48'),
-      (10, 305, 'OUT', '18:32'),
-      (11, 304, 'IN',  '19:08'),   -- Ingrid is inside when entry 4 is written
-      (12, 306, 'IN',  '19:52'),   -- the porter arrives well after the window
-      (13, 304, 'OUT', '19:36'),
-      (14, 306, 'OUT', '20:15'),
-      -- Two more people are inside the coroner's window, so "who was in the
-      -- vault when Wray died" returns three names, not one. Neither of them is
-      -- still inside at 19:14 when the ledger entry is written:
-      -- Sabine leaves four minutes before it, Casimir arrives six after.
-      (15, 302, 'IN',  '18:55'),
-      (16, 302, 'OUT', '19:10'),
-      (17, 305, 'IN',  '19:20'),
-      (18, 305, 'OUT', '19:33');
-
-    -- Dov Lantry cannot have signed anything that day.
-    CREATE TABLE leave_records (
-      id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      leave_from TEXT,
-      leave_to TEXT,
-      reason TEXT
-    );
-    INSERT INTO leave_records (id, suspect_id, leave_from, leave_to, reason) VALUES
-      (1, 3, '2026-08-31', '2026-09-06', 'Approved annual leave — abroad'),
-      (2, 6, '2026-07-14', '2026-07-18', 'Sick leave'),
-      (3, 1, '2026-06-02', '2026-06-09', 'Approved annual leave');
-
-    -- Why the file had to vanish before Wray reached it.
-    CREATE TABLE digitisation_queue (
-      id INTEGER PRIMARY KEY,
-      file_id INTEGER REFERENCES case_files(id),
-      queued_by TEXT,
-      scheduled_date TEXT,
-      status TEXT
-    );
-    INSERT INTO digitisation_queue (id, file_id, queued_by, scheduled_date, status) VALUES
-      (1, 1, 'Hollis Wray', '2026-09-01', 'done'),
-      (2, 2, 'Hollis Wray', '2026-09-04', 'pending'),
-      (3, 3, 'Hollis Wray', '2026-09-02', 'done'),
-      (4, 4, 'Hollis Wray', '2026-09-11', 'pending');
-
-    CREATE TABLE coroner_reports (
-      id INTEGER PRIMARY KEY,
-      victim TEXT,
-      tod_from TEXT,
-      tod_to TEXT,
-      injury TEXT
-    );
-    INSERT INTO coroner_reports (id, victim, tod_from, tod_to, injury) VALUES
-      (1, 'Hollis Wray', '19:05', '19:40', 'Blunt trauma, posterior skull — inconsistent with a forward fall');
+    INSERT INTO directory_accounts (id, worker_id, username, disabled_on, last_logon) VALUES
+      (1,  1,  'm.deane',   '2026-01-19', '2026-01-16'),
+      (2,  2,  'o.adebayo', '2026-02-27', '2026-02-27'),
+      (3,  3,  'p.nowak',   '2026-02-16', '2026-02-13'),  -- missed by the report, but on time
+      (4,  4,  'l.barr',    NULL,         '2026-06-02'),  -- missed, still live, used since
+      (5,  5,  's.price',   '2026-04-01', '2026-03-31'),
+      (6,  6,  'a.quist',   '2026-05-01', '2026-03-27'),  -- missed, five weeks late
+      (7,  7,  'r.menon',   '2026-05-18', '2026-05-15'),
+      (8,  8,  'e.strand',  '2026-06-15', '2026-06-12'),
+      (9,  9,  't.grey',    NULL,         '2026-07-02'),
+      (10, 10, 'k.imai',    NULL,         '2026-07-01'),
+      (11, 11, 'n.aziz',    NULL,         '2026-07-02'),
+      (12, 12, 'd.flynn',   '2025-12-22', '2025-12-19');
   `,
 
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'workers',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'name', type: 'TEXT' },
-          { name: 'role', type: 'TEXT' },
-          { name: 'badge_id', type: 'INTEGER' },
+          { name: 'worker_type', type: 'TEXT' },
+          { name: 'department', type: 'TEXT' },
+          { name: 'left_on', type: 'TEXT' },
         ],
       },
       {
-        name: 'case_files',
+        name: 'hr_leaver_report',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'file_code', type: 'TEXT' },
-          { name: 'subject', type: 'TEXT' },
-          { name: 'shelf', type: 'TEXT' },
+          { name: 'worker_id', type: 'INTEGER', fk: 'workers.id' },
+          { name: 'last_day', type: 'TEXT' },
         ],
       },
       {
-        name: 'vault_ledger',
+        name: 'directory_accounts',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'file_id', type: 'INTEGER', fk: 'case_files.id' },
-          { name: 'signed_out_by', type: 'TEXT' },
-          { name: 'signed_out_time', type: 'TEXT' },
-          { name: 'returned_time', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'door_scans',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'badge_id', type: 'INTEGER' },
-          { name: 'direction', type: 'TEXT' },
-          { name: 'scan_time', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'leave_records',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'leave_from', type: 'TEXT' },
-          { name: 'leave_to', type: 'TEXT' },
-          { name: 'reason', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'digitisation_queue',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'file_id', type: 'INTEGER', fk: 'case_files.id' },
-          { name: 'queued_by', type: 'TEXT' },
-          { name: 'scheduled_date', type: 'TEXT' },
-          { name: 'status', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'coroner_reports',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'tod_from', type: 'TEXT' },
-          { name: 'tod_to', type: 'TEXT' },
-          { name: 'injury', type: 'TEXT' },
+          { name: 'worker_id', type: 'INTEGER', fk: 'workers.id' },
+          { name: 'username', type: 'TEXT' },
+          { name: 'disabled_on', type: 'TEXT' },
+          { name: 'last_logon', type: 'TEXT' },
         ],
       },
     ],
@@ -245,88 +144,66 @@ Three people passed through that door while Wray was dying, and each had a reaso
 
   report: {
     template:
-      'Hollis Wray died over a file that was never meant to be scanned. Of everything signed out of the vault that day, only {{file}} has no return line — it went out at 19:14 and never came back. The ledger credits that sign-out to {{borrowedName}}, a clerk who was on approved leave and out of the country all week, so the entry was written in a borrowed hand. The door scans settle it: {{killer}} was the only person inside the vault when that line was written, having badged in at {{scanTime}} and out at 19:36 — straddling the coroner’s window. Wray had the file queued for digitisation on {{scheduled}}, and it had to disappear before he reached it.',
+      'Control ITGC-A02 was reported as 100% effective, but it was tested on an incomplete population. The leaver report left out every {{excludedType}}, so {{missingCount}} H1 leavers were never tested. Of those, {{stillEnabled}} was still enabled and had been used after its owner left, and {{lateDisabled}} was disabled five weeks late.',
     blanks: {
-      file: {
-        label: 'the file that never came back',
-        targetValue: 'BX-1207',
-        unlockedByColumn: 'file_code',
-        triggerValue: 'BX-1207',
-        options: ['BX-1140', 'BX-1207', 'BX-1315', 'BX-1488'],
+      missingCount: {
+        label: 'how many leavers were missed',
+        targetValue: '3',
+        // An aggregate alias over the anti-join. Without the period filter the
+        // count picks up a December leaver and comes out at four.
+        unlockedByColumn: 'missing_leavers',
+        triggerValue: 3,
+        options: ['0', '2', '3', '4'],
         provingQuery: `
-          SELECT f.file_code, f.subject, v.signed_out_by, v.signed_out_time, v.returned_time
-          FROM vault_ledger v JOIN case_files f ON f.id = v.file_id
-          WHERE v.returned_time IS NULL
+          SELECT COUNT(*) AS missing_leavers
+          FROM workers w
+          LEFT JOIN hr_leaver_report r ON r.worker_id = w.id
+          WHERE w.left_on BETWEEN '2026-01-01' AND '2026-06-30'
+            AND r.id IS NULL
         `,
-        hint: 'A sign-out with no return leaves returned_time empty — look for IS NULL in vault_ledger.',
+        hint: 'Reconcile the report to its source: LEFT JOIN workers to hr_leaver_report and keep the H1 leavers with no report row (IS NULL). Mind the audit period. Alias COUNT(*) AS missing_leavers.',
       },
-      borrowedName: {
-        label: 'the name in the ledger',
-        targetValue: 'Dov Lantry',
-        // Keyed on the leave date, not the name: the name is visible on the
-        // unreturned ledger row, so triggering on it would unlock this blank
-        // for free. The player must join leave_records to prove the signer
-        // couldn't have been holding the pen.
-        unlockedByColumn: 'leave_from',
-        triggerValue: '2026-08-31',
-        options: ['Perrin Oyelaran', 'Dov Lantry', 'Casimir Boyle', 'Neve Abara'],
+      excludedType: {
+        label: 'what the report left out',
+        targetValue: 'Contractor',
+        unlockedByColumn: 'excluded_type',
+        triggerValue: 'Contractor',
+        options: ['Employee', 'Contractor', 'Intern', 'Rehire'],
         provingQuery: `
-          SELECT v.signed_out_by, l.leave_from, l.leave_to, l.reason
-          FROM vault_ledger v
-          JOIN suspects s ON s.name = v.signed_out_by
-          JOIN leave_records l ON l.suspect_id = s.id
-          WHERE v.returned_time IS NULL
+          SELECT DISTINCT w.worker_type AS excluded_type
+          FROM workers w
+          LEFT JOIN hr_leaver_report r ON r.worker_id = w.id
+          WHERE w.left_on BETWEEN '2026-01-01' AND '2026-06-30'
+            AND r.id IS NULL
         `,
-        hint: 'Join the unreturned ledger row to leave_records — the signer was away that week.',
+        hint: 'The same anti-join: what worker_type do all the missing leavers share? Alias it AS excluded_type.',
       },
-      killer: {
-        label: 'the killer',
-        targetValue: 'Ingrid Sahl',
-        unlockedByColumn: 'name',
-        triggerValue: 'Ingrid Sahl',
-        options: ['Sabine Marchetti', 'Ingrid Sahl', 'Casimir Boyle', 'Neve Abara'],
+      stillEnabled: {
+        label: 'the account still live',
+        targetValue: 'l.barr',
+        unlockedByColumn: 'still_enabled',
+        triggerValue: 'l.barr',
+        options: ['p.nowak', 'l.barr', 'a.quist', 'k.imai'],
         provingQuery: `
-          SELECT s.name, d.scan_time AS entered, (
-            SELECT MIN(o.scan_time) FROM door_scans o
-            WHERE o.badge_id = d.badge_id AND o.direction = 'OUT'
-              AND o.scan_time > d.scan_time
-          ) AS left_at
-          FROM door_scans d JOIN suspects s ON s.badge_id = d.badge_id
-          WHERE d.direction = 'IN'
-            AND d.scan_time <= '19:14'
-            AND (
-              SELECT MIN(o.scan_time) FROM door_scans o
-              WHERE o.badge_id = d.badge_id AND o.direction = 'OUT'
-                AND o.scan_time > d.scan_time
-            ) >= '19:14'
+          SELECT a.username AS still_enabled, w.left_on, a.last_logon
+          FROM workers w JOIN directory_accounts a ON a.worker_id = w.id
+          WHERE w.left_on IS NOT NULL AND a.disabled_on IS NULL
+            AND NOT EXISTS (SELECT 1 FROM hr_leaver_report r WHERE r.worker_id = w.id)
         `,
-        hint: 'Several people were in the vault that evening. Who was badged IN before 19:14 and had not badged OUT again until after it?',
+        hint: 'Among the leavers missing from the report, whose account has no disabled_on? Alias the username AS still_enabled.',
       },
-      scanTime: {
-        label: 'when they badged in',
-        targetValue: '19:08',
-        unlockedByColumn: 'scan_time',
-        triggerValue: '19:08',
-        options: ['17:48', '19:08', '19:14', '19:52'],
+      lateDisabled: {
+        label: 'the account disabled late',
+        targetValue: 'a.quist',
+        unlockedByColumn: 'disabled_late',
+        triggerValue: 'a.quist',
+        options: ['p.nowak', 'l.barr', 'a.quist', 'd.flynn'],
         provingQuery: `
-          SELECT d.direction, d.scan_time
-          FROM door_scans d JOIN suspects s ON s.badge_id = d.badge_id
-          WHERE s.name = 'Ingrid Sahl' AND d.direction = 'IN' AND d.scan_time > '19:00'
+          SELECT a.username AS disabled_late, w.left_on, a.disabled_on
+          FROM workers w JOIN directory_accounts a ON a.worker_id = w.id
+          WHERE julianday(a.disabled_on) - julianday(w.left_on) > 3
         `,
-        hint: 'Filter door_scans to the killer’s badge for the IN scan just before the ledger entry.',
-      },
-      scheduled: {
-        label: 'the digitisation date',
-        targetValue: '2026-09-04',
-        unlockedByColumn: 'scheduled_date',
-        triggerValue: '2026-09-04',
-        options: ['2026-09-01', '2026-09-02', '2026-09-04', '2026-09-11'],
-        provingQuery: `
-          SELECT f.file_code, q.scheduled_date, q.status
-          FROM digitisation_queue q JOIN case_files f ON f.id = q.file_id
-          WHERE f.file_code = 'BX-1207'
-        `,
-        hint: 'Look up the missing file in digitisation_queue — it was due to be scanned days later.',
+        hint: 'Compare disabled_on with left_on. A Friday leaver disabled on Monday is still on time, so allow three calendar days; julianday() turns a date into a number you can subtract. Alias the username AS disabled_late.',
       },
     },
   },
