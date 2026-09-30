@@ -7,22 +7,7 @@ import { case05 } from './case05.js'
 import { case06 } from './case06.js'
 import { case07 } from './case07.js'
 import { case08 } from './case08.js'
-
-/**
- * The trailing "coming soon" placeholder. It renders as a folder but has no
- * playable schema yet. `comingSoon` marks it for the level-select card.
- *
- * @param {Pick<import('../types.js').ComingSoonCase, 'id' | 'code' | 'tag' | 'title' | 'teaser' | 'folderTheme' | 'comingSoon'>} over
- * @returns {import('../types.js').ComingSoonCase}
- */
-const lockedStub = (over) => ({
-  locked: true,
-  engagement: null,
-  schemaSql: null,
-  erd: null,
-  report: null,
-  ...over,
-})
+import { case09 } from './case09.js'
 
 /** @type {import('../types.js').GameCase[]} */
 export const CASES = [
@@ -34,15 +19,7 @@ export const CASES = [
   case06,
   case07,
   case08,
-  lockedStub({
-    id: 'case_09',
-    code: 'CODE_09',
-    tag: 'OPERATIONS',
-    title: 'Restore Point',
-    folderTheme: 'continuity',
-    teaser: 'The backups reported success every night for a year. Nobody had ever tried to restore one.',
-    comingSoon: true,
-  }),
+  case09,
 ]
 
 /**
