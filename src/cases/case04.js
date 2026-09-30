@@ -1,229 +1,165 @@
 // @ts-check
 /**
- * CASE 04 — "DEAD SIGNAL"
+ * CASE 04: "PAPER TRAIL"
  *
- * A step harder than Case 03. Seven tables, five suspects, and a piece of
- * FABRICATED evidence the player must disprove before the real question even
- * makes sense:
+ * Change management, with a misdirection. Norhaven Energy's change manager says
+ * every Q2 change to the billing system was approved before it went live, and
+ * every ticket agrees. The ticket's approved_at is a typed field, though; the
+ * ticketing system's own audit trail says when each approval record was really
+ * created.
  *
- *   - A text "from the victim" at 02:14 fixes everyone's attention after 2 AM,
- *     but tower_pings show his phone left the network at 01:50 for good.
- *     Proving that requires an aggregate with an alias (MAX(ping_time) AS
- *     last_ping), not a plain filter.
- *   - messages carries a `sent_via` column: every genuine text went out from
- *     the handset — the 02:14 one went through a cloud relay.
- *   - device_registry shows whose device was quietly paired to the victim's
- *     cloud account two days earlier (the relay's origin).
- *   - alibis all cover the FAKE window (post-02:00); two suspects have gaps in
- *     the coroner's REAL window, so the player must triangulate with
- *     tower_pings and cctv_sightings (joined through vehicle plates) to pick
- *     the right one.
+ * The player must:
+ *   1. Compare approved_at with deployed_at. Only the two EMERGENCY changes show
+ *      an approval after deployment, and both were retro-approved inside the
+ *      two-working-day window: compliant. The obvious query clears every
+ *      standard change. That is the misdirection.
+ *   2. Go to the audit trail and take MIN(edited_at) per approval, aliased: the
+ *      moment the approval first existed. One STANDARD change's approval was
+ *      created the morning after it went live, then its approved_at typed back
+ *      to the previous Monday's CAB.
+ *   3. MAX(edited_at) is the wrong aggregate: CHG-7152 had a comment edited a
+ *      week after deployment and would be a false positive.
+ *   4. Read who created and edited that approval, and whose name it carries.
  *
- * The difficulty is the misdirection: the data disproves its own headline fact.
- * Everything is still provable with SQL — no guessing.
+ * Deductive shape: approvals first created after deployment returns three
+ * changes; two are emergency changes explained by the procedure, leaving one.
+ * The realism dial is TIME LOGIC and the difference between a record's stated
+ * date and its system-recorded history.
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case04 = {
   id: 'case_04',
   code: 'CODE_04',
-  tag: 'SIGNAL',
-  title: 'Dead Signal',
+  tag: 'CHANGE',
+  title: 'Paper Trail',
   teaser:
-    'The last text was sent at 02:14. His phone was already off the grid at 01:50.',
-  folderTheme: 'continuity',
+    'Every change to the billing system carries an approval dated before it went live. The tickets say so. The tickets can be typed into.',
+  folderTheme: 'change',
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Jonah Reyes, 37', line2: 'Investigative journalist' },
-      { term: 'Location', line1: '4 Dockside Terrace, Apt 3C', line2: 'Home office' },
-      { term: 'Time of death', line1: '01:20 – 01:55', line2: 'May 2nd' },
+      { term: 'Control', line1: 'ITGC-C03: Change approval', line2: 'CAB before deploy; emergencies within 2 days' },
+      { term: 'System', line1: 'Norhaven Energy: Ampere', line2: 'Household billing, 400,000 accounts' },
+      { term: 'Audit period', line1: 'Q2: 1 April – 30 June 2026', line2: 'All changes to Ampere' },
     ],
-    report: `Jonah Reyes was found at his desk on the morning of May 2nd, dead from a single blow to the back of the head. He was mid-way through a story someone did not want printed.
+    report: `Norhaven Energy bills 400,000 households from Ampere, its billing system. In June the energy ombudsman asked why 3,100 customers had been sent bills far above anything they had used. The fault was traced to one of the changes made to Ampere's billing rules during Q2. Norhaven's change manager has told the audit committee that every one of those changes was approved before it went live, and each ticket carries an approval that says so.
 
-At 02:14 his phone texted his editor: "Can't sleep — still polishing the draft. More tomorrow." Everyone anchored their statements to that text. It proves he was alive after two. Except it proves nothing: the carrier's records show his handset last touched a cell tower at 01:50 and never came back on the network. Dead phones don't type.
+The control is ITGC-C03. A STANDARD CHANGE must be approved by the CAB, which meets on Mondays, before it is deployed. An EMERGENCY CHANGE is the exception: it may be deployed first to fix a live fault, but it must be approved retrospectively by the emergency CAB within two working days. An emergency change approved after deployment is compliant, as long as the approval came in time.
 
-Every message before that one left the handset itself. Check HOW the 02:14 text was sent — and check the device registry for what else was recently paired to Jonah's cloud account.
+Each approval record shows who approved it and an approved_at time. But approved_at is only a field: anyone with edit rights on the ticket can type into it. The ticketing system also keeps an AUDIT TRAIL of every approval record: when it was first created, every later edit, and who made each one. Nobody can edit the audit trail.
 
-The coroner puts the killing between 01:20 and 01:55. Five people orbit this story. Their alibis are all watertight — after 02:00. For the window that actually matters, the towers, the street cameras, and the registry will tell you who is lying.`,
+You have the staff, the Q2 changes to Ampere, their approvals and the approval audit trail. Find the change whose approval did not exist when it went live, when that approval was really first entered, whose name it carries, and who typed it in.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    CREATE TABLE staff (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      relationship TEXT,
-      phone_id INTEGER,
-      vehicle_plate TEXT
+      name TEXT,
+      role TEXT
     );
-    INSERT INTO suspects (id, name, relationship, phone_id, vehicle_plate) VALUES
-      (1, 'Vera Lin',     'His editor',                901, 'KLM-201'),
-      (2, 'Caleb Osei',   'Source he burned',          902, 'RGX-882'),
-      (3, 'Marta Voss',   'Ex-partner',                903, 'JPD-410'),
-      (4, 'Dominic Hale', 'Councilman in the story',   904, 'CVC-777'),
-      (5, 'Ruth Kessler', 'Landlady, same building',   905, NULL);
+    INSERT INTO staff (id, name, role) VALUES
+      (1, 'Hester Voss',   'Change Manager, CAB chair'),
+      (2, 'Callum Reid',   'Billing Developer'),
+      (3, 'Ines Duarte',   'Billing Developer'),
+      (4, 'Rafe Okonkwo',  'Platform Engineer'),
+      (5, 'Mina Holt',     'Head of IT Operations, emergency CAB');
 
-    -- Statements about the night. Note what window each alibi actually covers,
-    -- and whether anyone can corroborate it.
-    CREATE TABLE alibis (
+    -- Every change deployed to Ampere in Q2.
+    CREATE TABLE changes (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      statement TEXT,
-      covered_from TEXT,   -- 'HH:MM'
-      covered_to TEXT,
-      corroborated TEXT    -- 'yes' or 'no'
+      change_ref TEXT UNIQUE,
+      summary TEXT,
+      change_type TEXT,        -- 'Standard' or 'Emergency'
+      implemented_by INTEGER REFERENCES staff(id),
+      deployed_at TEXT         -- 'YYYY-MM-DD HH:MM'
     );
-    INSERT INTO alibis (id, suspect_id, statement, covered_from, covered_to, corroborated) VALUES
-      (1, 1, 'Newsroom all night, on deadline with the layout team.', '00:00', '03:00', 'yes'),
-      (2, 2, 'Caught the night bus, then drinks at the Anchor Bar.',  '02:05', '03:10', 'yes'),
-      (3, 3, 'Gym, then a video call with my sister overseas.',       '01:00', '02:40', 'yes'),
-      (4, 4, 'Fundraiser dinner at Civic Plaza, dozens of witnesses.','00:00', '02:20', 'yes'),
-      (5, 5, 'Asleep in the building office downstairs.',             '00:00', '06:00', 'no');
+    INSERT INTO changes (id, change_ref, summary, change_type, implemented_by, deployed_at) VALUES
+      (1, 'CHG-7101', 'Tariff table update',          'Standard',  3, '2026-04-01 06:00'),
+      (2, 'CHG-7134', 'Meter-read import fix',        'Emergency', 4, '2026-04-16 02:15'),
+      (3, 'CHG-7152', 'Payment reminder emails',      'Standard',  3, '2026-05-06 20:00'),
+      (4, 'CHG-7166', 'Billing rule update BR-22',    'Standard',  2, '2026-05-14 22:30'),
+      (5, 'CHG-7180', 'Restart stalled bill run',     'Emergency', 4, '2026-06-03 23:10'),
+      (6, 'CHG-7192', 'Billing rule update BR-23',    'Standard',  3, '2026-06-17 19:00');
 
-    -- Texts from the victim's phone (phone_id 900). 'sent_via' records whether
-    -- the message left the handset or was dispatched by the cloud relay.
-    CREATE TABLE messages (
+    -- The approval as the ticket shows it. approved_at is a TYPED field.
+    CREATE TABLE approvals (
       id INTEGER PRIMARY KEY,
-      sender_phone INTEGER,
-      recipient TEXT,
-      body TEXT,
-      sent_time TEXT,
-      sent_via TEXT        -- 'handset' or 'cloud relay'
+      change_ref TEXT REFERENCES changes(change_ref),
+      approver INTEGER REFERENCES staff(id),
+      approved_at TEXT,
+      decision TEXT
     );
-    INSERT INTO messages (id, sender_phone, recipient, body, sent_time, sent_via) VALUES
-      (1, 900, 'Vera Lin',   'Draft is close. Tonight, promise.',                  '23:48', 'handset'),
-      (2, 900, 'Caleb Osei', 'We need to talk about what you gave me. It''s bad.', '01:12', 'handset'),
-      (3, 900, 'Vera Lin',   'Can''t sleep — still polishing the draft. More tomorrow.', '02:14', 'cloud relay');
+    INSERT INTO approvals (id, change_ref, approver, approved_at, decision) VALUES
+      (1, 'CHG-7101', 1, '2026-03-30 10:00', 'Approved'),
+      (2, 'CHG-7134', 5, '2026-04-17 09:30', 'Approved'),  -- emergency, retro in time
+      (3, 'CHG-7152', 1, '2026-05-04 11:00', 'Approved'),
+      (4, 'CHG-7166', 1, '2026-05-11 10:00', 'Approved'),  -- typed to look like CAB on the 11th
+      (5, 'CHG-7180', 5, '2026-06-04 08:45', 'Approved'),  -- emergency, retro in time
+      (6, 'CHG-7192', 1, '2026-06-15 10:15', 'Approved');
 
-    -- Carrier tower pings. The victim's building sits under 'Dockside-2'.
-    -- The victim's handset is phone_id 900.
-    CREATE TABLE tower_pings (
+    -- The ticketing system's own history of every approval record. Written by
+    -- the system; no user can edit it.
+    CREATE TABLE approval_history (
       id INTEGER PRIMARY KEY,
-      phone_id INTEGER,
-      tower TEXT,
-      ping_time TEXT
+      approval_id INTEGER REFERENCES approvals(id),
+      action TEXT,             -- 'Created' or 'Edited'
+      field TEXT,
+      edited_by INTEGER REFERENCES staff(id),
+      edited_at TEXT
     );
-    INSERT INTO tower_pings (id, phone_id, tower, ping_time) VALUES
-      (1, 900, 'Dockside-2', '01:10'),
-      (2, 900, 'Dockside-2', '01:32'),
-      (3, 900, 'Dockside-2', '01:50'),   -- last ping; the handset never returns
-      (4, 901, 'Midtown-1',  '01:30'),
-      (5, 902, 'Dockside-2', '01:27'),   -- Caleb's phone, AT the building in the real window
-      (6, 903, 'Northside-4','01:35'),
-      (7, 904, 'Civic-1',    '01:25'),
-      (8, 905, 'Dockside-2', '01:40'),   -- Ruth lives there; her phone always pings this tower
-      (9, 902, 'Harbor-5',   '02:20');   -- Caleb, later, near the Anchor Bar
-
-    -- Devices paired to cloud messaging accounts.
-    CREATE TABLE device_registry (
-      id INTEGER PRIMARY KEY,
-      device TEXT,
-      owner TEXT,
-      paired_to TEXT,
-      note TEXT
-    );
-    INSERT INTO device_registry (id, device, owner, paired_to, note) VALUES
-      (1, 'laptop',     'Jonah Reyes',  'Jonah Reyes — cloud account', 'His own machine.'),
-      (2, 'tablet',     'Caleb Osei',   'Jonah Reyes — cloud account', 'Pairing added April 30 — two days before the murder.'),
-      (3, 'phone',      'Vera Lin',     'Vera Lin — cloud account',    'Normal.'),
-      (4, 'smartwatch', 'Dominic Hale', 'Dominic Hale — cloud account','Normal.');
-
-    -- Street cameras log plates with a location and time.
-    CREATE TABLE cctv_sightings (
-      id INTEGER PRIMARY KEY,
-      plate TEXT,
-      camera_location TEXT,
-      seen_time TEXT
-    );
-    INSERT INTO cctv_sightings (id, plate, camera_location, seen_time) VALUES
-      (1, 'RGX-882', 'Dockside Lot',        '01:23'),   -- Caleb's car arrives
-      (2, 'RGX-882', 'Dockside Lot',        '01:58'),   -- and leaves right after the window
-      (3, 'CVC-777', 'Civic Plaza Garage',  '01:15'),
-      (4, 'KLM-201', 'Press Tower Garage',  '01:40'),
-      (5, 'JPD-410', 'Northside Gym',       '01:05');
-
-    CREATE TABLE coroner_reports (
-      id INTEGER PRIMARY KEY,
-      victim TEXT,
-      tod_from TEXT,
-      tod_to TEXT,
-      cause TEXT
-    );
-    INSERT INTO coroner_reports (id, victim, tod_from, tod_to, cause) VALUES
-      (1, 'Jonah Reyes', '01:20', '01:55', 'Blunt cranial trauma, single strike from behind');
+    INSERT INTO approval_history (id, approval_id, action, field, edited_by, edited_at) VALUES
+      (1,  1, 'Created', NULL,          1, '2026-03-30 10:00'),
+      (2,  2, 'Created', NULL,          5, '2026-04-17 09:30'),
+      (3,  3, 'Created', NULL,          1, '2026-05-04 11:00'),
+      (4,  3, 'Edited',  'comment',     1, '2026-05-12 14:20'),  -- after deploy, harmless
+      (5,  4, 'Created', NULL,          2, '2026-05-15 09:42'),  -- the morning AFTER go-live
+      (6,  4, 'Edited',  'approved_at', 2, '2026-05-15 09:44'),
+      (7,  5, 'Created', NULL,          5, '2026-06-04 08:45'),
+      (8,  6, 'Created', NULL,          1, '2026-06-15 10:15');
   `,
 
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'staff',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'name', type: 'TEXT' },
-          { name: 'relationship', type: 'TEXT' },
-          { name: 'phone_id', type: 'INTEGER', fk: 'tower_pings.phone_id' },
-          { name: 'vehicle_plate', type: 'TEXT', fk: 'cctv_sightings.plate' },
+          { name: 'role', type: 'TEXT' },
         ],
       },
       {
-        name: 'alibis',
+        name: 'changes',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'statement', type: 'TEXT' },
-          { name: 'covered_from', type: 'TEXT' },
-          { name: 'covered_to', type: 'TEXT' },
-          { name: 'corroborated', type: 'TEXT' },
+          { name: 'change_ref', type: 'TEXT' },
+          { name: 'summary', type: 'TEXT' },
+          { name: 'change_type', type: 'TEXT' },
+          { name: 'implemented_by', type: 'INTEGER', fk: 'staff.id' },
+          { name: 'deployed_at', type: 'TEXT' },
         ],
       },
       {
-        name: 'messages',
+        name: 'approvals',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'sender_phone', type: 'INTEGER' },
-          { name: 'recipient', type: 'TEXT' },
-          { name: 'body', type: 'TEXT' },
-          { name: 'sent_time', type: 'TEXT' },
-          { name: 'sent_via', type: 'TEXT' },
+          { name: 'change_ref', type: 'TEXT', fk: 'changes.change_ref' },
+          { name: 'approver', type: 'INTEGER', fk: 'staff.id' },
+          { name: 'approved_at', type: 'TEXT' },
+          { name: 'decision', type: 'TEXT' },
         ],
       },
       {
-        name: 'tower_pings',
+        name: 'approval_history',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'phone_id', type: 'INTEGER' },
-          { name: 'tower', type: 'TEXT' },
-          { name: 'ping_time', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'device_registry',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'device', type: 'TEXT' },
-          { name: 'owner', type: 'TEXT' },
-          { name: 'paired_to', type: 'TEXT' },
-          { name: 'note', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'cctv_sightings',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'plate', type: 'TEXT' },
-          { name: 'camera_location', type: 'TEXT' },
-          { name: 'seen_time', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'coroner_reports',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'tod_from', type: 'TEXT' },
-          { name: 'tod_to', type: 'TEXT' },
-          { name: 'cause', type: 'TEXT' },
+          { name: 'approval_id', type: 'INTEGER', fk: 'approvals.id' },
+          { name: 'action', type: 'TEXT' },
+          { name: 'field', type: 'TEXT' },
+          { name: 'edited_by', type: 'INTEGER', fk: 'staff.id' },
+          { name: 'edited_at', type: 'TEXT' },
         ],
       },
     ],
@@ -231,69 +167,75 @@ The coroner puts the killing between 01:20 and 01:55. Five people orbit this sto
 
   report: {
     template:
-      'Jonah was dead before his phone “spoke.” The handset last pinged a tower at {{lastPing}} and never came back online — yet the 02:14 text went out via {{sentVia}}, dispatched from a {{device}} that had been paired to his cloud account two days earlier. That device belongs to {{killer}}, whose alibi only begins AFTER the fake text, whose phone hit the Dockside-2 tower inside the coroner’s window, and whose car sat on camera in the {{lot}} from 01:23 to 01:58.',
+      'Control ITGC-C03 failed, and the ticket concealed it. {{changeRef}} was a standard change, and its approval is dated before deployment in the name of {{approver}}. But the audit trail shows the approval record did not exist until {{firstEntered}}, after the change was already live, and that it was created and back-dated by {{enteredBy}}, the developer who implemented the change.',
     blanks: {
-      lastPing: {
-        label: 'last real signal',
-        targetValue: '01:50',
-        unlockedByColumn: 'last_ping',
-        triggerValue: '01:50',
-        options: ['01:32', '01:50', '02:14', '01:20'],
+      changeRef: {
+        label: 'the change',
+        targetValue: 'CHG-7166',
+        unlockedByColumn: 'backdated_change',
+        triggerValue: 'CHG-7166',
+        options: ['CHG-7134', 'CHG-7152', 'CHG-7166', 'CHG-7180'],
+        // The change and the moment its approval first existed are one row of
+        // the same aggregate query.
+        coUnlocksWith: 'firstEntered',
         provingQuery: `
-          SELECT MAX(ping_time) AS last_ping FROM tower_pings WHERE phone_id = 900
+          SELECT c.change_ref AS backdated_change, c.change_type, c.deployed_at,
+                 a.approved_at, MIN(h.edited_at) AS first_entered
+          FROM changes c
+          JOIN approvals a ON a.change_ref = c.change_ref
+          JOIN approval_history h ON h.approval_id = a.id
+          WHERE c.change_type = 'Standard'
+          GROUP BY c.change_ref
+          HAVING MIN(h.edited_at) > c.deployed_at
         `,
-        hint: 'When did the victim’s handset (phone_id 900) last touch a tower? SELECT MAX(ping_time) AS last_ping FROM tower_pings …',
+        hint: 'approved_at clears every standard change. Use the audit trail instead: MIN(edited_at) per approval is when the record first existed. Which standard change was live before its approval was? Alias the reference AS backdated_change and the MIN AS first_entered.',
       },
-      sentVia: {
-        label: 'how the 02:14 text was sent',
-        targetValue: 'cloud relay',
-        unlockedByColumn: 'sent_via',
-        triggerValue: 'cloud relay',
-        options: ['the handset', 'cloud relay', 'an SMS gateway', 'a burner phone'],
+      firstEntered: {
+        label: 'when the approval first existed',
+        targetValue: '2026-05-15 09:42',
+        unlockedByColumn: 'first_entered',
+        triggerValue: '2026-05-15 09:42',
+        options: ['2026-05-11 10:00', '2026-05-12 14:20', '2026-05-14 22:30', '2026-05-15 09:42'],
+        coUnlocksWith: 'changeRef',
         provingQuery: `
-          SELECT id, recipient, body, sent_time, sent_via FROM messages
-          WHERE sent_time > (SELECT MAX(ping_time) FROM tower_pings WHERE phone_id = 900)
+          SELECT c.change_ref AS backdated_change, c.change_type, c.deployed_at,
+                 a.approved_at, MIN(h.edited_at) AS first_entered
+          FROM changes c
+          JOIN approvals a ON a.change_ref = c.change_ref
+          JOIN approval_history h ON h.approval_id = a.id
+          WHERE c.change_type = 'Standard'
+          GROUP BY c.change_ref
+          HAVING MIN(h.edited_at) > c.deployed_at
         `,
-        hint: 'Compare sent_via across the messages from phone 900 — one of them is different.',
+        hint: 'The same row: MIN(edited_at) for that approval, aliased AS first_entered. MAX would catch harmless later edits instead.',
       },
-      device: {
-        label: 'the sending device',
-        targetValue: 'tablet',
-        unlockedByColumn: 'device',
-        triggerValue: 'tablet',
-        options: ['laptop', 'tablet', 'smartwatch', 'phone'],
+      approver: {
+        label: 'whose name it carries',
+        targetValue: 'Hester Voss',
+        unlockedByColumn: 'named_approver',
+        triggerValue: 'Hester Voss',
+        options: ['Hester Voss', 'Mina Holt', 'Rafe Okonkwo', 'Ines Duarte'],
         provingQuery: `
-          SELECT device, owner, paired_to, note FROM device_registry
-          WHERE owner <> 'Jonah Reyes' AND paired_to = 'Jonah Reyes — cloud account'
+          SELECT a.change_ref, s.name AS named_approver, a.approved_at
+          FROM approvals a JOIN staff s ON s.id = a.approver
+          WHERE a.change_ref = 'CHG-7166'
         `,
-        hint: 'device_registry: which device that isn’t Jonah’s is paired to “Jonah Reyes — cloud account”?',
+        hint: 'Join that approval to staff on approver. Alias the name AS named_approver.',
       },
-      killer: {
-        label: 'the killer',
-        targetValue: 'Caleb Osei',
-        unlockedByColumn: 'name',
-        triggerValue: 'Caleb Osei',
-        options: ['Vera Lin', 'Caleb Osei', 'Marta Voss', 'Dominic Hale', 'Ruth Kessler'],
+      enteredBy: {
+        label: 'who typed it in',
+        targetValue: 'Callum Reid',
+        unlockedByColumn: 'entered_by',
+        triggerValue: 'Callum Reid',
+        options: ['Hester Voss', 'Callum Reid', 'Ines Duarte', 'Mina Holt'],
         provingQuery: `
-          SELECT s.name, c.seen_time
-          FROM cctv_sightings c JOIN suspects s ON s.vehicle_plate = c.plate
-          JOIN coroner_reports r ON r.victim = 'Jonah Reyes'
-          WHERE c.seen_time >= r.tod_from AND c.seen_time <= r.tod_to
+          SELECT s.name AS entered_by, h.action, h.field, h.edited_at
+          FROM approval_history h
+          JOIN approvals a ON a.id = h.approval_id
+          JOIN staff s ON s.id = h.edited_by
+          WHERE a.change_ref = 'CHG-7166'
         `,
-        hint: 'Two alibis fail to cover 01:20–01:55. Join tower_pings and the device registry to pick which of the two was really in play.',
-      },
-      lot: {
-        label: 'where the car was parked',
-        targetValue: 'Dockside Lot',
-        unlockedByColumn: 'camera_location',
-        triggerValue: 'Dockside Lot',
-        options: ['Dockside Lot', 'Civic Plaza Garage', 'Press Tower Garage', 'Northside Gym'],
-        provingQuery: `
-          SELECT s.name, c.camera_location, c.seen_time
-          FROM cctv_sightings c JOIN suspects s ON s.vehicle_plate = c.plate
-          WHERE c.camera_location = 'Dockside Lot'
-        `,
-        hint: 'Join the killer’s vehicle_plate to cctv_sightings — where was the car during the window?',
+        hint: 'Join approval_history to staff on edited_by for that approval. Alias the name AS entered_by.',
       },
     },
   },
