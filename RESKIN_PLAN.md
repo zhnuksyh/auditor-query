@@ -5,10 +5,11 @@ Porting **Detective Query** (murder mystery) to **Auditor Query** (IT auditing).
 This repo began as a git clone of `../deduction-query` at commit `a21816a`.
 This document is the plan for the port and the record of what has been done.
 
-Status: **Phases 0–2 done; Phase 3 started.** Case 01 is a real audit engagement
-(The Leaver). Cases 02–08 are still the parent game's murder mysteries, so the
-game currently reads as an audit tutorial followed by seven killings — expected
-mid-port, but not shippable until the ladder is finished.
+Status: **Phases 0–2 done; Phase 3 in progress.** Cases 01 (The Leaver) and 02
+(The Green Light) are real audit engagements. Cases 03–08 are still the parent
+game's murder mysteries, so the game currently reads as two audits followed by
+six killings — expected mid-port, but not shippable until the ladder is
+finished.
 
 `npm test`, `npm run typecheck` and `npm run build` are green.
 
@@ -149,7 +150,7 @@ Cherry-pick engine fixes across if either side diverges.
 | # | Case | New query shape | Domain |
 |---|---|---|---|
 | 01 | ✅ **The Leaver** — orphaned account (tutorial) | `WHERE` + `JOIN` | Access management |
-| 02 | Unapproved production change | multi-table triangulation | Change management |
+| 02 | ✅ **The Green Light** — approval reused across systems | multi-table triangulation | Change management |
 | 03 | Rubber-stamp access review | `GROUP BY … HAVING` | Recertification |
 | 04 | Backdated approval (misdirection) | aggregate alias | Change management |
 | 05 | Segregation-of-duties breach | `SUM … HAVING` + TEXT join | Financial ITGC |

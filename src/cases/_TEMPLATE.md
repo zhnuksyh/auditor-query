@@ -21,7 +21,7 @@ finds it with SQL. Design the contradiction first, then build the tables around 
 | **id** | `case_0N` | Sequential, e.g. `case_02`. Must be unique. |
 | **code** | `CODE_0N` | Shown as a label. |
 | **tag** | e.g. `FALLING` | One-word mood/category. |
-| **title** | Title Case, e.g. `A Long Way Down` | The case name. |
+| **title** | Title Case, e.g. `The Green Light` | The case name. |
 | **teaser** | 1–2 sentences | Shown on the locked/unlocked level card. Hint at the mystery without spoiling it. |
 | **folderTheme** | `access` \| `change` \| `finance` \| `vendor` \| `privacy` \| `continuity` | The audit domain. Just a colour tone for the card. |
 

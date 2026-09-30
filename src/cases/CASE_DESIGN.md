@@ -49,8 +49,8 @@ Where the shipped cases actually land:
 
 | Case | First obvious query | Survivors |
 |---|---|---|
-| 01 Midnight Drift | keycard in East Wing during TOD | 1 — fine, it's the tutorial |
-| 02 A Long Way Down | rode the elevator to Floor 7 | 3 |
+| 01 The Leaver | left in March, account still enabled | 2 |
+| 02 The Green Light | released to Claims Engine in the audit week | 3 |
 | 03 Terminal Velocity | badged into Stairwell C | 6 |
 | 04 Dead Signal | phone at Dockside in the real window | 2 |
 | 05 Zero Sum | in the pantry during the dosing window | 3 |
@@ -58,8 +58,9 @@ Where the shipped cases actually land:
 | 07 Slack Water | upstream of Jetty 4 during the ebb | 3 |
 | 08 The Long Shift | badged onto Ward 3B during the TOD window | 4 |
 
-Case 01 gets a pass — it is the tutorial, and it should feel solvable. Every
-other case sits at 2 or more, so the killer always requires an intersection.
+Every case sits at 2 or more, so the exception always requires an intersection.
+The Leaver is the tutorial and still returns two live leaver accounts; only
+their sessions separate them.
 
 Both Case 02 and Case 06 originally shipped at 1 and had to be rebalanced by
 adding candidates *after* the fact, which is more delicate than designing the
