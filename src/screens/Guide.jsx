@@ -73,6 +73,41 @@ const CLAUSES = [
     desc: 'Bucket rows to aggregate (COUNT, SUM…); HAVING filters the buckets.',
     ex: 'SELECT reviewer_id, COUNT(*) FROM reviews\nGROUP BY reviewer_id HAVING COUNT(*) > 50;',
   },
+  {
+    kw: 'AS (alias)',
+    desc: 'Name a result column. Every Finding blank unlocks on a named alias, so use the name the hint asks for.',
+    ex: 'SELECT username AS flagged_account FROM accounts;',
+  },
+  {
+    kw: 'MIN / MAX / SUM',
+    desc: 'Smallest, largest and total within each group. A comparison counts as 1 or 0, so SUM(x = \'y\') counts matching rows.',
+    ex: "SELECT reviewer_id, MIN(decided_at) AS first_at,\n  SUM(decision = 'Revoke') AS revoked\nFROM reviews GROUP BY reviewer_id;",
+  },
+  {
+    kw: 'Self-join',
+    desc: 'Join a table to itself under two aliases to compare its rows with each other.',
+    ex: 'SELECT a.id, b.id\nFROM sessions a\nJOIN sessions b ON b.account = a.account AND a.id < b.id;',
+  },
+  {
+    kw: 'Subquery · NOT IN',
+    desc: 'Use one query’s result inside another, e.g. to leave out a list of names.',
+    ex: 'SELECT * FROM accounts\nWHERE id NOT IN (SELECT account_id FROM exceptions);',
+  },
+  {
+    kw: 'EXCEPT',
+    desc: 'Rows the first query returns that the second does not. Both must select the same columns.',
+    ex: 'SELECT host FROM sessions\nEXCEPT\nSELECT host FROM approved_hosts;',
+  },
+  {
+    kw: 'julianday()',
+    desc: 'Turns a date into a day number, so two dates can be subtracted.',
+    ex: 'SELECT julianday(closed_on) - julianday(opened_on) AS days_open\nFROM tickets;',
+  },
+  {
+    kw: 'LAG() OVER (…)',
+    desc: 'Read the previous row’s value. PARTITION BY restarts the count for each group; wrap it in a subquery to filter on the result.',
+    ex: 'SELECT * FROM (\n  SELECT account, amount,\n    LAG(amount) OVER (PARTITION BY account ORDER BY day) AS prev\n  FROM balances\n) WHERE amount > prev;',
+  },
 ]
 
 // Domain vocabulary. A murder mystery needs no glossary; an audit does. Every
@@ -123,6 +158,46 @@ const GLOSSARY = [
   {
     term: 'Automated control',
     desc: 'A control enforced by a system rather than a person, such as a pipeline gate that blocks unapproved releases. It is only as good as what it checks: test the rule it enforces, not just that it ran.',
+  },
+  {
+    term: 'Emergency change',
+    desc: 'A change deployed before approval to fix a live fault. Compliant only if it is approved retrospectively within the procedure’s deadline.',
+  },
+  {
+    term: 'Audit trail',
+    desc: 'A system-written history of who changed a record and when. Unlike the record’s own date fields, users cannot edit it.',
+  },
+  {
+    term: 'Precision',
+    desc: 'Whether a review control could actually catch a problem. A review that happened is not a review that worked.',
+  },
+  {
+    term: 'Mitigating control',
+    desc: 'A second control that covers a known gap, such as an independent review of a user who holds conflicting roles under an approved exception.',
+  },
+  {
+    term: 'Population',
+    desc: 'The full set of items a control should have operated on: every leaver, every change. Test the whole list, and prove the list is whole.',
+  },
+  {
+    term: 'IPE',
+    desc: 'Information produced by the entity: a report or extract the organisation gives you. Before relying on it, check it is complete and accurate against its source.',
+  },
+  {
+    term: 'Generic account',
+    desc: 'A shared login such as db_admin that belongs to no single person. Its logs name the account, never the human.',
+  },
+  {
+    term: 'Password vault',
+    desc: 'A system that releases a generic account’s password to one named person for a set window, records who, and changes the password afterwards.',
+  },
+  {
+    term: 'Mover',
+    desc: 'Someone who changes job internally. Their old access should go when they move; a handover exception may allow a short, approved overlap.',
+  },
+  {
+    term: 'Privilege creep',
+    desc: 'Access that accumulates across moves because new roles are added and old ones never removed.',
   },
   {
     term: 'ITGC',
