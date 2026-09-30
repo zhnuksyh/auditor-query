@@ -1,178 +1,191 @@
 // @ts-check
 /**
- * CASE 05 — "ZERO SUM"
+ * CASE 05: "BOTH SIDES"
  *
- * The hardest file yet. Seven tables, six suspects, and a motive buried in
- * money rather than movement. The player has to work like the victim did — a
- * forensic auditor — and the query shapes step up accordingly:
+ * Segregation of duties in a finance system. Castellan Foods' ERP must never
+ * let one person both maintain supplier bank details and approve payments.
+ * Three users hold both roles anyway. One holds them under an approved SoD
+ * exception with a mitigating control. The question is not who COULD abuse
+ * the conflict, but who DID.
  *
- *   - The skim is spread across many small ledger_entries. Naming the amount
- *     requires GROUP BY entered_by with SUM(amount) AS skimmed_total (and a
- *     HAVING to cut the petty-cash noise) — no single row contains the answer.
- *   - The shell vendor is exposed by a TEXT JOIN: its registered_address in
- *     `vendors` matches one employee's home_address in `hr_records`.
- *   - The poisoning window comes from toxicology, and pantry_log holds several
- *     people inside it — presence alone convicts nobody; the money does.
+ * The player must:
+ *   1. Find the users holding both Vendor Maintain and Payment Approve: three.
+ *   2. Find who EXERCISED the conflict: changed a vendor, then approved payments
+ *      to that same vendor. Two users did.
+ *   3. Remove the one with an approved SoD exception (an explained deviation).
+ *   4. SUM only the self-approved payments made after the change. Summing every
+ *      payment to that vendor gives a wrong total, because an earlier payment
+ *      was approved by someone else before the bank details changed.
+ *   5. TEXT join the vendor's bank account to the payroll bank details HR holds
+ *      for staff: the supplier's new account is the user's own.
  *
- * Two suspects were in the pantry during the dosing window, and two suspects
- * booked entries to the shell vendor. Only one person is in both sets, and the
- * address match seals it. Everything is provable with SQL — no guessing.
+ * Deductive shape: role holders (3) intersected with exercisers (2) minus the
+ * approved exception leaves one. The realism dial is CONFLICT HELD versus
+ * CONFLICT EXERCISED, plus a mitigated exception as the decoy.
  */
 
 /** @type {import('../types.js').PlayableCase} */
 export const case05 = {
   id: 'case_05',
   code: 'CODE_05',
-  tag: 'LEDGER',
-  title: 'Zero Sum',
+  tag: 'FINANCE',
+  title: 'Both Sides',
   teaser:
-    'The auditor was three days from naming a thief. The books balance perfectly now — minus one auditor.',
-  folderTheme: 'vendor',
+    'Three people could change a supplier’s bank details and approve its payments. Holding both keys is a risk. Only one of them turned both.',
+  folderTheme: 'finance',
   locked: true,
 
   engagement: {
     vitals: [
-      { term: 'Victim', line1: 'Evelyn Cho, 48', line2: 'Forensic auditor' },
-      { term: 'Location', line1: 'Halvard & Pope, 40 Exchange Row', line2: '6th floor — audit bureau' },
-      { term: 'Time of death', line1: 'Dosed 08:00 – 09:30', line2: 'June 9th · died 14:10' },
+      { term: 'Control', line1: 'ITGC-A09: Segregation of duties', line2: 'Vendor Maintain and Payment Approve kept apart' },
+      { term: 'System', line1: 'Castellan Foods: Ledgerline', line2: 'ERP accounts payable' },
+      { term: 'Audit period', line1: '1 June – 31 August 2026', line2: 'Vendor changes and payments' },
     ],
-    report: `Evelyn Cho collapsed at her desk at 13:55 on June 9th and was dead within the quarter hour. Toxicology found aconitine in her thermos — the tea she brewed in the office pantry every morning and sipped until lunch. Whoever dosed it did so in the pantry between 08:00 and 09:30, and the pantry door logs every badge.
+    report: `Castellan Foods pays its suppliers from Ledgerline, its ERP system. Two roles in Ledgerline must never sit with the same person. VENDOR MAINTAIN can create suppliers and change their bank details. PAYMENT APPROVE releases payments to them. Together they let one person point a supplier's payments at any account they like and then approve the money themselves. Keeping them apart is SEGREGATION OF DUTIES, and it is control ITGC-A09.
 
-Evelyn was three days from delivering an internal audit. Her working notes flag one payee: a vendor with no registration filings and invoices that never carried purchase-order numbers. The skim was patient — dozens of small entries, none big enough to trip a review, all booked to the same shell.
+Sometimes a small team cannot avoid the overlap. Then the Finance Director may approve an SOD EXCEPTION, recorded with a MITIGATING CONTROL such as an independent monthly review of that person's vendor changes. A user who holds both roles under an approved exception is not a finding on their own.
 
-Shells have paperwork, and paperwork has addresses. The vendor's registered address is on file, and so — in HR's records — are the home addresses of everyone on this floor.
+Holding a conflict is also not the same as using it. Auditors separate a conflict that exists on paper from one that was EXERCISED: the same person on both sides of a real transaction. That means a user who changed a supplier's details and then approved payments to that same supplier.
 
-Several people used the pantry that morning. More than one has entries against the flagged vendor. Follow the money to its total, match the address, and only one name survives.`,
+Treasury has raised a concern about supplier bank details being changed and then paid within days. You have the users, their roles, the approved SoD exceptions, the vendor master, every change made to it, the payments, and the payroll bank details HR holds for each employee. Find who used both halves of the conflict without an exception, which supplier they changed, how much they approved to it themselves after the change, and whose account the money reached.`,
   },
 
   schemaSql: `
-    CREATE TABLE suspects (
+    CREATE TABLE users (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      role TEXT,
-      desk_floor INTEGER
+      username TEXT,
+      name TEXT,
+      department TEXT
     );
-    INSERT INTO suspects (id, name, role, desk_floor) VALUES
-      (1, 'Piet Halvard', 'Managing partner',        7),
-      (2, 'Sonia Grey',   'Accounts-payable clerk',  6),
-      (3, 'Tobias Denn',  'Payroll manager',         6),
-      (4, 'Ida Brandt',   'Office manager',          6),
-      (5, 'Yusuf Kade',   'IT administrator',        5),
-      (6, 'Fern Wexley',  'Junior auditor',          6);
+    INSERT INTO users (id, username, name, department) VALUES
+      (1, 'r.castell',  'Rhea Castell',  'Accounts Payable'),
+      (2, 's.byrne',    'Sean Byrne',    'Accounts Payable'),
+      (3, 't.okoro',    'Tunde Okoro',   'Procurement'),
+      (4, 'v.lindgren', 'Vera Lindgren', 'Finance'),
+      (5, 'w.haddad',   'Wael Haddad',   'Accounts Payable'),
+      (6, 'y.marsh',    'Yvette Marsh',  'Treasury'),
+      (7, 'z.pell',     'Zoe Pell',      'Procurement');
 
-    -- Every journal entry booked this quarter. 'entered_by' is a suspect id.
-    -- The skim hides in small amounts against one payee.
-    CREATE TABLE ledger_entries (
+    CREATE TABLE role_assignments (
       id INTEGER PRIMARY KEY,
-      entered_by INTEGER REFERENCES suspects(id),
-      account TEXT,
-      amount INTEGER,
-      entry_date TEXT,
-      memo TEXT
+      user_id INTEGER REFERENCES users(id),
+      role TEXT
     );
-    INSERT INTO ledger_entries (id, entered_by, account, amount, entry_date, memo) VALUES
-      (1,  2, 'Coastline Supply',  9800, '2026-04-14', 'Facilities consumables'),
-      (2,  3, 'Payroll',          61200, '2026-04-30', 'April payroll run'),
-      (3,  2, 'Brightwater Paper', 1240, '2026-04-18', 'Print stock'),
-      (4,  2, 'Coastline Supply',  7400, '2026-04-28', 'Storage crates'),
-      (5,  4, 'Petty Cash',         180, '2026-05-02', 'Client refreshments'),
-      (6,  2, 'Coastline Supply',  8200, '2026-05-06', 'Safety equipment'),
-      (7,  5, 'Kestrel IT',        3900, '2026-05-09', 'License renewal'),
-      (8,  2, 'Coastline Supply',  9100, '2026-05-15', 'Pallet contract'),
-      (9,  3, 'Payroll',          61200, '2026-05-30', 'May payroll run'),
-      (10, 2, 'Coastline Supply',  6900, '2026-05-21', 'Site clearance'),
-      (11, 4, 'Coastline Supply',   450, '2026-05-23', 'Petty-cash reconciliation'),
-      (12, 2, 'Coastline Supply',  7500, '2026-06-03', 'Container hire'),
-      (13, 6, 'Brightwater Paper',  310, '2026-06-04', 'Audit binders'),
-      (14, 5, 'Kestrel IT',        1150, '2026-06-05', 'Spare drives');
+    INSERT INTO role_assignments (id, user_id, role) VALUES
+      (1,  1, 'Payment Approve'),
+      (2,  1, 'Invoice Entry'),
+      (3,  2, 'Vendor Maintain'),
+      (4,  2, 'Payment Approve'),     -- conflict held
+      (5,  3, 'Vendor Maintain'),
+      (6,  3, 'Payment Approve'),     -- conflict held, under an exception
+      (7,  4, 'Payment Approve'),
+      (8,  5, 'Vendor Maintain'),
+      (9,  5, 'Payment Approve'),     -- conflict held
+      (10, 5, 'Invoice Entry'),
+      (11, 6, 'Payment Approve'),
+      (12, 7, 'Vendor Maintain');
 
-    -- Registered vendors. A real company has filings; a shell has an address.
+    -- Approved SoD exceptions, each with its mitigating control.
+    CREATE TABLE sod_exceptions (
+      id INTEGER PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      conflict TEXT,
+      mitigating_control TEXT,
+      approved_by INTEGER REFERENCES users(id),
+      expires_on TEXT
+    );
+    INSERT INTO sod_exceptions (id, user_id, conflict, mitigating_control, approved_by, expires_on) VALUES
+      (1, 3, 'Vendor Maintain + Payment Approve', 'Monthly independent review of vendor changes', 4, '2026-12-31');
+
+    -- The vendor master as it stands today.
     CREATE TABLE vendors (
       id INTEGER PRIMARY KEY,
       vendor_name TEXT,
-      registered_address TEXT,
-      status TEXT
+      bank_account TEXT,       -- 'sort code account number'
+      created_on TEXT
     );
-    INSERT INTO vendors (id, vendor_name, registered_address, status) VALUES
-      (1, 'Brightwater Paper', 'Unit 4, Mill Road',        'active'),
-      (2, 'Coastline Supply',  'PO Box 119, Brant Station','no filings'),
-      (3, 'Kestrel IT',        '12 Foundry Avenue',        'active');
+    INSERT INTO vendors (id, vendor_name, bank_account, created_on) VALUES
+      (1, 'Harrow Packaging',      '40-11-62 19283746', '2024-02-01'),
+      (2, 'Ardent Facilities Ltd', '20-45-17 83310492', '2023-09-14'),
+      (3, 'Kelso Dairy',           '60-02-33 55512908', '2022-05-30'),
+      (4, 'Merrow Logistics',      '30-90-81 44120937', '2024-11-12');
 
-    -- HR's personnel file: where everyone actually lives.
-    CREATE TABLE hr_records (
+    -- Every change made to the vendor master in the period.
+    CREATE TABLE vendor_changes (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      home_address TEXT,
-      hire_date TEXT
+      vendor_id INTEGER REFERENCES vendors(id),
+      field TEXT,
+      new_value TEXT,
+      changed_by INTEGER REFERENCES users(id),
+      changed_on TEXT
     );
-    INSERT INTO hr_records (id, suspect_id, home_address, hire_date) VALUES
-      (1, 1, '2 Regent Crescent',          '2009-01-12'),
-      (2, 2, 'PO Box 119, Brant Station',  '2018-06-01'),
-      (3, 3, '31 Alder Row',               '2015-03-23'),
-      (4, 4, '9 Wren Court',               '2012-09-10'),
-      (5, 5, '17 Foundry Avenue, Flat 2',  '2020-11-02'),
-      (6, 6, '55 Exchange Row',            '2024-02-19');
+    INSERT INTO vendor_changes (id, vendor_id, field, new_value, changed_by, changed_on) VALUES
+      (1, 1, 'address',       'Unit 4, Brook Park',   2, '2026-07-08'),
+      (2, 2, 'bank_account',  '20-45-17 83310492',    5, '2026-07-21'),
+      (3, 3, 'bank_account',  '60-02-33 55512908',    3, '2026-08-02'),
+      (4, 4, 'contact_email', 'accounts@merrow.test', 7, '2026-07-30');
 
-    -- Pantry badge log for the morning of June 9th.
-    CREATE TABLE pantry_log (
+    CREATE TABLE payments (
       id INTEGER PRIMARY KEY,
-      suspect_id INTEGER REFERENCES suspects(id),
-      entry_time TEXT,
-      exit_time TEXT
+      vendor_id INTEGER REFERENCES vendors(id),
+      amount INTEGER,
+      approved_by INTEGER REFERENCES users(id),
+      paid_on TEXT
     );
-    INSERT INTO pantry_log (id, suspect_id, entry_time, exit_time) VALUES
-      (1, 6, '07:45', '07:55'),   -- before the window
-      (2, 4, '08:05', '08:20'),   -- inside the window
-      (3, 2, '08:40', '08:55'),   -- inside the window
-      (4, 5, '09:05', '09:15'),   -- inside the window
-      (5, 3, '10:10', '10:20');   -- after the window
+    INSERT INTO payments (id, vendor_id, amount, approved_by, paid_on) VALUES
+      (1, 2, 6300,  6, '2026-06-19'),   -- Ardent, before the change, approved by someone else
+      (2, 1, 8200,  1, '2026-07-10'),
+      (3, 2, 12400, 5, '2026-07-24'),
+      (4, 3, 5600,  3, '2026-08-05'),   -- exercised, but under an approved exception
+      (5, 2, 14850, 5, '2026-08-07'),
+      (6, 1, 9100,  4, '2026-08-12'),
+      (7, 2, 11200, 5, '2026-08-21'),
+      (8, 4, 7750,  6, '2026-08-25');
 
-    CREATE TABLE toxicology (
+    -- Staff bank details held by HR for payroll.
+    CREATE TABLE payroll_accounts (
       id INTEGER PRIMARY KEY,
-      victim TEXT,
-      substance TEXT,
-      ingestion_from TEXT,
-      ingestion_to TEXT,
-      note TEXT
+      user_id INTEGER REFERENCES users(id),
+      bank_account TEXT
     );
-    INSERT INTO toxicology (id, victim, substance, ingestion_from, ingestion_to, note) VALUES
-      (1, 'Evelyn Cho', 'aconitine', '08:00', '09:30',
-          'Dosed into the thermos in the pantry; symptom onset roughly five hours after ingestion.');
-
-    -- The victim's own working notes: which payees her audit had flagged.
-    CREATE TABLE audit_scope (
-      id INTEGER PRIMARY KEY,
-      account TEXT,
-      flagged TEXT,        -- 'yes' or 'no'
-      note TEXT
-    );
-    INSERT INTO audit_scope (id, account, flagged, note) VALUES
-      (1, 'Coastline Supply',  'yes', 'No registration filings; invoices lack PO numbers.'),
-      (2, 'Brightwater Paper', 'no',  'Clean. Long-standing supplier.'),
-      (3, 'Kestrel IT',        'no',  'Clean. Contracts on file.'),
-      (4, 'Payroll',           'no',  'Reconciles to headcount.');
+    INSERT INTO payroll_accounts (id, user_id, bank_account) VALUES
+      (1, 1, '11-30-52 20194837'),
+      (2, 2, '09-01-28 77301256'),
+      (3, 3, '40-11-62 88420915'),
+      (4, 4, '23-14-70 61039482'),
+      (5, 5, '20-45-17 83310492'),
+      (6, 6, '60-02-33 10928374'),
+      (7, 7, '77-91-04 30561284');
   `,
 
   erd: {
     tables: [
       {
-        name: 'suspects',
+        name: 'users',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
+          { name: 'username', type: 'TEXT' },
           { name: 'name', type: 'TEXT' },
-          { name: 'role', type: 'TEXT' },
-          { name: 'desk_floor', type: 'INTEGER' },
+          { name: 'department', type: 'TEXT' },
         ],
       },
       {
-        name: 'ledger_entries',
+        name: 'role_assignments',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'entered_by', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'account', type: 'TEXT', fk: 'vendors.vendor_name' },
-          { name: 'amount', type: 'INTEGER' },
-          { name: 'entry_date', type: 'TEXT' },
-          { name: 'memo', type: 'TEXT' },
+          { name: 'user_id', type: 'INTEGER', fk: 'users.id' },
+          { name: 'role', type: 'TEXT' },
+        ],
+      },
+      {
+        name: 'sod_exceptions',
+        columns: [
+          { name: 'id', type: 'INTEGER', pk: true },
+          { name: 'user_id', type: 'INTEGER', fk: 'users.id' },
+          { name: 'conflict', type: 'TEXT' },
+          { name: 'mitigating_control', type: 'TEXT' },
+          { name: 'approved_by', type: 'INTEGER', fk: 'users.id' },
+          { name: 'expires_on', type: 'TEXT' },
         ],
       },
       {
@@ -180,46 +193,37 @@ Several people used the pantry that morning. More than one has entries against t
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
           { name: 'vendor_name', type: 'TEXT' },
-          { name: 'registered_address', type: 'TEXT' },
-          { name: 'status', type: 'TEXT' },
+          { name: 'bank_account', type: 'TEXT' },
+          { name: 'created_on', type: 'TEXT' },
         ],
       },
       {
-        name: 'hr_records',
+        name: 'vendor_changes',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'home_address', type: 'TEXT' },
-          { name: 'hire_date', type: 'TEXT' },
+          { name: 'vendor_id', type: 'INTEGER', fk: 'vendors.id' },
+          { name: 'field', type: 'TEXT' },
+          { name: 'new_value', type: 'TEXT' },
+          { name: 'changed_by', type: 'INTEGER', fk: 'users.id' },
+          { name: 'changed_on', type: 'TEXT' },
         ],
       },
       {
-        name: 'pantry_log',
+        name: 'payments',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'suspect_id', type: 'INTEGER', fk: 'suspects.id' },
-          { name: 'entry_time', type: 'TEXT' },
-          { name: 'exit_time', type: 'TEXT' },
+          { name: 'vendor_id', type: 'INTEGER', fk: 'vendors.id' },
+          { name: 'amount', type: 'INTEGER' },
+          { name: 'approved_by', type: 'INTEGER', fk: 'users.id' },
+          { name: 'paid_on', type: 'TEXT' },
         ],
       },
       {
-        name: 'toxicology',
+        name: 'payroll_accounts',
         columns: [
           { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'victim', type: 'TEXT' },
-          { name: 'substance', type: 'TEXT' },
-          { name: 'ingestion_from', type: 'TEXT' },
-          { name: 'ingestion_to', type: 'TEXT' },
-          { name: 'note', type: 'TEXT' },
-        ],
-      },
-      {
-        name: 'audit_scope',
-        columns: [
-          { name: 'id', type: 'INTEGER', pk: true },
-          { name: 'account', type: 'TEXT' },
-          { name: 'flagged', type: 'TEXT' },
-          { name: 'note', type: 'TEXT' },
+          { name: 'user_id', type: 'INTEGER', fk: 'users.id' },
+          { name: 'bank_account', type: 'TEXT' },
         ],
       },
     ],
@@ -227,90 +231,79 @@ Several people used the pantry that morning. More than one has entries against t
 
   report: {
     template:
-      'Evelyn died for a number. Her audit had flagged {{vendor}} — a shell with no filings, registered to {{address}}, an address that appears once more in this building: in one employee’s own HR file. The ledger shows {{killer}} routed a total of {{total}} through that shell in small, deniable entries. With the audit three days out, they laced Evelyn’s thermos in the pantry with {{substance}}, inside the dosing window toxicology fixed from {{window}} to 09:30.',
+      'Control ITGC-A09 failed, and the conflict was exercised. {{selfApprover}} held Vendor Maintain and Payment Approve with no approved exception. They changed the bank details of {{vendor}}, then approved {{total}} of payments to it themselves. The new bank account matched the payroll account HR holds for {{holder}}.',
     blanks: {
-      vendor: {
-        label: 'the shell vendor',
-        targetValue: 'Coastline Supply',
-        unlockedByColumn: 'vendor_name',
-        triggerValue: 'Coastline Supply',
-        options: ['Brightwater Paper', 'Coastline Supply', 'Kestrel IT', 'Harbor Freight Co.'],
+      selfApprover: {
+        label: 'who exercised the conflict',
+        targetValue: 'Wael Haddad',
+        unlockedByColumn: 'self_approver',
+        triggerValue: 'Wael Haddad',
+        options: ['Sean Byrne', 'Tunde Okoro', 'Wael Haddad', 'Rhea Castell'],
+        // Who self-approved and how much are one SUM ... HAVING row.
+        coUnlocksWith: 'total',
         provingQuery: `
-          SELECT v.vendor_name, v.status, a.flagged, a.note
-          FROM vendors v JOIN audit_scope a ON a.account = v.vendor_name
-          WHERE a.flagged = 'yes'
+          SELECT u.name AS self_approver, v.vendor_name, SUM(p.amount) AS self_approved_total
+          FROM vendor_changes vc
+          JOIN payments p ON p.vendor_id = vc.vendor_id
+                         AND p.approved_by = vc.changed_by
+                         AND p.paid_on >= vc.changed_on
+          JOIN users u ON u.id = vc.changed_by
+          JOIN vendors v ON v.id = vc.vendor_id
+          WHERE vc.changed_by NOT IN (SELECT user_id FROM sod_exceptions)
+          GROUP BY u.name, v.vendor_name
+          HAVING SUM(p.amount) > 0
         `,
-        hint: 'audit_scope names the flagged account; vendors shows which payee has no filings.',
-      },
-      address: {
-        label: 'the shared address',
-        targetValue: 'PO Box 119, Brant Station',
-        unlockedByColumn: 'registered_address',
-        triggerValue: 'PO Box 119, Brant Station',
-        options: ['Unit 4, Mill Road', 'PO Box 119, Brant Station', '12 Foundry Avenue', '2 Regent Crescent'],
-        provingQuery: `
-          SELECT v.vendor_name, v.registered_address, h.home_address
-          FROM vendors v JOIN hr_records h ON h.home_address = v.registered_address
-        `,
-        hint: 'Join vendors.registered_address to hr_records.home_address — one pair matches.',
-      },
-      killer: {
-        label: 'the killer',
-        targetValue: 'Sonia Grey',
-        unlockedByColumn: 'name',
-        triggerValue: 'Sonia Grey',
-        options: ['Piet Halvard', 'Sonia Grey', 'Tobias Denn', 'Ida Brandt', 'Yusuf Kade', 'Fern Wexley'],
-        provingQuery: `
-          SELECT s.name, SUM(l.amount) AS skimmed_total
-          FROM ledger_entries l JOIN suspects s ON s.id = l.entered_by
-          WHERE l.account = 'Coastline Supply'
-          GROUP BY s.name
-          HAVING SUM(l.amount) > 1000
-        `,
-        hint: 'Intersect three sets: booked entries to the shell, badged the pantry inside 08:00–09:30, and matches the vendor’s address. One name survives all three.',
+        hint: 'Join vendor_changes to payments on the same vendor where the approver is the person who made the change. Leave out anyone in sod_exceptions, then GROUP BY person with SUM(amount). Alias the name AS self_approver and the SUM AS self_approved_total.',
       },
       total: {
-        label: 'the skimmed total',
-        targetValue: '48,900',
-        unlockedByColumn: 'skimmed_total',
-        triggerValue: 48900,
-        // Deliberately shares the killer's query: the SUM that names the amount
-        // is the same GROUP BY that names who booked it. One deduction.
-        coUnlocksWith: 'killer',
-        options: ['12,400', '48,900', '61,200', '96,200'],
+        label: 'how much they approved themselves',
+        targetValue: '£38,450',
+        unlockedByColumn: 'self_approved_total',
+        triggerValue: 38450,
+        options: ['£12,400', '£38,450', '£44,750', '£5,600'],
+        coUnlocksWith: 'selfApprover',
         provingQuery: `
-          SELECT s.name, SUM(l.amount) AS skimmed_total
-          FROM ledger_entries l JOIN suspects s ON s.id = l.entered_by
-          WHERE l.account = 'Coastline Supply'
-          GROUP BY s.name
-          HAVING SUM(l.amount) > 1000
+          SELECT u.name AS self_approver, v.vendor_name, SUM(p.amount) AS self_approved_total
+          FROM vendor_changes vc
+          JOIN payments p ON p.vendor_id = vc.vendor_id
+                         AND p.approved_by = vc.changed_by
+                         AND p.paid_on >= vc.changed_on
+          JOIN users u ON u.id = vc.changed_by
+          JOIN vendors v ON v.id = vc.vendor_id
+          WHERE vc.changed_by NOT IN (SELECT user_id FROM sod_exceptions)
+          GROUP BY u.name, v.vendor_name
+          HAVING SUM(p.amount) > 0
         `,
-        hint: 'GROUP BY entered_by over the shell-vendor entries with SUM(amount) AS skimmed_total — use HAVING to drop the petty-cash noise.',
+        hint: 'The same row. Count only payments they approved after their own change, not every payment to the vendor. Alias it AS self_approved_total.',
       },
-      substance: {
-        label: 'the poison',
-        targetValue: 'aconitine',
-        unlockedByColumn: 'substance',
-        triggerValue: 'aconitine',
-        options: ['aconitine', 'arsenic', 'thallium', 'cyanide'],
+      vendor: {
+        label: 'the supplier they changed',
+        targetValue: 'Ardent Facilities Ltd',
+        unlockedByColumn: 'changed_vendor',
+        triggerValue: 'Ardent Facilities Ltd',
+        options: ['Harrow Packaging', 'Ardent Facilities Ltd', 'Kelso Dairy', 'Merrow Logistics'],
         provingQuery: `
-          SELECT victim, substance, ingestion_from, ingestion_to FROM toxicology
+          SELECT v.vendor_name AS changed_vendor, vc.field, vc.new_value, vc.changed_on
+          FROM vendor_changes vc
+          JOIN vendors v ON v.id = vc.vendor_id
+          JOIN users u ON u.id = vc.changed_by
+          WHERE u.name = 'Wael Haddad'
         `,
-        hint: 'Toxicology names what was in the thermos.',
+        hint: 'Join vendor_changes to vendors for that person’s change. Alias the supplier AS changed_vendor.',
       },
-      window: {
-        label: 'dosing window start',
-        targetValue: '08:00',
-        unlockedByColumn: 'ingestion_from',
-        triggerValue: '08:00',
-        // Deliberately shares the substance query: one toxicology row carries
-        // both the poison and the window it was taken in. One deduction.
-        coUnlocksWith: 'substance',
-        options: ['07:45', '08:00', '08:40', '09:30'],
+      holder: {
+        label: 'whose account received it',
+        targetValue: 'Wael Haddad',
+        unlockedByColumn: 'account_holder',
+        triggerValue: 'Wael Haddad',
+        options: ['Tunde Okoro', 'Sean Byrne', 'Wael Haddad', 'Rhea Castell'],
         provingQuery: `
-          SELECT victim, substance, ingestion_from, ingestion_to FROM toxicology
+          SELECT v.vendor_name, v.bank_account, u.name AS account_holder
+          FROM vendors v
+          JOIN payroll_accounts pa ON pa.bank_account = v.bank_account
+          JOIN users u ON u.id = pa.user_id
         `,
-        hint: 'Toxicology fixes when the thermos could have been dosed.',
+        hint: 'Join vendors to payroll_accounts ON the bank_account text itself: does any supplier share an account with a member of staff? Alias the staff name AS account_holder.',
       },
     },
   },
